@@ -18,7 +18,6 @@ class Settings(BaseSettings):
 
     WEBAPP_URL: str = ""
     VT_API_KEY: str = ""
-    WHISPER_MODEL_SIZE: str = "tiny"
     DEFAULT_PREFIX: str = "."
 
     WEBHOOK_PATH: str = "/webhook"

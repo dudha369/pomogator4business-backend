@@ -13,12 +13,10 @@ registry.register_passive_module("archive")
 
 
 def _format_mention(full_name, username, chat_id):
-    if username is not None:
+    if username:
         return f'<a href="https://t.me/{username}">{full_name}</a>'
-    elif chat_id is not None:
-        return f'<a href="tg://user?id={chat_id}">{full_name}</a>'
 
-    return full_name
+    return f'<a href="tg://user?id={chat_id}">{full_name}</a>'
 
 
 def _format_edited(locale, old_text, new_text, sender_label):

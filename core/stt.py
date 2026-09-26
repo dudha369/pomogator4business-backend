@@ -1,34 +1,33 @@
 import asyncio
+import io
 
-from config import settings
+import speech_recognition as sr
 
-_model = None
-_model_lock = asyncio.Lock()
+from core.ffmpeg import convert_ogg_to_wav
 
-
-async def _get_model():
-    global _model
-    if _model is not None:
-        return _model
-
-    async with _model_lock:
-        if _model is None:
-            from faster_whisper import WhisperModel
-
-            _model = await asyncio.to_thread(
-                WhisperModel,
-                settings.WHISPER_MODEL_SIZE,
-                device="cpu",
-                compute_type="int8",
-            )
-    return _model
+_LANGUAGE_CODES = {
+    "ru": "ru-RU",
+    "en": "en-US",
+    "uk": "uk-UA",
+}
 
 
-async def transcribe_audio(file_path):
-    model = await _get_model()
+async def transcribe_audio(ogg_bytes: bytes, locale: str = "ru"):
+    wav_bytes = await convert_ogg_to_wav(ogg_bytes)
+    if wav_bytes is None:
+        return None
+
+    language = _LANGUAGE_CODES.get(locale, "ru-RU")
 
     def _run():
-        segments, _info = model.transcribe(file_path)
-        return " ".join(segment.text.strip() for segment in segments).strip()
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(io.BytesIO(wav_bytes)) as source:
+            audio = recognizer.record(source)
+        try:
+            return recognizer.recognize_google(audio, language=language)
+        except sr.UnknownValueError:
+            return ""
+        except sr.RequestError:
+            return None
 
     return await asyncio.to_thread(_run)
