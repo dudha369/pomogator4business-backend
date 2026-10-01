@@ -126,7 +126,7 @@ async def on_business_edited(message: Message, bot: Bot):
                     message.chat.id,
                 ),
                 old_text=html.quote(old_text),
-                new_text=html.quote(highlight_changes(old_text, new_text)),
+                new_text=new_text=highlight_changes(old_text, new_text)
             )
             try:
                 await bot.send_message(
@@ -200,7 +200,6 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
             await bot.send_message(
                 chat_id=connection["owner_chat_id"],
                 text=text,
-                reply_markup=_link_keyboard(locale, event.chat.username, message_id),
                 link_preview_options=LinkPreviewOptions(is_disabled=True),
             )
         except Exception:
