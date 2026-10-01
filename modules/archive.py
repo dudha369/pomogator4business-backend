@@ -1,4 +1,6 @@
 import time
+from difflib import SequenceMatcher
+from html import escape
 
 from aiogram import Bot, F, Router, html
 from aiogram.types import (
@@ -8,6 +10,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
+    LinkPreviewOptions,
 )
 
 from core import database as db
@@ -24,6 +27,24 @@ _MEDIA_SEND = {
     "voice": ("send_voice", "voice"),
     "video_note": ("send_video_note", "video_note"),
 }
+
+
+def highlight_changes(old_text: str, new_text: str) -> str:
+    matcher = SequenceMatcher(None, old_text, new_text, autojunk=False)
+
+    result = []
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        new_part = new_text[j1:j2]
+
+        if tag == "equal":
+            result.append(escape(new_part))
+
+        elif tag in ("replace", "insert"):
+            if new_part:
+                result.append(f"<b>{escape(new_part)}</b>")
+
+    return "".join(result)
 
 
 def _format_mention(full_name, username, chat_id):
@@ -69,8 +90,6 @@ async def _send_deleted_media(bot, chat_id, entry):
 
 @router.callback_query(F.data == "archive:link_unavailable")
 async def on_link_unavailable(call: CallbackQuery):
-    # Уведомления архива шлются владельцу напрямую (не через business-соединение),
-    # поэтому локаль берём по самому нажавшему — это всегда владелец бота.
     locale = await db.get_locale(call.from_user.id)
     await call.answer(t("archive.link_unavailable", locale), show_alert=True)
 
@@ -107,7 +126,7 @@ async def on_business_edited(message: Message, bot: Bot):
                     message.chat.id,
                 ),
                 old_text=html.quote(old_text),
-                new_text=html.quote(new_text),
+                new_text=html.quote(highlight_changes(old_text, new_text)),
             )
             try:
                 await bot.send_message(
@@ -116,6 +135,7 @@ async def on_business_edited(message: Message, bot: Bot):
                     reply_markup=_link_keyboard(
                         locale, message.chat.username, message.message_id
                     ),
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
                 )
             except Exception:
                 pass
@@ -181,6 +201,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                 chat_id=connection["owner_chat_id"],
                 text=text,
                 reply_markup=_link_keyboard(locale, event.chat.username, message_id),
+                link_preview_options=LinkPreviewOptions(is_disabled=True),
             )
         except Exception:
             pass

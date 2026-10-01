@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "chk.header": "⚪ {w_name}\n⚫ {b_name}",
     "chk.white": "Белые",
