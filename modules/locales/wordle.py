@@ -1,0 +1,43 @@
+"""Автоматически сгенерировано scripts/split_locales.py."""
+
+RU = {
+    "wordle.title": "🔠 Игра Wordle",
+    "wordle.subtitle": "Угадай слово из {length} букв за 6 попыток:",
+    "wordle.legend_green": "🟢 - буква на правильном месте",
+    "wordle.legend_blue": "🔵 - буква есть, но в другом месте",
+    "wordle.legend_red": "🔴 - буквы нет в слове",
+    "wordle.hint": "Чтобы сделать ход, отправь: .[слово]",
+    "wordle.attempts": "Попыток использовано: {used}/{max}",
+    "wordle.won": "🏆 Угадано!",
+    "wordle.lost": "😔 Попытки закончились. Слово было: {secret}",
+    "wordle.invalid_word": "Слово слишком короткое. Минимум 3 буквы.",
+    "cmddesc.word": "Начинает игру Wordle",
+}
+
+EN = {
+    "wordle.title": "🔠 Wordle",
+    "wordle.subtitle": "Guess the {length}-letter word in 6 tries:",
+    "wordle.legend_green": "🟢 - letter in the correct spot",
+    "wordle.legend_blue": "🔵 - letter is in the word, wrong spot",
+    "wordle.legend_red": "🔴 - letter isn't in the word",
+    "wordle.hint": "To make a move, send: .[word]",
+    "wordle.attempts": "Attempts used: {used}/{max}",
+    "wordle.won": "🏆 Guessed it!",
+    "wordle.lost": "😔 Out of attempts. The word was: {secret}",
+    "wordle.invalid_word": "That word is too short. Minimum 3 letters.",
+    "cmddesc.word": "Starts a Wordle game",
+}
+
+UK = {
+    "wordle.title": "🔠 Гра Wordle",
+    "wordle.subtitle": "Вгадай слово з {length} літер за 6 спроб:",
+    "wordle.legend_green": "🟢 - літера на правильному місці",
+    "wordle.legend_blue": "🔵 - літера є, але в іншому місці",
+    "wordle.legend_red": "🔴 - літери немає в слові",
+    "wordle.hint": "Щоб зробити хід, надішли: .[слово]",
+    "wordle.attempts": "Використано спроб: {used}/{max}",
+    "wordle.won": "🏆 Вгадано!",
+    "wordle.lost": "😔 Спроби закінчились. Слово було: {secret}",
+    "wordle.invalid_word": "Слово надто коротке. Мінімум 3 літери.",
+    "cmddesc.word": "Починає гру Wordle",
+}

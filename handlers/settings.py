@@ -16,6 +16,8 @@ from core.webapp import webapp_keyboard
 
 router = Router(name="settings")
 
+_ONBOARDING_PROMPT = "Выберите язык / Choose language / Оберіть мову"
+
 
 class PrefixState(StatesGroup):
     waiting_for_prefix = State()
@@ -46,27 +48,42 @@ def _modules_keyboard(disabled):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def _language_keyboard():
+def _language_keyboard(onboarding=False):
+    suffix = ":onboarding" if onboarding else ""
     buttons = [
-        [InlineKeyboardButton(text=name, callback_data=f"language:{code}")]
+        [InlineKeyboardButton(text=name, callback_data=f"language:{code}{suffix}")]
         for code, name in LANGUAGE_NAMES.items()
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+async def _send_greeting(target, owner_id, locale, edit=False):
+    connection = await db.get_connection_by_owner(owner_id)
+    if connection and connection["is_enabled"]:
+        text = t("start.greeting_connected", locale)
+        markup = webapp_keyboard(t("connection.open_app_button", locale))
+    else:
+        text = t("start.greeting", locale)
+        markup = None
+
+    if edit:
+        await target.edit_text(text, reply_markup=markup)
+    else:
+        await target.answer(text, reply_markup=markup)
+
+
 @router.message(Command("start"))
 async def cmd_start(message: Message):
-    locale = await db.get_locale(message.from_user.id)
-    connection = await db.get_connection_by_owner(message.from_user.id)
+    owner_id = message.from_user.id
 
-    if connection and connection["is_enabled"]:
+    if not await db.has_chosen_locale(owner_id):
         await message.answer(
-            t("start.greeting_connected", locale),
-            reply_markup=webapp_keyboard(t("connection.open_app_button", locale)),
+            _ONBOARDING_PROMPT, reply_markup=_language_keyboard(onboarding=True)
         )
         return
 
-    await message.answer(t("start.greeting", locale))
+    locale = await db.get_locale(owner_id)
+    await _send_greeting(message, owner_id, locale)
 
 
 @router.message(Command("language"))
@@ -77,9 +94,17 @@ async def cmd_language(message: Message):
 
 @router.callback_query(F.data.startswith("language:"))
 async def cb_language(call: CallbackQuery):
-    new_locale = call.data.split(":", 1)[1]
+    parts = call.data.split(":")
+    new_locale = parts[1]
+    onboarding = len(parts) > 2 and parts[2] == "onboarding"
+
     await db.set_locale(call.from_user.id, new_locale)
-    await call.message.edit_text(t("language.updated", new_locale))
+
+    if onboarding:
+        await _send_greeting(call.message, call.from_user.id, new_locale, edit=True)
+    else:
+        await call.message.edit_text(t("language.updated", new_locale))
+
     await call.answer()
 
 

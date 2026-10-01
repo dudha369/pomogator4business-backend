@@ -1,9 +1,10 @@
 """Сводка для вкладки "Аккаунт" мини-приложения: подключение, зеркало,
-эмодзи-статус."""
+эмодзи-статус, часовой пояс."""
 
 import json
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from api.deps import require_user
 from core import database as db
@@ -47,4 +48,17 @@ async def get_account(user: dict = Depends(require_user)):
             "granted": await db.is_emoji_status_granted(owner_id),
             "enabled": await db.is_emoji_status_enabled(owner_id),
         },
+        "timezone_offset_minutes": await db.get_timezone_offset(owner_id),
     }
+
+
+class TimezoneUpdate(BaseModel):
+    offset_minutes: int
+
+
+@router.post("/account/timezone")
+async def update_timezone(payload: TimezoneUpdate, user: dict = Depends(require_user)):
+    if not -720 <= payload.offset_minutes <= 840:
+        raise HTTPException(status_code=400, detail="Invalid timezone offset")
+    await db.set_timezone_offset(user["id"], payload.offset_minutes)
+    return {"offset_minutes": payload.offset_minutes}

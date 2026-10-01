@@ -1,0 +1,52 @@
+"""Автоматически сгенерировано scripts/split_locales.py."""
+
+RU = {
+    "eightball.answer_1": "Бесспорно",
+    "eightball.answer_2": "Да",
+    "eightball.answer_3": "Без сомнения",
+    "eightball.answer_4": "Точно да",
+    "eightball.answer_5": "Мой ответ - нет",
+    "eightball.answer_6": "Вряд ли",
+    "eightball.answer_7": "Спроси позже",
+    "eightball.answer_8": "Сконцентрируйся и спроси снова",
+    "eightball.answer_9": "Трудно сказать",
+    "eightball.answer_10": "Скорее всего",
+    "eightball.answer_11": 'Знаки говорят "да"',
+    "eightball.answer_12": "Даже не думай",
+    "eightball.usage": "Формат: .8ball [вопрос]\nПример: .8ball Стоит ли мне это делать?",
+    "cmddesc.8ball": "Магический шар",
+}
+
+EN = {
+    "eightball.answer_1": "It is certain",
+    "eightball.answer_2": "Yes",
+    "eightball.answer_3": "Without a doubt",
+    "eightball.answer_4": "Definitely yes",
+    "eightball.answer_5": "My reply is no",
+    "eightball.answer_6": "Very doubtful",
+    "eightball.answer_7": "Ask again later",
+    "eightball.answer_8": "Concentrate and ask again",
+    "eightball.answer_9": "Hard to say",
+    "eightball.answer_10": "Most likely",
+    "eightball.answer_11": "Signs point to yes",
+    "eightball.answer_12": "Don't count on it",
+    "eightball.usage": "Format: .8ball [question]\nExample: .8ball Should I do this?",
+    "cmddesc.8ball": "Magic 8-ball",
+}
+
+UK = {
+    "eightball.answer_1": "Безсумнівно",
+    "eightball.answer_2": "Так",
+    "eightball.answer_3": "Без сумніву",
+    "eightball.answer_4": "Точно так",
+    "eightball.answer_5": "Моя відповідь - ні",
+    "eightball.answer_6": "Навряд чи",
+    "eightball.answer_7": "Запитай пізніше",
+    "eightball.answer_8": "Зосередься і запитай знову",
+    "eightball.answer_9": "Важко сказати",
+    "eightball.answer_10": "Скоріш за все",
+    "eightball.answer_11": 'Знаки кажуть "так"',
+    "eightball.answer_12": "Навіть не думай",
+    "eightball.usage": "Формат: .8ball [питання]\nПриклад: .8ball Чи варто мені це робити?",
+    "cmddesc.8ball": "Магічна куля",
+}

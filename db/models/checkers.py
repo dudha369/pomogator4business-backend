@@ -15,6 +15,7 @@ class ChkGame(Model):
     player_b_id = fields.BigIntField(null=True)
     player_b_name = fields.CharField(max_length=255, null=True)
     selected = fields.IntField(null=True)
+    forced_continue = fields.BooleanField(default=False)
     status = fields.CharField(max_length=16, default="active")
     message_id = fields.BigIntField(null=True)
 
@@ -31,12 +32,16 @@ _DEFAULTS = {
     "player_b_id": None,
     "player_b_name": None,
     "selected": None,
+    "forced_continue": False,
     "status": "active",
     "message_id": None,
 }
 
 
 async def save_chk_game(connection_id, chat_id, **fields):
+    fields = dict(fields)
+    if "forced_continue" in fields:
+        fields["forced_continue"] = bool(fields["forced_continue"])
     await save_game(ChkGame, connection_id, chat_id, _DEFAULTS, fields)
 
 

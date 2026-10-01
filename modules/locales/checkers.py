@@ -1,0 +1,55 @@
+"""Автоматически сгенерировано scripts/split_locales.py."""
+
+RU = {
+    "chk.header": "⚪ {w_name}\n⚫ {b_name}",
+    "chk.white": "Белые",
+    "chk.black": "Чёрные",
+    "chk.turn": "Ход: {color}",
+    "chk.win": "🏆 Победа: {color}!",
+    "chk.not_your_game": "Это не ваша игра.",
+    "chk.not_your_turn": "Сейчас не ваш ход.",
+    "chk.no_moves": "У этой шашки нет доступных ходов.",
+    "chk.invalid_move": "Недопустимый ход.",
+    "cmddesc.chk": "Шашки",
+    "chk.challenge": "🎮 {name} приглашает сыграть в шашки!",
+    "chk.declined": "❌ Вызов отклонён.",
+    "chk.cant_accept_own": "Нельзя принять собственный вызов.",
+    "chk.must_continue": "Эта шашка должна продолжить бить — выберите один из доступных прыжков.",
+    "chk.must_capture_elsewhere": "На доске есть обязательное взятие — нужно бить.",
+}
+
+EN = {
+    "chk.header": "⚪ {w_name}\n⚫ {b_name}",
+    "chk.white": "White",
+    "chk.black": "Black",
+    "chk.turn": "Turn: {color}",
+    "chk.win": "🏆 {color} wins!",
+    "chk.not_your_game": "This isn't your game.",
+    "chk.not_your_turn": "It's not your turn.",
+    "chk.no_moves": "This piece has no available moves.",
+    "chk.invalid_move": "Invalid move.",
+    "cmddesc.chk": "Checkers",
+    "chk.challenge": "🎮 {name} challenges you to checkers!",
+    "chk.declined": "❌ Challenge declined.",
+    "chk.cant_accept_own": "You can't accept your own challenge.",
+    "chk.must_continue": "This piece must keep capturing — pick one of the available jumps.",
+    "chk.must_capture_elsewhere": "A capture is mandatory somewhere on the board — you must take it.",
+}
+
+UK = {
+    "chk.header": "⚪ {w_name}\n⚫ {b_name}",
+    "chk.white": "Білі",
+    "chk.black": "Чорні",
+    "chk.turn": "Хід: {color}",
+    "chk.win": "🏆 Перемога: {color}!",
+    "chk.not_your_game": "Це не ваша гра.",
+    "chk.not_your_turn": "Зараз не ваш хід.",
+    "chk.no_moves": "У цієї шашки немає доступних ходів.",
+    "chk.invalid_move": "Недопустимий хід.",
+    "cmddesc.chk": "Шашки",
+    "chk.challenge": "🎮 {name} запрошує зіграти в шашки!",
+    "chk.declined": "❌ Виклик відхилено.",
+    "chk.cant_accept_own": "Не можна прийняти власний виклик.",
+    "chk.must_continue": "Ця шашка має продовжити бити — оберіть один з доступних стрибків.",
+    "chk.must_capture_elsewhere": "На дошці є обов'язкове взяття — потрібно бити.",
+}

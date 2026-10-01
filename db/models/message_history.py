@@ -9,6 +9,8 @@ class MessageHistory(Model):
     message_id = fields.BigIntField()
     is_owner = fields.BooleanField()
     text = fields.TextField(null=True)
+    media_type = fields.CharField(max_length=16, null=True)
+    media_data = fields.BinaryField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -17,7 +19,16 @@ class MessageHistory(Model):
         indexes = (("connection_id", "chat_id", "created_at"),)
 
 
-async def save_history(connection_id, chat_id, message_id, is_owner, text, created_at):
+async def save_history(
+    connection_id,
+    chat_id,
+    message_id,
+    is_owner,
+    text,
+    created_at,
+    media_type=None,
+    media_data=None,
+):
     obj, created = await MessageHistory.get_or_create(
         connection_id=connection_id,
         chat_id=chat_id,
@@ -25,12 +36,19 @@ async def save_history(connection_id, chat_id, message_id, is_owner, text, creat
         defaults={
             "is_owner": bool(is_owner),
             "text": text,
+            "media_type": media_type,
+            "media_data": media_data,
             "created_at": created_at,
         },
     )
     if not created:
         obj.text = text
-        await obj.save(update_fields=["text"])
+        update_fields = ["text"]
+        if media_type is not None:
+            obj.media_type = media_type
+            obj.media_data = media_data
+            update_fields += ["media_type", "media_data"]
+        await obj.save(update_fields=update_fields)
 
 
 async def get_history_text(connection_id, chat_id, message_id):
@@ -41,7 +59,6 @@ async def get_history_text(connection_id, chat_id, message_id):
 
 
 async def get_history_entry(connection_id, chat_id, message_id):
-    """Как get_history_text, но возвращает всю строку (в т.ч. is_owner)."""
     rows = await MessageHistory.filter(
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
     ).values()
@@ -55,11 +72,6 @@ async def delete_history(connection_id, chat_id, message_id):
 
 
 async def has_other_messages(connection_id, chat_id, exclude_message_id):
-    """True, если для этого чата уже есть история, кроме сообщения
-    exclude_message_id. Резервный сигнал для modules/scam.py на случай,
-    если known_chats пуст не из-за реально нового контакта (например,
-    после восстановления/пересоздания таблицы) — settings.is_known_chat
-    один такой кэш, полагаться только на него небезопасно."""
     return (
         await MessageHistory.filter(connection_id=connection_id, chat_id=chat_id)
         .exclude(message_id=exclude_message_id)

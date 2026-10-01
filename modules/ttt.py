@@ -31,6 +31,21 @@ def _check_winner(board):
     return None, set()
 
 
+def _challenge_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅", callback_data="ttt:accept", style="success"
+                ),
+                InlineKeyboardButton(
+                    text="❌", callback_data="ttt:decline", style="danger"
+                ),
+            ]
+        ]
+    )
+
+
 def _build_keyboard(board, finished, winning_line=None):
     rows = []
     winning_line = winning_line or set()
@@ -103,22 +118,15 @@ async def cmd_ttt(ctx):
         player_x_name=starter_name,
         player_o_id=None,
         player_o_name=None,
-        status="active",
+        status="pending",
         message_id=None,
     )
 
-    game = await db.get_ttt_game(ctx.connection_id, ctx.chat_id)
-    text = _build_text(ctx.locale, game, None)
-    keyboard = _build_keyboard(game["board"], False)
-
-    await ctx.edit_command_message(text, reply_markup=keyboard)
+    text = t("ttt.challenge", ctx.locale, name=starter_name)
+    await ctx.edit_command_message(text, reply_markup=_challenge_keyboard())
     await db.save_ttt_game(
         ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
     )
-
-
-async def _get_locale_for(owner_id):
-    return await db.get_locale(owner_id)
 
 
 @router.callback_query(F.data.startswith("ttt:"))
@@ -133,9 +141,38 @@ async def on_ttt_callback(call: CallbackQuery):
         return
 
     connection = await db.get_connection(business_connection_id)
-    locale = await _get_locale_for(connection["owner_id"]) if connection else "ru"
+    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
 
     if action == "noop":
+        await call.answer()
+        return
+
+    if game["status"] == "pending":
+        if action == "decline":
+            await db.save_ttt_game(business_connection_id, chat_id, status="finished")
+            await call.message.edit_text(t("ttt.declined", locale))
+            await call.answer()
+            return
+
+        if action == "accept":
+            if call.from_user.id == game["player_x_id"]:
+                await call.answer(t("ttt.cant_accept_own", locale), show_alert=True)
+                return
+            await db.save_ttt_game(
+                business_connection_id,
+                chat_id,
+                player_o_id=call.from_user.id,
+                player_o_name=call.from_user.full_name,
+                status="active",
+            )
+            game = await db.get_ttt_game(business_connection_id, chat_id)
+            await call.message.edit_text(
+                _build_text(locale, game, None),
+                reply_markup=_build_keyboard(game["board"], False),
+            )
+            await call.answer()
+            return
+
         await call.answer()
         return
 
@@ -154,13 +191,12 @@ async def on_ttt_callback(call: CallbackQuery):
             player_x_name=starter_name,
             player_o_id=None,
             player_o_name=None,
-            status="active",
+            status="pending",
             message_id=call.message.message_id,
         )
-        game = await db.get_ttt_game(business_connection_id, chat_id)
         await call.message.edit_text(
-            _build_text(locale, game, None),
-            reply_markup=_build_keyboard(game["board"], False),
+            t("ttt.challenge", locale, name=starter_name),
+            reply_markup=_challenge_keyboard(),
         )
         await call.answer()
         return
@@ -174,15 +210,6 @@ async def on_ttt_callback(call: CallbackQuery):
 
     if user_id == game["player_x_id"]:
         symbol = "X"
-    elif game["player_o_id"] is None and user_id != game["player_x_id"]:
-        symbol = "O"
-        await db.save_ttt_game(
-            business_connection_id,
-            chat_id,
-            player_o_id=user_id,
-            player_o_name=call.from_user.full_name,
-        )
-        game = await db.get_ttt_game(business_connection_id, chat_id)
     elif user_id == game["player_o_id"]:
         symbol = "O"
     else:

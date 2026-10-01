@@ -13,6 +13,8 @@ class MsGame(Model):
     coop = fields.BooleanField(default=False)
     mines = fields.TextField(default="[]")
     revealed = fields.TextField(default="")
+    flagged = fields.TextField(default="[]")
+    flag_mode = fields.BooleanField(default=False)
     starter_id = fields.BigIntField(null=True)
     starter_name = fields.CharField(max_length=255, null=True)
     phase = fields.CharField(max_length=16, default="settings")
@@ -29,6 +31,8 @@ _DEFAULTS = {
     "coop": False,
     "mines": "[]",
     "revealed": "",
+    "flagged": "[]",
+    "flag_mode": False,
     "starter_id": None,
     "starter_name": None,
     "phase": "settings",
@@ -40,6 +44,8 @@ async def save_ms_game(connection_id, chat_id, **fields):
     fields = dict(fields)
     if "coop" in fields:
         fields["coop"] = bool(fields["coop"])
+    if "flag_mode" in fields:
+        fields["flag_mode"] = bool(fields["flag_mode"])
     await save_game(MsGame, connection_id, chat_id, _DEFAULTS, fields)
 
 

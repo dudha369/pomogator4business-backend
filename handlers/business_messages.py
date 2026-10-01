@@ -5,6 +5,7 @@ from aiogram.types import Message
 
 from core import database as db
 from core.context import CommandContext
+from core.media import extract_history_media
 from core.registry import registry
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
@@ -25,19 +26,25 @@ async def on_business_message(message: Message, bot: Bot):
         connection["connection_id"], message.chat.id, message.message_id
     )
 
+    disabled = await db.list_disabled_modules(connection["connection_id"])
+    is_owner = message.from_user.id == connection["owner_id"]
+
     text_for_history = message.text or message.caption
-    if text_for_history is not None:
+    media_type, media_data = (None, None)
+    if "archive" not in disabled:
+        media_type, media_data = await extract_history_media(bot, message)
+
+    if text_for_history is not None or media_type is not None:
         await db.save_history(
             connection["connection_id"],
             message.chat.id,
             message.message_id,
-            message.from_user.id == connection["owner_id"],
+            is_owner,
             text_for_history,
             int(message.date.timestamp()) if message.date else int(time.time()),
+            media_type=media_type,
+            media_data=media_data,
         )
-
-    disabled = await db.list_disabled_modules(connection["connection_id"])
-    is_owner = message.from_user.id == connection["owner_id"]
 
     if is_owner and message.voice and "voice" not in disabled:
         if await handle_voice_message(bot, connection, message):

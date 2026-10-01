@@ -58,7 +58,14 @@ from db.models.mute import (
 from db.models.profile_backup import get_profile_backup, save_profile_backup
 from db.models.story import is_autopost_enabled, toggle_autopost
 from db.models.ttt import get_ttt_game, save_ttt_game
-from db.models.user_locale import get_locale, set_locale
+from db.models.user_locale import (
+    get_locale,
+    get_timezone_offset,
+    get_timezone_offsets_for,
+    has_chosen_locale,
+    set_locale,
+    set_timezone_offset,
+)
 from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
@@ -92,9 +99,12 @@ __all__ = [
     "get_profile_backup",
     "get_recent_archive",
     "get_recent_history",
+    "get_timezone_offset",
+    "get_timezone_offsets_for",
     "get_ttt_game",
     "get_voice_effect",
     "get_wordle_game",
+    "has_chosen_locale",
     "is_autopost_enabled",
     "is_echo_enabled",
     "is_emoji_status_enabled",
@@ -122,6 +132,7 @@ __all__ = [
     "set_locale",
     "set_prefix",
     "set_timed_mute",
+    "set_timezone_offset",
     "set_voice_effect",
     "set_warn_mute",
     "toggle_autopost",

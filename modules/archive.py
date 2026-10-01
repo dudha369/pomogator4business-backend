@@ -1,7 +1,14 @@
 import time
 
-from aiogram import Bot, Router, html
-from aiogram.types import BusinessMessagesDeleted, Message
+from aiogram import Bot, F, Router, html
+from aiogram.types import (
+    BufferedInputFile,
+    BusinessMessagesDeleted,
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
 from core import database as db
 from core.i18n import t
@@ -11,26 +18,61 @@ from core.self_actions import consume_self_delete
 router = Router(name="archive")
 registry.register_passive_module("archive")
 
+_MEDIA_SEND = {
+    "photo": ("send_photo", "photo"),
+    "video": ("send_video", "video"),
+    "voice": ("send_voice", "voice"),
+    "video_note": ("send_video_note", "video_note"),
+}
+
 
 def _format_mention(full_name, username, chat_id):
     if username:
-        return f'<a href="https://t.me/{username}">{full_name}</a>'
-
-    return f'<a href="tg://user?id={chat_id}">{full_name}</a>'
-
-
-def _format_edited(locale, old_text, new_text, sender_label):
-    return t(
-        "archive.edited_notice",
-        locale,
-        sender=sender_label,
-        old_text=old_text,
-        new_text=new_text,
-    )
+        return f'<a href="https://t.me/{username}">{html.quote(full_name)}</a>'
+    return f'<a href="tg://user?id={chat_id}">{html.quote(full_name)}</a>'
 
 
-def _format_deleted(locale, old_text, sender_label):
-    return t("archive.deleted_notice", locale, sender=sender_label, old_text=old_text)
+def _message_link(username, message_id):
+    if not username:
+        return None
+    return f"https://t.me/{username}/{message_id}"
+
+
+def _link_keyboard(locale, username, message_id):
+    label = t("archive.open_message_button", locale)
+    link = _message_link(username, message_id)
+    if link:
+        button = InlineKeyboardButton(
+            text=label, url=link, icon_custom_emoji_id="5260730055880876557"
+        )
+    else:
+        button = InlineKeyboardButton(
+            text=label,
+            callback_data="archive:link_unavailable",
+            icon_custom_emoji_id="5260730055880876557",
+        )
+    return InlineKeyboardMarkup(inline_keyboard=[[button]])
+
+
+async def _send_deleted_media(bot, chat_id, entry):
+    kind = entry.get("media_type")
+    data = entry.get("media_data")
+    if not kind or not data:
+        return
+    method_name, kwarg = _MEDIA_SEND[kind]
+    file = BufferedInputFile(bytes(data), filename=f"deleted_{kind}")
+    try:
+        await getattr(bot, method_name)(chat_id=chat_id, **{kwarg: file})
+    except Exception:
+        pass
+
+
+@router.callback_query(F.data == "archive:link_unavailable")
+async def on_link_unavailable(call: CallbackQuery):
+    # Уведомления архива шлются владельцу напрямую (не через business-соединение),
+    # поэтому локаль берём по самому нажавшему — это всегда владелец бота.
+    locale = await db.get_locale(call.from_user.id)
+    await call.answer(t("archive.link_unavailable", locale), show_alert=True)
 
 
 @router.edited_business_message()
@@ -56,20 +98,24 @@ async def on_business_edited(message: Message, bot: Bot):
         )
         if old_text is not None and old_text != new_text:
             locale = await db.get_locale(connection["owner_id"])
+            text = t(
+                "archive.edited_notice",
+                locale,
+                mention=_format_mention(
+                    message.from_user.full_name,
+                    message.from_user.username,
+                    message.chat.id,
+                ),
+                old_text=html.quote(old_text),
+                new_text=html.quote(new_text),
+            )
             try:
                 await bot.send_message(
                     chat_id=connection["owner_chat_id"],
-                    text=_format_edited(
-                        locale,
-                        old_text,
-                        new_text,
-                        _format_mention(
-                            message.from_user.full_name,
-                            message.from_user.username,
-                            message.chat.id,
-                        ),
+                    text=text,
+                    reply_markup=_link_keyboard(
+                        locale, message.chat.username, message.message_id
                     ),
-                    parse_mode="html",
                 )
             except Exception:
                 pass
@@ -116,22 +162,30 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
         if entry is None:
             continue
 
-        sender_label = (
-            t("archive.sender_you", locale)
-            if entry["is_owner"]
-            else _format_mention(
+        body = (
+            html.quote(entry["text"])
+            if entry["text"]
+            else t("archive.media_placeholder", locale)
+        )
+        text = t(
+            "archive.deleted_notice",
+            locale,
+            mention=_format_mention(
                 event.chat.full_name, event.chat.username, event.chat.id
-            )
+            ),
+            old_text=body,
         )
 
         try:
             await bot.send_message(
                 chat_id=connection["owner_chat_id"],
-                text=_format_deleted(locale, entry["text"], sender_label),
-                parse_mode="html",
+                text=text,
+                reply_markup=_link_keyboard(locale, event.chat.username, message_id),
             )
         except Exception:
             pass
+
+        await _send_deleted_media(bot, connection["owner_chat_id"], entry)
 
         await db.log_archive_event(
             connection_id,

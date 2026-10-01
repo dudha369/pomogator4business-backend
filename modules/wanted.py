@@ -121,15 +121,14 @@ async def cmd_wanted(ctx: CommandContext):
     target = ctx.message.reply_to_message
     charge = ctx.args.strip() or ctx.t("wanted.default_charge")
 
-    image_bytes = None
-    name = "UNKNOWN"
-
     if target and target.photo:
         image_bytes = await download_message_photo(ctx.bot, target)
         name = (target.from_user.full_name if target.from_user else "UNKNOWN").upper()
-    elif target and target.from_user:
-        image_bytes = await download_user_avatar(ctx.bot, target.from_user.id)
-        name = target.from_user.full_name.upper()
+    else:
+        user = target.from_user if target and target.from_user else None
+        user_id = user.id if user else ctx.chat_id  # фолбэк — собеседник чата
+        image_bytes = await download_user_avatar(ctx.bot, user_id)
+        name = (user.full_name if user else "UNKNOWN").upper()
 
     if not image_bytes:
         await ctx.usage_error(ctx.t("wanted.usage"))
