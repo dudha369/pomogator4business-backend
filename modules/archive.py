@@ -126,7 +126,7 @@ async def on_business_edited(message: Message, bot: Bot):
                     message.chat.id,
                 ),
                 old_text=html.quote(old_text),
-                new_text=new_text=highlight_changes(old_text, new_text)
+                new_text=highlight_changes(old_text, new_text),
             )
             try:
                 await bot.send_message(
