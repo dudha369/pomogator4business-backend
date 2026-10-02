@@ -15,6 +15,16 @@ from core.mirror_manager import mirror_manager
 from core.scheduler import run_emoji_clock
 
 _background_tasks: list[asyncio.Task] = []
+_WEBHOOK_ALLOWED_UPDATES = [
+    "message",
+    "edited_message",
+    "callback_query",
+    "business_connection",
+    "business_message",
+    "edited_business_message",
+    "deleted_business_messages",
+    "my_chat_member",
+]
 
 
 @asynccontextmanager
@@ -29,6 +39,7 @@ async def lifespan(app: FastAPI):
             url=settings.WEBHOOK_URL,
             secret_token=settings.WEBHOOK_SECRET,
             drop_pending_updates=True,
+            allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
         )
     else:
         logging.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
