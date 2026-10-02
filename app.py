@@ -11,19 +11,20 @@ from bot_instance import bot, dp
 from config import TORTOISE_ORM, settings
 from core.loader import load_modules
 from core.logging_config import configure_logging
-from core.mirror_manager import mirror_manager
+from core.mirror_manager import mirror_dispatcher, mirror_manager
 from core.scheduler import run_emoji_clock
 
 _background_tasks: list[asyncio.Task] = []
+
 _WEBHOOK_ALLOWED_UPDATES = [
     "message",
     "edited_message",
     "callback_query",
+    "my_chat_member",
     "business_connection",
     "business_message",
     "edited_business_message",
     "deleted_business_messages",
-    "my_chat_member",
 ]
 
 
@@ -45,7 +46,8 @@ async def lifespan(app: FastAPI):
         logging.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
 
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
-    _background_tasks.append(asyncio.create_task(mirror_manager.start_all()))
+
+    await mirror_manager.start_all()
 
     yield
 
@@ -85,6 +87,24 @@ async def telegram_webhook(
 
     data = await request.json()
     await dp.feed_webhook_update(bot, data)
+    return Response(status_code=200)
+
+
+@app.post(f"{settings.MIRROR_WEBHOOK_PATH}/{{owner_id}}")
+async def mirror_webhook(
+    owner_id: int,
+    request: Request,
+    x_telegram_bot_api_secret_token: str = Header(default=None),
+):
+    if not mirror_manager.verify_secret(owner_id, x_telegram_bot_api_secret_token):
+        raise HTTPException(status_code=401, detail="Invalid secret token")
+
+    mirror_bot = mirror_manager.get_bot(owner_id)
+    if not mirror_bot:
+        raise HTTPException(status_code=404, detail="Mirror not running")
+
+    data = await request.json()
+    await mirror_dispatcher.feed_webhook_update(mirror_bot, data, owner_id=owner_id)
     return Response(status_code=200)
 
 

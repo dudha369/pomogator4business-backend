@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     DEFAULT_PREFIX: str = "."
 
     WEBHOOK_PATH: str = "/webhook"
+    MIRROR_WEBHOOK_PATH: str = "/webhook/mirror"
     WEBHOOK_BASE_URL: str = ""
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
