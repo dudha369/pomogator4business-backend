@@ -21,11 +21,11 @@ from core.self_actions import consume_self_delete
 router = Router(name="archive")
 registry.register_passive_module("archive")
 
-_MEDIA_SEND = {
-    "photo": ("send_photo", "photo"),
-    "video": ("send_video", "video"),
-    "voice": ("send_voice", "voice"),
-    "video_note": ("send_video_note", "video_note"),
+_MEDIA_LABEL_KEYS = {
+    "photo": "archive.media_photo",
+    "video": "archive.media_video",
+    "voice": "archive.media_voice",
+    "video_note": "archive.media_video_note",
 }
 
 
@@ -75,15 +75,16 @@ def _link_keyboard(locale, username, message_id):
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
 
-async def _send_deleted_media(bot, chat_id, entry):
+async def _send_deleted_media(bot, chat_id, entry, locale):
     kind = entry.get("media_type")
     data = entry.get("media_data")
     if not kind or not data:
         return
     method_name, kwarg = _MEDIA_SEND[kind]
     file = BufferedInputFile(bytes(data), filename=f"deleted_{kind}")
+    caption = t(_MEDIA_LABEL_KEYS.get(kind, "archive.media_placeholder"), locale)
     try:
-        await getattr(bot, method_name)(chat_id=chat_id, **{kwarg: file})
+        await getattr(bot, method_name)(chat_id=chat_id, caption=caption, **{kwarg: file})
     except Exception:
         pass
 
@@ -205,7 +206,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
         except Exception:
             pass
 
-        await _send_deleted_media(bot, connection["owner_chat_id"], entry)
+        await _send_deleted_media(bot, connection["owner_chat_id"], entry, locale)
 
         await db.log_archive_event(
             connection_id,

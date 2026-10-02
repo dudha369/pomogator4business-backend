@@ -50,4 +50,15 @@ async def toggle_emoji_status(
         raise HTTPException(status_code=400, detail="Access not granted yet")
 
     await db.set_emoji_status_enabled(user["id"], payload.enabled)
+
+    if not payload.enabled:
+        from bot_instance import bot
+
+        try:
+            await bot.set_user_emoji_status(
+                user_id=user["id"], emoji_status_custom_emoji_id=""
+            )
+        except Exception:
+            pass
+
     return {"enabled": payload.enabled}
