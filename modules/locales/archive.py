@@ -17,10 +17,10 @@ RU = {
     "archive.open_message_button": "Перейти к сообщению",
     "archive.link_unavailable": "Ссылка недоступна — у собеседника нет username.",
     "archive.media_placeholder": "[медиа-сообщение]",
-"archive.media_photo": "📷 Исчезающее фото сохранено",
-"archive.media_video": "🎥 Исчезающее видео сохранено",
-"archive.media_voice": "🎤 Голосовое сообщение сохранено",
-"archive.media_video_note": "⭕ Видео-кружок сохранён",
+    "archive.media_photo": "📷 Исчезающее фото сохранено",
+    "archive.media_video": "🎥 Исчезающее видео сохранено",
+    "archive.media_voice": "🎤 Голосовое сообщение сохранено",
+    "archive.media_video_note": "⭕ Видео-кружок сохранён",
 }
 
 EN = {
@@ -40,10 +40,10 @@ EN = {
     "archive.open_message_button": "Go to message",
     "archive.link_unavailable": "Link unavailable — this contact has no username.",
     "archive.media_placeholder": "[media message]",
-"archive.media_photo": "📷 Disappearing photo saved",
-"archive.media_video": "🎥 Disappearing video saved",
-"archive.media_voice": "🎤 Voice message saved",
-"archive.media_video_note": "⭕ Video note saved",
+    "archive.media_photo": "📷 Disappearing photo saved",
+    "archive.media_video": "🎥 Disappearing video saved",
+    "archive.media_voice": "🎤 Voice message saved",
+    "archive.media_video_note": "⭕ Video note saved",
 }
 
 UK = {
@@ -63,8 +63,8 @@ UK = {
     "archive.open_message_button": "Перейти до повідомлення",
     "archive.link_unavailable": "Посилання недоступне — у співрозмовника немає username.",
     "archive.media_placeholder": "[медіаповідомлення]",
-"archive.media_photo": "📷 Зникаюче фото збережено",
-"archive.media_video": "🎥 Зникаюче відео збережено",
-"archive.media_voice": "🎤 Голосове повідомлення збережено",
-"archive.media_video_note": "⭕ Відео-гурток збережено",
+    "archive.media_photo": "📷 Зникаюче фото збережено",
+    "archive.media_video": "🎥 Зникаюче відео збережено",
+    "archive.media_voice": "🎤 Голосове повідомлення збережено",
+    "archive.media_video_note": "⭕ Відео-гурток збережено",
 }

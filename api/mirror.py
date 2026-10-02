@@ -25,7 +25,9 @@ class MirrorConnect(BaseModel):
 
 
 @router.post("/mirror/connect")
-async def api_connect_mirror(payload: MirrorConnect, user: dict = Depends(require_user)):
+async def api_connect_mirror(
+    payload: MirrorConnect, user: dict = Depends(require_user)
+):
     try:
         username = await connect_mirror(user["id"], payload.token)
     except MirrorSetupError as exc:

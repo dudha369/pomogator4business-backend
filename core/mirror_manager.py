@@ -57,7 +57,8 @@ class MirrorManager:
         if not settings.WEBHOOK_BASE_URL:
             logger.warning(
                 "WEBHOOK_BASE_URL не задан — зеркало owner_id=%s не может "
-                "быть запущено", owner_id,
+                "быть запущено",
+                owner_id,
             )
             return
 

@@ -32,6 +32,8 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     finally:
         await test_bot.session.close()
 
-    await db.save_mirror(owner_id, encrypt_token(token), me.id, me.username, int(time.time()))
+    await db.save_mirror(
+        owner_id, encrypt_token(token), me.id, me.username, int(time.time())
+    )
     await mirror_manager.start_mirror(owner_id, token)
     return me.username

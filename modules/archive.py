@@ -84,7 +84,9 @@ async def _send_deleted_media(bot, chat_id, entry, locale):
     file = BufferedInputFile(bytes(data), filename=f"deleted_{kind}")
     caption = t(_MEDIA_LABEL_KEYS.get(kind, "archive.media_placeholder"), locale)
     try:
-        await getattr(bot, method_name)(chat_id=chat_id, caption=caption, **{kwarg: file})
+        await getattr(bot, method_name)(
+            chat_id=chat_id, caption=caption, **{kwarg: file}
+        )
     except Exception:
         pass
 
