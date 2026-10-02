@@ -115,7 +115,9 @@ async def mirror_webhook(
     try:
         await mirror_dispatcher.feed_webhook_update(mirror_bot, data, owner_id=owner_id)
     except Exception:
-        logger.exception("Не удалось обработать апдейт зеркала owner_id=%s: %s", owner_id, data)
+        logger.exception(
+            "Не удалось обработать апдейт зеркала owner_id=%s: %s", owner_id, data
+        )
     return Response(status_code=200)
 
 

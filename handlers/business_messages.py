@@ -5,7 +5,7 @@ from aiogram.types import Message
 
 from core import database as db
 from core.context import CommandContext
-from core.media import extract_history_media
+from core.media import extract_history_media, rescue_via_reply
 from core.registry import registry
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
@@ -33,6 +33,13 @@ async def on_business_message(message: Message, bot: Bot):
     media_type, media_data = (None, None)
     if "archive" not in disabled:
         media_type, media_data = await extract_history_media(bot, message)
+
+    if "archive" not in disabled and media_type is None and text_for_history is None:
+        rescued = await rescue_via_reply(
+            bot, connection["connection_id"], message.chat.id, message.message_id
+        )
+        if rescued and rescued[0] is not None:
+            media_type, media_data = rescued
 
     if text_for_history is not None or media_type is not None:
         await db.save_history(
