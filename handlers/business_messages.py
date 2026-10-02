@@ -5,7 +5,7 @@ from aiogram.types import Message
 
 from core import database as db
 from core.context import CommandContext
-from core.media import extract_history_media, rescue_via_reply
+from core.media import extract_history_media, extract_media_from_reply
 from core.registry import registry
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
@@ -34,12 +34,25 @@ async def on_business_message(message: Message, bot: Bot):
     if "archive" not in disabled:
         media_type, media_data = await extract_history_media(bot, message)
 
-    if "archive" not in disabled and media_type is None and text_for_history is None:
-        rescued = await rescue_via_reply(
-            bot, connection["connection_id"], message.chat.id, message.message_id
+    if "archive" not in disabled and is_owner and message.reply_to_message is not None:
+        existing = await db.get_history_entry(
+            connection["connection_id"],
+            message.chat.id,
+            message.reply_to_message.message_id,
         )
-        if rescued and rescued[0] is not None:
-            media_type, media_data = rescued
+        if existing is None:
+            rescued_type, rescued_data = await extract_media_from_reply(bot, message)
+            if rescued_type is not None:
+                await db.save_history(
+                    connection["connection_id"],
+                    message.chat.id,
+                    message.reply_to_message.message_id,
+                    False,
+                    None,
+                    int(message.reply_to_message.date.timestamp()),
+                    media_type=rescued_type,
+                    media_data=rescued_data,
+                )
 
     if text_for_history is not None or media_type is not None:
         await db.save_history(

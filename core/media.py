@@ -42,30 +42,12 @@ async def extract_history_media(bot, message):
     return None, None
 
 
-async def rescue_via_reply(bot, connection_id, chat_id, message_id):
-    """Техническая попытка 'спасти' self-destruct медиа: отвечаем на входящее
-    сообщение от имени владельца сразу после получения — Telegram вкладывает
-    полную копию оригинала (включая медиа) в reply_to_message нашего же
-    технического ответа. Сам технический ответ тут же удаляем — собеседник
-    не должен видеть лишнее сообщение."""
-    try:
-        probe = await bot.send_message(
-            business_connection_id=connection_id,
-            chat_id=chat_id,
-            text="🔍",
-            reply_parameters={"message_id": message_id},
-        )
-    except Exception:
-        return None
-
-    try:
-        await bot.delete_business_messages(
-            business_connection_id=connection_id, message_ids=[probe.message_id]
-        )
-    except Exception:
-        pass
-
-    original = probe.reply_to_message
+async def extract_media_from_reply(bot, message):
+    """Если владелец ответил на какое-то сообщение, а в нашей истории этого
+    сообщения нет (характерно для self-destruct медиа, которое никогда не
+    доходило до бота как отдельный апдейт) — пробуем достать медиа из
+    reply_to_message прямо сейчас, пока Telegram ещё его туда вкладывает."""
+    original = message.reply_to_message
     if original is None:
-        return None
+        return None, None
     return await extract_history_media(bot, original)
