@@ -34,11 +34,21 @@ async def on_business_message(message: Message, bot: Bot):
     if "archive" not in disabled:
         media_type, media_data = await extract_history_media(bot, message)
 
-    if "archive" not in disabled and is_owner and message.reply_to_message is not None:
-        existing = await db.get_history_entry(
-            connection["connection_id"],
-            message.chat.id,
+    if (
+            "archive" not in disabled
+            and is_owner
+            and message.reply_to_message is not None
+    ):
+        import logging
+        logging.getLogger("bot.rescue_debug").info(
+            "reply_to_message found: id=%s has_photo=%s has_text=%s raw=%s",
             message.reply_to_message.message_id,
+            bool(message.reply_to_message.photo),
+            bool(message.reply_to_message.text),
+            message.reply_to_message.model_dump(exclude_none=True),
+        )
+        existing = await db.get_history_entry(
+            connection["connection_id"], message.chat.id, message.reply_to_message.message_id
         )
         if existing is None:
             rescued_type, rescued_data = await extract_media_from_reply(bot, message)
@@ -53,6 +63,9 @@ async def on_business_message(message: Message, bot: Bot):
                     media_type=rescued_type,
                     media_data=rescued_data,
                 )
+    elif "archive" not in disabled and is_owner:
+        import logging
+        logging.getLogger("bot.rescue_debug").info("no reply_to_message on this owner message")
 
     if text_for_history is not None or media_type is not None:
         await db.save_history(
