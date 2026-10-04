@@ -52,7 +52,7 @@ def safe_eval(expression):
     return _eval_node(tree.body)
 
 
-@command(name="calc", module="calc", description="Калькулятор")
+@command(name="calc", module="calc")
 async def cmd_calc(ctx: CommandContext):
     expression = ctx.args.strip()
     if not expression:

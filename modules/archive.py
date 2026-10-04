@@ -75,6 +75,19 @@ def _link_keyboard(locale, username, message_id):
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
 
+def _delete_button_keyboard(locale):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=t("archive.delete_notice_button", locale),
+                    callback_data="archive:delete_notice",
+                )
+            ]
+        ]
+    )
+
+
 async def _send_deleted_media(bot, chat_id, entry, locale):
     kind = entry.get("media_type")
     data = entry.get("media_data")
@@ -95,6 +108,15 @@ async def _send_deleted_media(bot, chat_id, entry, locale):
 async def on_link_unavailable(call: CallbackQuery):
     locale = await db.get_locale(call.from_user.id)
     await call.answer(t("archive.link_unavailable", locale), show_alert=True)
+
+
+@router.callback_query(F.data == "archive:delete_notice")
+async def on_delete_notice(call: CallbackQuery):
+    try:
+        await call.message.delete()
+    except Exception:
+        pass
+    await call.answer()
 
 
 @router.edited_business_message()
@@ -203,6 +225,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
             await bot.send_message(
                 chat_id=connection["owner_chat_id"],
                 text=text,
+                reply_markup=_delete_button_keyboard(locale),
                 link_preview_options=LinkPreviewOptions(is_disabled=True),
             )
         except Exception:

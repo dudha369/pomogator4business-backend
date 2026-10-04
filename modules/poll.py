@@ -6,7 +6,7 @@ from core.registry import command
 _MAX_OPTIONS = 10
 
 
-@command(name="poll", module="poll", description="Создаёт опрос")
+@command(name="poll", module="poll")
 async def cmd_poll(ctx: CommandContext):
     raw = ctx.args.strip()
     parts = [p.strip() for p in raw.split("|") if p.strip()]

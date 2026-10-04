@@ -22,7 +22,6 @@ async def _fire(bot, connection_id, chat_id, seconds, text):
 @command(
     name="timer",
     module="timer",
-    description="Отправляет сообщение через заданное время",
 )
 async def cmd_timer(ctx: CommandContext):
     parts = ctx.args.split(maxsplit=1)

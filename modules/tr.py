@@ -6,7 +6,7 @@ from core.context import CommandContext
 from core.registry import command
 
 
-@command(name="tr", module="tr", description="Переводит текст на нужный язык")
+@command(name="tr", module="tr")
 async def cmd_tr(ctx: CommandContext):
     parts = ctx.args.split(maxsplit=1)
     if len(parts) < 2:

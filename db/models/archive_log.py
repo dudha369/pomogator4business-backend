@@ -37,3 +37,12 @@ async def get_recent_archive(connection_id, limit):
         .limit(limit)
         .values()
     )
+
+
+async def get_archive_page(connection_id, before_id, limit):
+    query = ArchiveLog.filter(connection_id=connection_id)
+    if before_id is not None:
+        query = query.filter(log_id__lt=before_id)
+    rows = await query.order_by("-log_id").limit(limit + 1).values()
+    has_more = len(rows) > limit
+    return rows[:limit], has_more

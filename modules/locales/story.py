@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "story.usage_reply": "Ответьте командой .story на фото.",
     "story.autopost_toggled": "Автопостинг историй {status}.",
@@ -7,6 +5,14 @@ RU = {
     "story.status_off": "выключен — /story будет присылать файлы вам в ЛС",
     "cmddesc.story": "Разрезает фото на части: публикует как Истории или присылает файлы в ЛС (см. /storyautopost)",
     "cmddesc.storyautopost": "Переключает: публиковать /story сразу или присылать файлы в ЛС",
+    "cmdmeta.story.title": "Разрезание фото",
+    "cmdmeta.story.short": "Разрезает фото на части: публикует как Истории или присылает файлы в ЛС (см. /storyautopost)",
+    "cmdmeta.story.long": "Режет фото на 3, 6 или 9 частей для мозаики в Историях. В зависимости от /storyautopost — публикует их сразу как Истории по порядку, либо присылает файлы вам в ЛС.",
+    "cmdmeta.story.usage": ".story [3|6|9] (ответом на фото)",
+    "cmdmeta.storyautopost.title": "Автопостинг Историй",
+    "cmdmeta.storyautopost.short": "Переключает: публиковать /story сразу или присылать файлы в ЛС",
+    "cmdmeta.storyautopost.long": "Переключатель режима работы .story — автоматическая публикация как Историй по порядку или просто отправка файлов владельцу.",
+    "cmdmeta.storyautopost.usage": ".storyautopost",
 }
 
 EN = {
@@ -16,6 +22,14 @@ EN = {
     "story.status_off": "off — /story will DM you the files instead",
     "cmddesc.story": "Splits a photo into pieces: posts as Stories or DMs you the files (see /storyautopost)",
     "cmddesc.storyautopost": "Toggles whether /story publishes immediately or DMs you the files",
+    "cmdmeta.story.title": "Photo splitting",
+    "cmdmeta.story.short": "Splits a photo into pieces: posts as Stories or DMs you the files (see /storyautopost)",
+    "cmdmeta.story.long": "Cuts a photo into 3, 6 or 9 pieces for a Stories mosaic. Depending on /storyautopost — posts them right away as Stories in order, or sends you the files in a DM.",
+    "cmdmeta.story.usage": ".story [3|6|9] (as a reply to a photo)",
+    "cmdmeta.storyautopost.title": "Story autoposting",
+    "cmdmeta.storyautopost.short": "Toggles whether /story publishes immediately or DMs you the files",
+    "cmdmeta.storyautopost.long": "Toggles how .story behaves — automatic posting as Stories in order, or just sending the files to the owner.",
+    "cmdmeta.storyautopost.usage": ".storyautopost",
 }
 
 UK = {
@@ -25,4 +39,12 @@ UK = {
     "story.status_off": "вимкнено — /story надсилатиме файли вам в ОС",
     "cmddesc.story": "Розрізає фото на частини: публікує як Історії або надсилає файли в ОС (див. /storyautopost)",
     "cmddesc.storyautopost": "Перемикає: публікувати /story одразу чи надсилати файли в ОС",
+    "cmdmeta.story.title": "Розрізання фото",
+    "cmdmeta.story.short": "Розрізає фото на частини: публікує як Історії або надсилає файли в ОС (див. /storyautopost)",
+    "cmdmeta.story.long": "Ріже фото на 3, 6 або 9 частин для мозаїки в Історіях. Залежно від /storyautopost — публікує їх одразу як Історії по порядку, або надсилає файли вам в ОС.",
+    "cmdmeta.story.usage": ".story [3|6|9] (у відповідь на фото)",
+    "cmdmeta.storyautopost.title": "Автопостинг Історій",
+    "cmdmeta.storyautopost.short": "Перемикає: публікувати /story одразу чи надсилати файли в ОС",
+    "cmdmeta.storyautopost.long": "Перемикач режиму роботи .story — автоматична публікація як Історій по порядку або просто надсилання файлів власнику.",
+    "cmdmeta.storyautopost.usage": ".storyautopost",
 }

@@ -16,7 +16,6 @@ def _chunks(items, size):
     name="panic",
     aliases=["del"],
     module="panic",
-    description="Удаляет последние N сообщений в чате",
 )
 async def cmd_panic(ctx: CommandContext):
     parts = ctx.args.split()

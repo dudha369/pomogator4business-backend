@@ -9,7 +9,6 @@ class Command:
     module: str
     aliases: list = field(default_factory=list)
     owner_only: bool = True
-    description: str = ""
 
 
 class CommandRegistry:
@@ -36,7 +35,7 @@ class CommandRegistry:
 registry = CommandRegistry()
 
 
-def command(name, aliases=None, module=None, owner_only=True, description=""):
+def command(name, aliases=None, module=None, owner_only=True):
     def decorator(func):
         registry.register(
             Command(
@@ -45,7 +44,6 @@ def command(name, aliases=None, module=None, owner_only=True, description=""):
                 module=module or name,
                 aliases=aliases or [],
                 owner_only=owner_only,
-                description=description,
             )
         )
         return func

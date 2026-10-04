@@ -1,4 +1,8 @@
-from db.models.archive_log import get_recent_archive, log_archive_event
+from db.models.archive_log import (
+    get_archive_page,
+    get_recent_archive,
+    log_archive_event,
+)
 from db.models.checkers import get_chk_game, save_chk_game
 from db.models.city import get_city_game, save_city_game
 from db.models.clock import (
@@ -97,7 +101,7 @@ __all__ = [
     "get_ms_game",
     "get_mute",
     "get_profile_backup",
-    "get_recent_archive",
+    "get_archive_page" "get_recent_archive",
     "get_recent_history",
     "get_timezone_offset",
     "get_timezone_offsets_for",

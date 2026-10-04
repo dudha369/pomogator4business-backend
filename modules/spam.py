@@ -16,7 +16,6 @@ _DELAY = 0.35
 @command(
     name="spam",
     module="spam",
-    description="Отправляет несколько одинаковых сообщений подряд (лимит без зеркала — 100)",
 )
 async def cmd_spam(ctx: CommandContext):
     parts = ctx.args.split(maxsplit=1)

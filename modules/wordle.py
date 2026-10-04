@@ -66,9 +66,7 @@ def _render_board(locale, secret_length, guesses, status, secret):
     return "\n".join(lines)
 
 
-@command(
-    name="word", module="wordle", description="Начинает игру Wordle", owner_only=False
-)
+@command(name="word", module="wordle", owner_only=False)
 async def cmd_word(ctx):
     raw = ctx.args.strip().upper()
     if raw:

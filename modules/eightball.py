@@ -6,7 +6,7 @@ from core.registry import command
 _ANSWER_COUNT = 12
 
 
-@command(name="8ball", module="eightball", description="Магический шар")
+@command(name="8ball", module="eightball")
 async def cmd_8ball(ctx: CommandContext):
     args = ctx.args.strip()
 

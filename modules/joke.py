@@ -18,7 +18,6 @@ _JOKES = [
     name="joke",
     aliases=["анекдот"],
     module="joke",
-    description="Отправляет случайную шутку",
 )
 async def cmd_joke(ctx: CommandContext):
     joke = random.choice(_JOKES)

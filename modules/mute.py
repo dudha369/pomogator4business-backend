@@ -7,7 +7,7 @@ from core.self_actions import delete_own_messages
 from core import database as db
 
 
-@command(name="mute", module="mute", description="Мутит собеседника в этом чате")
+@command(name="mute", module="mute")
 async def cmd_mute(ctx: CommandContext):
     args = ctx.args.strip()
     existing = await db.get_mute(ctx.connection_id, ctx.chat_id)
@@ -31,7 +31,7 @@ async def cmd_mute(ctx: CommandContext):
     await ctx.edit_command_message(ctx.t("mute.enabled_for", time=args))
 
 
-@command(name="wmute", module="mute", description="Мутит после N сообщений собеседника")
+@command(name="wmute", module="mute")
 async def cmd_wmute(ctx: CommandContext):
     args = ctx.args.split()
 

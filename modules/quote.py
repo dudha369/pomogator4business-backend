@@ -8,6 +8,7 @@ from core.imaging import circular_crop, load_font, to_bytes, wrap_text
 from core.media import download_user_avatar
 from core.registry import command
 
+
 _WIDTH = 800
 _PADDING = 40
 _AVATAR_SIZE = 120
@@ -49,12 +50,7 @@ def render_quote(avatar_bytes, name, text):
     return to_bytes(canvas)
 
 
-@command(
-    name="quote",
-    aliases=["цитата"],
-    module="quote",
-    description="Создаёт графическую цитату",
-)
+@command(name="quote", aliases=["цитата"], module="quote")
 async def cmd_quote(ctx: CommandContext):
     target = ctx.message.reply_to_message
     if not target:

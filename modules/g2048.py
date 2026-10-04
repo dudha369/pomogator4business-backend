@@ -191,7 +191,7 @@ def _text(locale, score, status):
     return t("g2048.score", locale, score=score)
 
 
-@command(name="2048", module="g2048", description="2048", owner_only=False)
+@command(name="2048", module="g2048", owner_only=False)
 async def cmd_2048(ctx):
     board = new_board()
     await db.save_g2048_game(

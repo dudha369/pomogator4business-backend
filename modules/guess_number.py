@@ -7,7 +7,7 @@ from core.registry import command
 _DEFAULT_MAX = 100
 
 
-@command(name="guess", module="guess", description="Угадай число", owner_only=False)
+@command(name="guess", module="guess", owner_only=False)
 async def cmd_guess(ctx):
     raw = ctx.args.strip()
     game = await db.get_guess_game(ctx.connection_id, ctx.chat_id)

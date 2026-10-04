@@ -10,6 +10,10 @@ RU = {
     "ttt.challenge": "🎮 {name} приглашает сыграть в крестики-нолики!",
     "ttt.declined": "❌ Вызов отклонён.",
     "ttt.cant_accept_own": "Нельзя принять собственный вызов.",
+    "cmdmeta.ttt.title": "Крестики-нолики",
+    "cmdmeta.ttt.short": "Крестики-нолики",
+    "cmdmeta.ttt.long": "Запускает вызов на крестики-нолики в чате — собеседник может принять или отклонить приглашение кнопками под сообщением.",
+    "cmdmeta.ttt.usage": ".ttt",
 }
 
 EN = {
@@ -24,6 +28,10 @@ EN = {
     "ttt.challenge": "🎮 {name} challenges you to tic-tac-toe!",
     "ttt.declined": "❌ Challenge declined.",
     "ttt.cant_accept_own": "You can't accept your own challenge.",
+    "cmdmeta.ttt.title": "Tic-tac-toe",
+    "cmdmeta.ttt.short": "Tic-tac-toe",
+    "cmdmeta.ttt.long": "Sends a tic-tac-toe challenge in the chat — the other person can accept or decline with buttons under the message.",
+    "cmdmeta.ttt.usage": ".ttt",
 }
 
 UK = {
@@ -38,4 +46,8 @@ UK = {
     "ttt.challenge": "🎮 {name} запрошує зіграти у хрестики-нулики!",
     "ttt.declined": "❌ Виклик відхилено.",
     "ttt.cant_accept_own": "Не можна прийняти власний виклик.",
+    "cmdmeta.ttt.title": "Хрестики-нулики",
+    "cmdmeta.ttt.short": "Хрестики-нулики",
+    "cmdmeta.ttt.long": "Надсилає виклик на хрестики-нулики в чаті — співрозмовник може прийняти або відхилити запрошення кнопками під повідомленням.",
+    "cmdmeta.ttt.usage": ".ttt",
 }

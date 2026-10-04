@@ -8,6 +8,7 @@ from core.imaging import load_font, to_bytes, wrap_text
 from core.media import download_message_photo
 from core.registry import command
 
+
 _BORDER = 40
 _INNER_BORDER = 4
 _GAP = 30
@@ -81,12 +82,7 @@ def render_demotivator(image_bytes, title, subtitle):
     return to_bytes(canvas)
 
 
-@command(
-    name="dem",
-    aliases=["дем", "демотиватор"],
-    module="dem",
-    description="Создаёт демотиватор",
-)
+@command(name="dem", aliases=["дем", "демотиватор"], module="dem")
 async def cmd_dem(ctx: CommandContext):
     target = ctx.message.reply_to_message
     photo_source = target if target and target.photo else ctx.message

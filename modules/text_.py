@@ -34,7 +34,7 @@ def render_meme_text(image_bytes, text):
     return to_bytes(image)
 
 
-@command(name="text", module="text", description="Добавляет мемный текст на фото")
+@command(name="text", module="text")
 async def cmd_text(ctx: CommandContext):
     target = ctx.message.reply_to_message
     photo_source = target if target and target.photo else ctx.message

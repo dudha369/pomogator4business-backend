@@ -13,9 +13,7 @@ _FILTERS = {
 }
 
 
-@command(
-    name="voice", module="voice", description="Включает эффект деформации голоса для ГС"
-)
+@command(name="voice", module="voice")
 async def cmd_voice(ctx: CommandContext):
     effect = ctx.args.strip().lower()
 

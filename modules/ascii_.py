@@ -6,6 +6,7 @@ from core.context import CommandContext
 from core.media import download_message_photo, download_user_avatar
 from core.registry import command
 
+
 _BRAILLE_BASE = 0x2800
 _DOT_BITS = [
     (0, 0, 0x01),
@@ -53,7 +54,7 @@ def image_to_braille(image_bytes, columns=_COLUMNS, invert=False, edge=False):
     return "\n".join(rows_out)
 
 
-@command(name="ascii", module="ascii", description="Конвертирует фото в Braille-арт")
+@command(name="ascii", module="ascii")
 async def cmd_ascii(ctx: CommandContext):
     target = ctx.message.reply_to_message
     options = ctx.args.lower().split()

@@ -20,31 +20,31 @@ async def _send_dice(ctx: CommandContext, key):
     )
 
 
-@command(name="dice", module="dice", description="Бросает кубик")
+@command(name="dice", module="dice")
 async def cmd_dice(ctx: CommandContext):
     await _send_dice(ctx, "dice")
 
 
-@command(name="dart", module="dice", description="Бросает дротик")
+@command(name="dart", module="dice")
 async def cmd_dart(ctx: CommandContext):
     await _send_dice(ctx, "dart")
 
 
-@command(name="bball", module="dice", description="Бросает баскетбольный мяч")
+@command(name="bball", module="dice")
 async def cmd_bball(ctx: CommandContext):
     await _send_dice(ctx, "bball")
 
 
-@command(name="bowl", module="dice", description="Боулинг")
+@command(name="bowl", module="dice")
 async def cmd_bowl(ctx: CommandContext):
     await _send_dice(ctx, "bowl")
 
 
-@command(name="football", module="dice", description="Бьёт по мячу")
+@command(name="football", module="dice")
 async def cmd_football(ctx: CommandContext):
     await _send_dice(ctx, "football")
 
 
-@command(name="slot", module="dice", description="Крутит слот-машину")
+@command(name="slot", module="dice")
 async def cmd_slot(ctx: CommandContext):
     await _send_dice(ctx, "slot")

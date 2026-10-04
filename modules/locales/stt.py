@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "stt.usage": "Ответьте .stt на голосовое сообщение или видео-кружок.",
     "stt.too_long": "Сообщение длиннее {limit} секунд — слишком длинное для распознавания.",
@@ -7,6 +5,10 @@ RU = {
     "stt.failed": "Не удалось распознать речь.",
     "stt.empty": "Речь не распознана — возможно, сообщение слишком тихое или короткое.",
     "cmddesc.stt": "Распознаёт речь из ГС или видео-кружка",
+    "cmdmeta.stt.title": "Распознавание речи",
+    "cmdmeta.stt.short": "Распознаёт речь из ГС или видео-кружка",
+    "cmdmeta.stt.long": "Переводит голосовое сообщение или видео-кружок в текст (максимум 120 секунд). Работает только ответом на такое сообщение.",
+    "cmdmeta.stt.usage": ".stt (ответом на ГС или кружок)",
 }
 
 EN = {
@@ -16,6 +18,10 @@ EN = {
     "stt.failed": "Couldn't transcribe the audio.",
     "stt.empty": "No speech detected — the message might be too quiet or short.",
     "cmddesc.stt": "Transcribes speech from a voice message or video note",
+    "cmdmeta.stt.title": "Speech to text",
+    "cmdmeta.stt.short": "Transcribes speech from a voice message or video note",
+    "cmdmeta.stt.long": "Converts a voice message or video note into text (up to 120 seconds). Only works as a reply to such a message.",
+    "cmdmeta.stt.usage": ".stt (as a reply to a voice message or video note)",
 }
 
 UK = {
@@ -25,4 +31,8 @@ UK = {
     "stt.failed": "Не вдалося розпізнати мовлення.",
     "stt.empty": "Мовлення не розпізнано — можливо, повідомлення надто тихе або коротке.",
     "cmddesc.stt": "Розпізнає мовлення з ГС або відеогуртка",
+    "cmdmeta.stt.title": "Розпізнавання мовлення",
+    "cmdmeta.stt.short": "Розпізнає мовлення з ГС або відеогуртка",
+    "cmdmeta.stt.long": "Перетворює голосове повідомлення або відеогурток на текст (максимум 120 секунд). Працює лише у відповідь на таке повідомлення.",
+    "cmdmeta.stt.usage": ".stt (у відповідь на ГС або гурток)",
 }

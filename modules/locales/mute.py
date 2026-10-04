@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "mute.disabled": "🔊 Мут отключён.",
     "mute.enabled_forever": "🔇 Мут включён навсегда.",
@@ -11,6 +9,14 @@ RU = {
     "wmute.enabled_after": "⚠️ Мут после {count} сообщений включён.",
     "cmddesc.mute": "Мутит собеседника в этом чате",
     "cmddesc.wmute": "Мутит после N сообщений собеседника",
+    "cmdmeta.mute.title": "Мут",
+    "cmdmeta.mute.short": "Мутит собеседника в этом чате",
+    "cmdmeta.mute.long": "Удаляет все входящие сообщения собеседника в этом чате. Без аргумента — переключатель (вкл/выкл навсегда), с временем — мутит на заданный срок.",
+    "cmdmeta.mute.usage": ".mute [время, напр. 10m]",
+    "cmdmeta.wmute.title": "Мут после N сообщений",
+    "cmdmeta.wmute.short": "Мутит после N сообщений собеседника",
+    "cmdmeta.wmute.long": "Включает предупредительный мут: после указанного числа сообщений от собеседника включается обычный .mute, опционально на заданное время.",
+    "cmdmeta.wmute.usage": ".wmute [кол-во] [время]",
 }
 
 EN = {
@@ -24,6 +30,14 @@ EN = {
     "wmute.enabled_after": "⚠️ Mute after {count} messages enabled.",
     "cmddesc.mute": "Mutes the other person in this chat",
     "cmddesc.wmute": "Mutes after N messages from the other person",
+    "cmdmeta.mute.title": "Mute",
+    "cmdmeta.mute.short": "Mutes the other person in this chat",
+    "cmdmeta.mute.long": "Deletes all incoming messages from the other person in this chat. No argument toggles it permanently on/off; with a time it mutes for that duration.",
+    "cmdmeta.mute.usage": ".mute [time, e.g. 10m]",
+    "cmdmeta.wmute.title": "Mute after N messages",
+    "cmdmeta.wmute.short": "Mutes after N messages from the other person",
+    "cmdmeta.wmute.long": "Enables a warning mute: after the given number of messages from the other person, a regular .mute kicks in, optionally for a set duration.",
+    "cmdmeta.wmute.usage": ".wmute [count] [time]",
 }
 
 UK = {
@@ -37,4 +51,12 @@ UK = {
     "wmute.enabled_after": "⚠️ Мут після {count} повідомлень увімкнено.",
     "cmddesc.mute": "Мутить співрозмовника в цьому чаті",
     "cmddesc.wmute": "Мутить після N повідомлень співрозмовника",
+    "cmdmeta.mute.title": "Мут",
+    "cmdmeta.mute.short": "Мутить співрозмовника в цьому чаті",
+    "cmdmeta.mute.long": "Видаляє всі вхідні повідомлення співрозмовника в цьому чаті. Без аргументу — перемикач (увімк/вимк назавжди), з часом — мутить на заданий термін.",
+    "cmdmeta.mute.usage": ".mute [час, напр. 10m]",
+    "cmdmeta.wmute.title": "Мут після N повідомлень",
+    "cmdmeta.wmute.short": "Мутить після N повідомлень співрозмовника",
+    "cmdmeta.wmute.long": "Вмикає попереджувальний мут: після зазначеної кількості повідомлень від співрозмовника вмикається звичайний .mute, опціонально на заданий час.",
+    "cmdmeta.wmute.usage": ".wmute [кількість] [час]",
 }

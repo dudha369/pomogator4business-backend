@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "profile.usage_reply": "Ответьте .profile на сообщение собеседника.",
     "profile.copied": "Скопировано: {items}. Отменить — .restore",
@@ -11,6 +9,14 @@ RU = {
     "profile.item_avatar": "аватар",
     "cmddesc.profile": "Копирует аватар и био собеседника",
     "cmddesc.restore": "Возвращает профиль к состоянию до последнего .profile",
+    "cmdmeta.profile.title": "Копия профиля",
+    "cmdmeta.profile.short": "Копирует аватар и био собеседника",
+    "cmdmeta.profile.long": "Копирует био и фото собеседника на ваш бизнес-профиль, предварительно сохранив текущий профиль для восстановления через .restore.",
+    "cmdmeta.profile.usage": ".profile (ответом на сообщение собеседника)",
+    "cmdmeta.restore.title": "Восстановление профиля",
+    "cmdmeta.restore.short": "Возвращает профиль к состоянию до последнего .profile",
+    "cmdmeta.restore.long": "Восстанавливает био и фото профиля, сохранённые перед последним использованием .profile.",
+    "cmdmeta.restore.usage": ".restore",
 }
 
 EN = {
@@ -24,6 +30,14 @@ EN = {
     "profile.item_avatar": "avatar",
     "cmddesc.profile": "Copies the other person's avatar and bio",
     "cmddesc.restore": "Restores the profile to how it was before the last .profile",
+    "cmdmeta.profile.title": "Profile copy",
+    "cmdmeta.profile.short": "Copies the other person's avatar and bio",
+    "cmdmeta.profile.long": "Copies the other person's bio and photo onto your business profile, first backing up your current profile so it can be restored via .restore.",
+    "cmdmeta.profile.usage": ".profile (as a reply to a message from the other person)",
+    "cmdmeta.restore.title": "Profile restore",
+    "cmdmeta.restore.short": "Restores the profile to how it was before the last .profile",
+    "cmdmeta.restore.long": "Restores the bio and profile photo that were saved before the last use of .profile.",
+    "cmdmeta.restore.usage": ".restore",
 }
 
 UK = {
@@ -37,4 +51,12 @@ UK = {
     "profile.item_avatar": "аватар",
     "cmddesc.profile": "Копіює аватар і біо співрозмовника",
     "cmddesc.restore": "Повертає профіль до стану перед останнім .profile",
+    "cmdmeta.profile.title": "Копія профілю",
+    "cmdmeta.profile.short": "Копіює аватар і біо співрозмовника",
+    "cmdmeta.profile.long": "Копіює біо та фото співрозмовника на ваш бізнес-профіль, попередньо зберігши поточний профіль для відновлення через .restore.",
+    "cmdmeta.profile.usage": ".profile (у відповідь на повідомлення співрозмовника)",
+    "cmdmeta.restore.title": "Відновлення профілю",
+    "cmdmeta.restore.short": "Повертає профіль до стану перед останнім .profile",
+    "cmdmeta.restore.long": "Відновлює біо та фото профілю, збережені перед останнім використанням .profile.",
+    "cmdmeta.restore.usage": ".restore",
 }

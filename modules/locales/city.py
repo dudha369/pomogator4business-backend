@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "city.usage": "Формат: .city [город]\nПример: .city Москва",
     "city.started": "🏙 Игра в города началась!\n{city}\nСледующий город на букву: {letter}",
@@ -8,6 +6,10 @@ RU = {
     "city.wrong_letter": "Город должен начинаться на букву {letter}.",
     "city.accepted": "✅ {city}\nСледующий город на букву: {letter}",
     "cmddesc.city": "Игра в города",
+    "cmdmeta.city.title": "Города",
+    "cmdmeta.city.short": "Игра в города",
+    "cmdmeta.city.long": "Классическая игра в города — каждый следующий город должен начинаться на последнюю букву предыдущего. .city stop завершает игру.",
+    "cmdmeta.city.usage": ".city [город]",
 }
 
 EN = {
@@ -18,6 +20,10 @@ EN = {
     "city.wrong_letter": "The city must start with the letter {letter}.",
     "city.accepted": "✅ {city}\nNext city must start with: {letter}",
     "cmddesc.city": "City chain game",
+    "cmdmeta.city.title": "City chain",
+    "cmdmeta.city.short": "City chain game",
+    "cmdmeta.city.long": "Classic city-chain game — each next city must start with the last letter of the previous one. .city stop ends the game.",
+    "cmdmeta.city.usage": ".city [city name]",
 }
 
 UK = {
@@ -28,4 +34,8 @@ UK = {
     "city.wrong_letter": "Місто має починатися на літеру {letter}.",
     "city.accepted": "✅ {city}\nНаступне місто на літеру: {letter}",
     "cmddesc.city": "Гра в міста",
+    "cmdmeta.city.title": "Міста",
+    "cmdmeta.city.short": "Гра в міста",
+    "cmdmeta.city.long": "Класична гра в міста — кожне наступне місто має починатися на останню літеру попереднього. .city stop завершує гру.",
+    "cmdmeta.city.usage": ".city [місто]",
 }

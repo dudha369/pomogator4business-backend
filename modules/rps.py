@@ -25,12 +25,7 @@ def _keyboard():
     )
 
 
-@command(
-    name="rps",
-    module="rps",
-    description="Камень-ножницы-бумага против бота",
-    owner_only=False,
-)
+@command(name="rps", module="rps", owner_only=False)
 async def cmd_rps(ctx):
     await ctx.edit_command_message(
         t("rps.prompt", ctx.locale), reply_markup=_keyboard()

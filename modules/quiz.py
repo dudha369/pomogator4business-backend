@@ -57,7 +57,7 @@ def _keyboard(question_index, options):
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-@command(name="quiz", module="quiz", description="Викторина", owner_only=False)
+@command(name="quiz", module="quiz", owner_only=False)
 async def cmd_quiz(ctx: CommandContext):
     index = random.randrange(len(QUESTIONS))
     question, options, _correct = QUESTIONS[index]

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from api.account import router as account_router
+from api.archive import router as archive_router
 from api.commands import router as commands_router
 from api.emoji_status import router as emoji_status_router
 from api.locale import router as locale_router
@@ -16,4 +17,5 @@ def setup_routers() -> APIRouter:
     router.include_router(locale_router)
     router.include_router(account_router)
     router.include_router(mirror_router)
+    router.include_router(archive_router)
     return router

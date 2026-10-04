@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "check.not_configured": "Модуль проверки файлов не настроен (нет VT_API_KEY в .env).",
     "check.usage": "Ответьте командой .check на файл или архив.",
@@ -12,6 +10,10 @@ RU = {
     "check.no_threats": "✅ Угроз не обнаружено",
     "check.detections": "Обнаружений: {count}/{total}",
     "cmddesc.check": "Проверяет файл в VirusTotal",
+    "cmdmeta.check.title": "Проверка файла",
+    "cmdmeta.check.short": "Проверяет файл в VirusTotal",
+    "cmdmeta.check.long": "Сканирует присланный файл или архив через VirusTotal и присылает отчёт о найденных угрозах. Требует настройки VT_API_KEY на сервере.",
+    "cmdmeta.check.usage": ".check (ответом на файл)",
 }
 
 EN = {
@@ -26,6 +28,10 @@ EN = {
     "check.no_threats": "✅ No threats detected",
     "check.detections": "Detections: {count}/{total}",
     "cmddesc.check": "Checks a file on VirusTotal",
+    "cmdmeta.check.title": "File check",
+    "cmdmeta.check.short": "Checks a file on VirusTotal",
+    "cmdmeta.check.long": "Scans a sent file or archive via VirusTotal and reports any threats found. Requires VT_API_KEY configured on the server.",
+    "cmdmeta.check.usage": ".check (as a reply to a file)",
 }
 
 UK = {
@@ -40,4 +46,8 @@ UK = {
     "check.no_threats": "✅ Загроз не виявлено",
     "check.detections": "Виявлень: {count}/{total}",
     "cmddesc.check": "Перевіряє файл у VirusTotal",
+    "cmdmeta.check.title": "Перевірка файлу",
+    "cmdmeta.check.short": "Перевіряє файл у VirusTotal",
+    "cmdmeta.check.long": "Сканує надісланий файл або архів через VirusTotal і надсилає звіт про знайдені загрози. Потребує налаштування VT_API_KEY на сервері.",
+    "cmdmeta.check.usage": ".check (у відповідь на файл)",
 }

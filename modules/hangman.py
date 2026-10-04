@@ -108,7 +108,7 @@ async def _handle_guess(ctx, game, letter):
     )
 
 
-@command(name="hangman", module="hangman", description="Виселица", owner_only=False)
+@command(name="hangman", module="hangman", owner_only=False)
 async def cmd_hangman(ctx):
     raw = ctx.args.strip()
     game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)

@@ -257,7 +257,7 @@ def _build_text(locale, game, winner, forced_continue=False):
     return header + "\n\n" + status
 
 
-@command(name="chk", module="chk", description="Шашки", owner_only=False)
+@command(name="chk", module="chk", owner_only=False)
 async def cmd_chk(ctx):
     starter_name = ctx.message.from_user.full_name if ctx.message.from_user else "White"
 

@@ -10,6 +10,7 @@ from core.imaging import load_font, to_bytes, to_sepia, wrap_text
 from core.media import download_message_photo, download_user_avatar
 from core.registry import command
 
+
 _CANVAS_SIZE = (900, 1200)
 _PHOTO_SIZE = 640
 
@@ -111,12 +112,7 @@ def render_wanted(image_bytes, name, charge):
     return to_bytes(canvas)
 
 
-@command(
-    name="wanted",
-    aliases=["розыск"],
-    module="wanted",
-    description="Создаёт постер в розыск",
-)
+@command(name="wanted", aliases=["розыск"], module="wanted")
 async def cmd_wanted(ctx: CommandContext):
     target = ctx.message.reply_to_message
     charge = ctx.args.strip() or ctx.t("wanted.default_charge")

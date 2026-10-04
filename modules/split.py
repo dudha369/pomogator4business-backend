@@ -10,7 +10,6 @@ _MAX_PARTS = 40
 @command(
     name="split",
     module="split",
-    description="Отправляет предложение по словам или слово по буквам",
 )
 async def cmd_split(ctx: CommandContext):
     if not ctx.args.strip():

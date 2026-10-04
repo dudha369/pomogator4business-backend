@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "hangman.title": "🎪 Виселица",
     "hangman.guessed": "Использованные буквы: {letters}",
@@ -9,6 +7,10 @@ RU = {
     "hangman.already_guessed": "Эта буква уже была использована.",
     "hangman.invalid_word": "Слово слишком короткое. Минимум 3 буквы.",
     "cmddesc.hangman": "Виселица",
+    "cmdmeta.hangman.title": "Виселица",
+    "cmdmeta.hangman.short": "Виселица",
+    "cmdmeta.hangman.long": "Загадывает слово — угадывайте буквы командой .hangman [буква]. Можно задать своё слово аргументом при старте.",
+    "cmdmeta.hangman.usage": ".hangman [слово]",
 }
 
 EN = {
@@ -20,6 +22,10 @@ EN = {
     "hangman.already_guessed": "That letter was already used.",
     "hangman.invalid_word": "That word is too short. Minimum 3 letters.",
     "cmddesc.hangman": "Hangman",
+    "cmdmeta.hangman.title": "Hangman",
+    "cmdmeta.hangman.short": "Hangman",
+    "cmdmeta.hangman.long": "Picks a word to guess — guess letters with .hangman [letter]. You can set a custom word as an argument when starting.",
+    "cmdmeta.hangman.usage": ".hangman [word]",
 }
 
 UK = {
@@ -31,4 +37,8 @@ UK = {
     "hangman.already_guessed": "Ця літера вже використана.",
     "hangman.invalid_word": "Слово надто коротке. Мінімум 3 літери.",
     "cmddesc.hangman": "Шибениця",
+    "cmdmeta.hangman.title": "Шибениця",
+    "cmdmeta.hangman.short": "Шибениця",
+    "cmdmeta.hangman.long": "Загадує слово — вгадуйте літери командою .hangman [літера]. Можна задати своє слово аргументом під час старту.",
+    "cmdmeta.hangman.usage": ".hangman [слово]",
 }

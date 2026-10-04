@@ -13,7 +13,7 @@ def _extract_target(message):
     return None, None
 
 
-@command(name="stt", module="stt", description="Распознаёт речь из ГС или видео-кружка")
+@command(name="stt", module="stt")
 async def cmd_stt(ctx: CommandContext):
     target = ctx.message.reply_to_message
     file_id, duration = _extract_target(target) if target else (None, None)

@@ -71,7 +71,7 @@ def switch_layout(text: str) -> str:
     return "".join(result)
 
 
-@command(name="sw", module="sw", description="Переключает раскладку в сообщении")
+@command(name="sw", module="sw")
 async def cmd_sw(ctx: CommandContext):
     target = ctx.message.reply_to_message
 

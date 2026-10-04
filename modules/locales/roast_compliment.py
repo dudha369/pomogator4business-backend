@@ -23,6 +23,14 @@ RU = {
     "compliment.line_10": "Ты справляешься с трудностями с таким достоинством, что это вдохновляет.",
     "cmddesc.compliment": "Генерирует комплимент",
     "cmddesc.roast": "Генерирует дружеский подкол",
+    "cmdmeta.roast.title": "Подкол",
+    "cmdmeta.roast.short": "Генерирует дружеский подкол",
+    "cmdmeta.roast.long": "Присылает случайную дружескую шутливую подколку из заготовленного набора.",
+    "cmdmeta.roast.usage": ".roast",
+    "cmdmeta.compliment.title": "Комплимент",
+    "cmdmeta.compliment.short": "Генерирует комплимент",
+    "cmdmeta.compliment.long": "Присылает случайный тёплый комплимент из заготовленного набора.",
+    "cmdmeta.compliment.usage": ".compliment",
 }
 
 EN = {
@@ -48,6 +56,14 @@ EN = {
     "compliment.line_10": "You handle hard things with a grace that's honestly inspiring.",
     "cmddesc.compliment": "Generates a compliment",
     "cmddesc.roast": "Generates a friendly roast",
+    "cmdmeta.roast.title": "Roast",
+    "cmdmeta.roast.short": "Generates a friendly roast",
+    "cmdmeta.roast.long": "Sends a random friendly joking roast from a built-in set.",
+    "cmdmeta.roast.usage": ".roast",
+    "cmdmeta.compliment.title": "Compliment",
+    "cmdmeta.compliment.short": "Generates a compliment",
+    "cmdmeta.compliment.long": "Sends a random warm compliment from a built-in set.",
+    "cmdmeta.compliment.usage": ".compliment",
 }
 
 UK = {
@@ -73,4 +89,12 @@ UK = {
     "compliment.line_10": "Ти справляєшся з труднощами з такою гідністю, що це надихає.",
     "cmddesc.compliment": "Генерує комплімент",
     "cmddesc.roast": "Генерує дружній підкол",
+    "cmdmeta.roast.title": "Підкол",
+    "cmdmeta.roast.short": "Генерує дружній підкол",
+    "cmdmeta.roast.long": "Надсилає випадковий дружній жартівливий підкол із заготовленого набору.",
+    "cmdmeta.roast.usage": ".roast",
+    "cmdmeta.compliment.title": "Комплімент",
+    "cmdmeta.compliment.short": "Генерує комплімент",
+    "cmdmeta.compliment.long": "Надсилає випадковий теплий комплімент із заготовленого набору.",
+    "cmdmeta.compliment.usage": ".compliment",
 }

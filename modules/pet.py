@@ -57,7 +57,7 @@ def render_pet(avatar_bytes):
     return buffer.getvalue()
 
 
-@command(name="pet", aliases=["погладить"], module="pet", description="Гладит аватарку")
+@command(name="pet", aliases=["погладить"], module="pet")
 async def cmd_pet(ctx: CommandContext):
     target = ctx.message.reply_to_message
 

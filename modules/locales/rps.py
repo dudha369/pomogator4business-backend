@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "rps.prompt": "🪨✂️📄 Камень, ножницы или бумага?",
     "rps.result": "Вы: {player}  Бот: {bot}\n\n{result}",
@@ -7,6 +5,10 @@ RU = {
     "rps.lose": "😔 Вы проиграли.",
     "rps.draw": "🤝 Ничья!",
     "cmddesc.rps": "Камень-ножницы-бумага против бота",
+    "cmdmeta.rps.title": "Камень-ножницы-бумага",
+    "cmdmeta.rps.short": "Камень-ножницы-бумага против бота",
+    "cmdmeta.rps.long": "Простая игра против бота — выбирайте камень, ножницы или бумагу кнопками.",
+    "cmdmeta.rps.usage": ".rps",
 }
 
 EN = {
@@ -16,6 +18,10 @@ EN = {
     "rps.lose": "😔 You lose.",
     "rps.draw": "🤝 Draw!",
     "cmddesc.rps": "Rock-paper-scissors against the bot",
+    "cmdmeta.rps.title": "Rock-paper-scissors",
+    "cmdmeta.rps.short": "Rock-paper-scissors against the bot",
+    "cmdmeta.rps.long": "A simple game against the bot — pick rock, paper or scissors with buttons.",
+    "cmdmeta.rps.usage": ".rps",
 }
 
 UK = {
@@ -25,4 +31,8 @@ UK = {
     "rps.lose": "😔 Ви програли.",
     "rps.draw": "🤝 Нічия!",
     "cmddesc.rps": "Камінь-ножиці-папір проти бота",
+    "cmdmeta.rps.title": "Камінь-ножиці-папір",
+    "cmdmeta.rps.short": "Камінь-ножиці-папір проти бота",
+    "cmdmeta.rps.long": "Проста гра проти бота — обирайте камінь, ножиці або папір кнопками.",
+    "cmdmeta.rps.usage": ".rps",
 }

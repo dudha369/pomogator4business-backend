@@ -14,6 +14,10 @@ RU = {
     "chk.cant_accept_own": "Нельзя принять собственный вызов.",
     "chk.must_continue": "Эта шашка должна продолжить бить — выберите один из доступных прыжков.",
     "chk.must_capture_elsewhere": "На доске есть обязательное взятие — нужно бить.",
+    "cmdmeta.chk.title": "Шашки",
+    "cmdmeta.chk.short": "Шашки",
+    "cmdmeta.chk.long": "Запускает вызов на русские шашки с обязательным взятием и серией боёв одной шашкой. Собеседник принимает или отклоняет вызов кнопками.",
+    "cmdmeta.chk.usage": ".chk",
 }
 
 EN = {
@@ -32,6 +36,10 @@ EN = {
     "chk.cant_accept_own": "You can't accept your own challenge.",
     "chk.must_continue": "This piece must keep capturing — pick one of the available jumps.",
     "chk.must_capture_elsewhere": "A capture is mandatory somewhere on the board — you must take it.",
+    "cmdmeta.chk.title": "Checkers",
+    "cmdmeta.chk.short": "Checkers",
+    "cmdmeta.chk.long": "Sends a Russian-rules checkers challenge with mandatory captures and multi-jump combos. The other person accepts or declines with buttons.",
+    "cmdmeta.chk.usage": ".chk",
 }
 
 UK = {
@@ -50,4 +58,8 @@ UK = {
     "chk.cant_accept_own": "Не можна прийняти власний виклик.",
     "chk.must_continue": "Ця шашка має продовжити бити — оберіть один з доступних стрибків.",
     "chk.must_capture_elsewhere": "На дошці є обов'язкове взяття — потрібно бити.",
+    "cmdmeta.chk.title": "Шашки",
+    "cmdmeta.chk.short": "Шашки",
+    "cmdmeta.chk.long": "Надсилає виклик на шашки за російськими правилами з обов'язковим взяттям і серією боїв однією шашкою. Співрозмовник приймає або відхиляє виклик кнопками.",
+    "cmdmeta.chk.usage": ".chk",
 }

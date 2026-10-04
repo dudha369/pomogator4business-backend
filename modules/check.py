@@ -85,7 +85,7 @@ def _format_report(ctx, stats, sha256):
     return f"{verdict}\n{detections}\nhttps://www.virustotal.com/gui/file/{sha256}"
 
 
-@command(name="check", module="check", description="Проверяет файл в VirusTotal")
+@command(name="check", module="check")
 async def cmd_check(ctx: CommandContext):
     if not settings.VT_API_KEY:
         await ctx.reply(ctx.t("check.not_configured"))

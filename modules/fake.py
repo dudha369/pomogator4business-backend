@@ -8,6 +8,7 @@ from core.imaging import circular_crop, load_font, to_bytes, wrap_text
 from core.media import download_user_avatar
 from core.registry import command
 
+
 _WIDTH = 800
 _PADDING = 36
 _AVATAR_SIZE = 90
@@ -56,12 +57,7 @@ def render_fake_card(avatar_bytes, name, handle, text, watermark):
     return to_bytes(canvas)
 
 
-@command(
-    name="fake",
-    aliases=["фейк", "твит"],
-    module="fake",
-    description="Создаёт шаблон карточки поста",
-)
+@command(name="fake", aliases=["фейк", "твит"], module="fake")
 async def cmd_fake(ctx: CommandContext):
     target = ctx.message.reply_to_message
     raw = ctx.args.strip()

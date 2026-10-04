@@ -20,7 +20,6 @@ async def _get_bio(bot, user_id):
     name="profile",
     aliases=["профиль"],
     module="profile",
-    description="Копирует аватар и био собеседника",
 )
 async def cmd_profile(ctx: CommandContext):
     target = ctx.message.reply_to_message
@@ -75,7 +74,6 @@ async def cmd_profile(ctx: CommandContext):
     name="restore",
     aliases=["восстановить"],
     module="profile",
-    description="Возвращает профиль к состоянию до последнего .profile",
 )
 async def cmd_restore(ctx: CommandContext):
     backup = await db.get_profile_backup(ctx.connection_id)

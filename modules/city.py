@@ -19,7 +19,7 @@ def is_valid_city_text(word):
     return all(ch.isalpha() or ch in " -" for ch in word)
 
 
-@command(name="city", module="city", description="Игра в города", owner_only=False)
+@command(name="city", module="city", owner_only=False)
 async def cmd_city(ctx):
     raw = ctx.args.strip()
 

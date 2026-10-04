@@ -20,7 +20,6 @@ _GRID = {
 _ACTIVE_PERIOD = 86400
 _POST_DELAY = 1.0
 
-# Ровно то, что требует Telegram для Историй (1080x1920, 9:16).
 _TILE_W = 1080
 _TILE_H = 1920
 _BLUR_RADIUS = 40
@@ -109,7 +108,6 @@ async def _post_all(bot, connection_id, tiles):
 @command(
     name="story",
     module="story",
-    description="Разрезает фото на части: /storyautopost вкл — публикует как Истории по порядку, выкл — присылает файлы владельцу в ЛС",
 )
 async def cmd_story(ctx: CommandContext):
     target = ctx.message.reply_to_message
@@ -147,7 +145,6 @@ async def cmd_story(ctx: CommandContext):
 @command(
     name="storyautopost",
     module="story",
-    description="Переключает: /story публикует сразу как Истории, или просто присылает файлы владельцу в ЛС",
 )
 async def cmd_storyautopost(ctx: CommandContext):
     enabled = await db.toggle_autopost(ctx.connection_id)

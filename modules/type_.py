@@ -90,7 +90,7 @@ async def handle_type_trigger(bot, message, connection, trigger):
     await typewriter(bot, connection, message.chat.id, text, cursor, message.message_id)
 
 
-@command(name="type", module="type", description="Печатает текст с анимацией")
+@command(name="type", module="type")
 async def cmd_type(ctx: CommandContext):
     if not ctx.args:
         return

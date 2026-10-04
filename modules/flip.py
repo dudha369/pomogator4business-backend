@@ -5,7 +5,7 @@ from core.context import CommandContext
 from core.registry import command
 
 
-@command(name="flip", module="flip", description="Подбрасывает монетку")
+@command(name="flip", module="flip")
 async def cmd_flip(ctx: CommandContext):
     await ctx.edit_command_message(
         '<tg-emoji emoji-id="5920267974043766795">🪙</tg-emoji>',

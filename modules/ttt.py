@@ -105,7 +105,7 @@ def _build_text(locale, game, winner):
     return t("ttt.header", locale, x_name=x_name, o_name=o_name) + "\n\n" + status
 
 
-@command(name="ttt", module="ttt", description="Крестики-нолики", owner_only=False)
+@command(name="ttt", module="ttt", owner_only=False)
 async def cmd_ttt(ctx):
     starter_name = ctx.message.from_user.full_name if ctx.message.from_user else "X"
 

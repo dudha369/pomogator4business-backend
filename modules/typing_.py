@@ -34,9 +34,7 @@ async def _keep_action(bot, connection_id, chat_id, action, seconds):
         elapsed += wait
 
 
-@command(
-    name="typing", module="typing", description="Имитирует набор текста / запись медиа"
-)
+@command(name="typing", module="typing")
 async def cmd_typing(ctx: CommandContext):
     parts = ctx.args.split()
     if not parts:

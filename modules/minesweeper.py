@@ -182,7 +182,7 @@ def _game_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-@command(name="ms", module="ms", description="Сапёр", owner_only=False)
+@command(name="ms", module="ms", owner_only=False)
 async def cmd_ms(ctx):
     starter_name = ctx.message.from_user.full_name if ctx.message.from_user else "?"
 

@@ -13,15 +13,15 @@ async def list_commands(locale: str = "ru"):
     result = []
     for module_name, commands in sorted(registry.modules().items()):
         for cmd in commands:
-            description = t(f"cmddesc.{cmd.name}", locale)
-            if description == f"cmddesc.{cmd.name}":
-                description = cmd.description
             result.append(
                 {
                     "module": module_name,
                     "name": cmd.name,
                     "aliases": cmd.aliases,
-                    "description": description,
+                    "title": t(f"cmdmeta.{cmd.name}.title", locale),
+                    "description": t(f"cmdmeta.{cmd.name}.short", locale),
+                    "long_description": t(f"cmdmeta.{cmd.name}.long", locale),
+                    "usage": t(f"cmdmeta.{cmd.name}.usage", locale),
                     "owner_only": cmd.owner_only,
                 }
             )

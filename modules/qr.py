@@ -14,7 +14,7 @@ def render_qr(text):
     return buffer.getvalue()
 
 
-@command(name="qr", module="qr", description="Генерирует QR-код")
+@command(name="qr", module="qr")
 async def cmd_qr(ctx: CommandContext):
     text = ctx.args.strip()
     if not text:

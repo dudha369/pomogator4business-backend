@@ -8,7 +8,7 @@ _ROAST_COUNT = 10
 _COMPLIMENT_COUNT = 10
 
 
-@command(name="roast", module="roast", description="Генерирует дружеский подкол")
+@command(name="roast", module="roast")
 async def cmd_roast(ctx: CommandContext):
     index = random.randint(1, _ROAST_COUNT)
     text = ctx.t(f"roast.line_{index}")
@@ -17,7 +17,7 @@ async def cmd_roast(ctx: CommandContext):
     )
 
 
-@command(name="compliment", module="compliment", description="Генерирует комплимент")
+@command(name="compliment", module="compliment")
 async def cmd_compliment(ctx: CommandContext):
     index = random.randint(1, _COMPLIMENT_COUNT)
     text = ctx.t(f"compliment.line_{index}")

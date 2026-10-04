@@ -17,7 +17,6 @@ async def _explode(bot, connection_id, chat_id, message_id, seconds):
     name="bomb",
     aliases=["timerdel"],
     module="bomb",
-    description="Отправляет самоудаляющееся сообщение или ставит таймер на удаление ответа",
 )
 async def cmd_bomb(ctx: CommandContext):
     target = ctx.message.reply_to_message
