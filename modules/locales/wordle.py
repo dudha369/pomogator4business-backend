@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "wordle.title": "🔠 Игра Wordle",
     "wordle.subtitle": "Угадай слово из {length} букв за 6 попыток:",
@@ -11,7 +9,6 @@ RU = {
     "wordle.won": "🏆 Угадано!",
     "wordle.lost": "😔 Попытки закончились. Слово было: {secret}",
     "wordle.invalid_word": "Слово слишком короткое. Минимум 3 буквы.",
-    "cmddesc.word": "Начинает игру Wordle",
     "cmdmeta.word.title": "Wordle",
     "cmdmeta.word.short": "Начинает игру Wordle",
     "cmdmeta.word.long": "Загадывает случайное слово (или своё, если указать аргументом) — угадывайте, отправляя слова той же длины обычными сообщениями, 6 попыток.",
@@ -29,7 +26,6 @@ EN = {
     "wordle.won": "🏆 Guessed it!",
     "wordle.lost": "😔 Out of attempts. The word was: {secret}",
     "wordle.invalid_word": "That word is too short. Minimum 3 letters.",
-    "cmddesc.word": "Starts a Wordle game",
     "cmdmeta.word.title": "Wordle",
     "cmdmeta.word.short": "Starts a Wordle game",
     "cmdmeta.word.long": "Picks a random word (or a custom one if given as an argument) — guess it by sending words of the same length as regular messages, 6 tries.",
@@ -47,7 +43,6 @@ UK = {
     "wordle.won": "🏆 Вгадано!",
     "wordle.lost": "😔 Спроби закінчились. Слово було: {secret}",
     "wordle.invalid_word": "Слово надто коротке. Мінімум 3 літери.",
-    "cmddesc.word": "Починає гру Wordle",
     "cmdmeta.word.title": "Wordle",
     "cmdmeta.word.short": "Починає гру Wordle",
     "cmdmeta.word.long": "Загадує випадкове слово (або своє, якщо вказати аргументом) — вгадуйте, надсилаючи слова тієї ж довжини звичайними повідомленнями, 6 спроб.",

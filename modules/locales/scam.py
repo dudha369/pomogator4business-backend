@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "scam.new_contact": "👤 Новый собеседник: {name}",
     "scam.id_label": "ID: {id}",

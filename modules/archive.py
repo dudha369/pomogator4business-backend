@@ -69,8 +69,8 @@ def _link_keyboard(locale, username, message_id):
     else:
         button = InlineKeyboardButton(
             text=label,
-            callback_data="archive:link_unavailable",
             icon_custom_emoji_id="5260730055880876557",
+            callback_data="archive:link_unavailable",
         )
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
@@ -81,6 +81,7 @@ def _delete_button_keyboard(locale):
             [
                 InlineKeyboardButton(
                     text=t("archive.delete_notice_button", locale),
+                    icon_custom_emoji_id="5258130763148172425",
                     callback_data="archive:delete_notice",
                 )
             ]

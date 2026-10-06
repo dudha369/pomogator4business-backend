@@ -1,5 +1,4 @@
 RU = {
-    "cmddesc.plove": "Печатает текст в окружении сердечек",
     "cmdmeta.plove.title": "Сердечки",
     "cmdmeta.plove.short": "Печатает текст в окружении сердечек",
     "cmdmeta.plove.long": "Печатает текст с анимацией, окружённый сердечками с двух сторон.",
@@ -7,7 +6,6 @@ RU = {
 }
 
 EN = {
-    "cmddesc.plove": "Types out text surrounded by hearts",
     "cmdmeta.plove.title": "Hearts",
     "cmdmeta.plove.short": "Types out text surrounded by hearts",
     "cmdmeta.plove.long": "Animated typing of text surrounded by hearts on both sides.",
@@ -15,7 +13,6 @@ EN = {
 }
 
 UK = {
-    "cmddesc.plove": "Друкує текст в оточенні сердечок",
     "cmdmeta.plove.title": "Сердечка",
     "cmdmeta.plove.short": "Друкує текст в оточенні сердечок",
     "cmdmeta.plove.long": "Анімовано друкує текст, оточений сердечками з обох боків.",

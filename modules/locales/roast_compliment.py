@@ -1,5 +1,3 @@
-"""Автоматически сгенерировано scripts/split_locales.py."""
-
 RU = {
     "roast.line_1": "Ты как Wi-Fi без пароля - все подключаются, но никто не остаётся надолго.",
     "roast.line_2": "Твоя реакция на жизнь как у Internet Explorer - загружается очень долго.",
@@ -21,8 +19,6 @@ RU = {
     "compliment.line_8": "Ты из тех, на кого можно положиться в любой момент.",
     "compliment.line_9": "Твоё чувство юмора реально спасает даже самые тяжёлые дни.",
     "compliment.line_10": "Ты справляешься с трудностями с таким достоинством, что это вдохновляет.",
-    "cmddesc.compliment": "Генерирует комплимент",
-    "cmddesc.roast": "Генерирует дружеский подкол",
     "cmdmeta.roast.title": "Подкол",
     "cmdmeta.roast.short": "Генерирует дружеский подкол",
     "cmdmeta.roast.long": "Присылает случайную дружескую шутливую подколку из заготовленного набора.",
@@ -54,8 +50,6 @@ EN = {
     "compliment.line_8": "You're the kind of person others can count on, no matter what.",
     "compliment.line_9": "Your sense of humor genuinely saves even the roughest days.",
     "compliment.line_10": "You handle hard things with a grace that's honestly inspiring.",
-    "cmddesc.compliment": "Generates a compliment",
-    "cmddesc.roast": "Generates a friendly roast",
     "cmdmeta.roast.title": "Roast",
     "cmdmeta.roast.short": "Generates a friendly roast",
     "cmdmeta.roast.long": "Sends a random friendly joking roast from a built-in set.",
@@ -87,8 +81,6 @@ UK = {
     "compliment.line_8": "Ти з тих, на кого можна покластися будь-якої миті.",
     "compliment.line_9": "Твоє почуття гумору реально рятує навіть найважчі дні.",
     "compliment.line_10": "Ти справляєшся з труднощами з такою гідністю, що це надихає.",
-    "cmddesc.compliment": "Генерує комплімент",
-    "cmddesc.roast": "Генерує дружній підкол",
     "cmdmeta.roast.title": "Підкол",
     "cmdmeta.roast.short": "Генерує дружній підкол",
     "cmdmeta.roast.long": "Надсилає випадковий дружній жартівливий підкол із заготовленого набору.",

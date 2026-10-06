@@ -13,7 +13,9 @@ def webapp_keyboard(button_text: str) -> InlineKeyboardMarkup | None:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=button_text, web_app=WebAppInfo(url=settings.WEBAPP_URL)
+                    text=button_text,
+                    icon_custom_emoji_id="5260233433107407649",
+                    web_app=WebAppInfo(url=settings.WEBAPP_URL),
                 )
             ]
         ]
