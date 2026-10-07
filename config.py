@@ -70,6 +70,7 @@ TORTOISE_ORM = {
                 "db.models.module_settings",
                 "db.models.echo",
                 "db.models.message_log",
+                "db.models.autoresponder",
                 "db.models.mute",
                 "db.models.story",
                 "db.models.known_chat",

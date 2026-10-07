@@ -26,6 +26,13 @@ from db.models.emoji_status import (
     set_emoji_status_enabled,
     set_emoji_status_granted,
 )
+from db.models.autoresponder import (
+    get_autoresponder_settings,
+    upsert_autoresponder_settings,
+    list_keyword_replies,
+    add_keyword_reply,
+    delete_keyword_reply,
+)
 from db.models.g2048 import get_g2048_game, save_g2048_game
 from db.models.guess import get_guess_game, save_guess_game
 from db.models.hangman import get_hangman_game, save_hangman_game
