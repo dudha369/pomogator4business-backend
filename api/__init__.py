@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-from api import autoresponder
 from api.locale import router as locale_router
 from api.mirror import router as mirror_router
 from api.emoji_status import router as emoji_status_router
@@ -10,6 +9,7 @@ from api.settings import router as settings_router
 from api.account import router as account_router
 from api.archive import router as archive_router
 from api.avatar import router as avatar_router
+from api.chat_info import router as chat_info_router
 
 
 def setup_routers() -> APIRouter:
@@ -24,5 +24,6 @@ def setup_routers() -> APIRouter:
     router.include_router(account_router)
     router.include_router(archive_router)
     router.include_router(avatar_router)
+    router.include_router(chat_info_router)
 
     return router

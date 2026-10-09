@@ -1,4 +1,5 @@
 import asyncio
+import hmac
 import logging
 from contextlib import asynccontextmanager
 
@@ -38,14 +39,19 @@ async def lifespan(app: FastAPI):
     await Tortoise.init(config=TORTOISE_ORM, _enable_global_fallback=True)
 
     if settings.WEBHOOK_URL:
-        await bot.set_webhook(
-            url=settings.WEBHOOK_URL,
-            secret_token=settings.WEBHOOK_SECRET,
-            drop_pending_updates=True,
-            allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
-        )
+        try:
+            await bot.set_webhook(
+                url=settings.WEBHOOK_URL,
+                secret_token=settings.WEBHOOK_SECRET,
+                drop_pending_updates=True,
+                allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
+            )
+        except Exception:
+            # Временная ошибка Telegram API не должна ронять весь сервис
+            # (включая мини-приложение и /health) на старте.
+            logger.exception("Не удалось установить вебхук %s", settings.WEBHOOK_URL)
     else:
-        logging.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
+        logger.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
 
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
 
@@ -84,7 +90,9 @@ async def telegram_webhook(
     request: Request,
     x_telegram_bot_api_secret_token: str = Header(default=None),
 ):
-    if x_telegram_bot_api_secret_token != settings.WEBHOOK_SECRET:
+    if not x_telegram_bot_api_secret_token or not hmac.compare_digest(
+        x_telegram_bot_api_secret_token, settings.WEBHOOK_SECRET
+    ):
         raise HTTPException(status_code=401, detail="Invalid secret token")
 
     data = await request.json()

@@ -29,5 +29,5 @@ async def get_avatar(target_user_id: int, user: dict = Depends(require_user)):
     return Response(
         content=avatar_bytes,
         media_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={"Cache-Control": "private, max-age=3600"},
     )

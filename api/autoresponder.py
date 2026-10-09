@@ -40,7 +40,14 @@ class AutoresponderUpdate(BaseModel):
 async def update_settings(
     payload: AutoresponderUpdate, user: dict = Depends(require_user)
 ):
-    fields = {k: v for k, v in payload.model_dump().items() if v is not None}
+    # model_fields_set — чтобы можно было явно сбросить поле в null
+    # (например, очистить расписание), а не только менять на непустое значение.
+    fields = {
+        k: v for k, v in payload.model_dump().items() if k in payload.model_fields_set
+    }
+    for key in ("greeting_enabled", "away_enabled", "auto_read_enabled"):
+        if key in fields and fields[key] is None:
+            del fields[key]
     await db.upsert_autoresponder_settings(user["id"], **fields)
     return await get_settings(user=user)
 

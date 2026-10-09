@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Awaitable, Callable
+from typing import TYPE_CHECKING, Awaitable, Callable
+
+if TYPE_CHECKING:
+    from core.context import CommandContext
 
 
 @dataclass

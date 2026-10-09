@@ -31,6 +31,15 @@ async def log_archive_event(
     )
 
 
+async def get_recent_archive(connection_id, limit):
+    return (
+        await ArchiveLog.filter(connection_id=connection_id)
+        .order_by("-log_id")
+        .limit(limit)
+        .values()
+    )
+
+
 async def get_archive_page(
     connection_id,
     before_id,

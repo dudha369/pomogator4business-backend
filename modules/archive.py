@@ -1,3 +1,4 @@
+import logging
 import time
 from difflib import SequenceMatcher
 from html import escape
@@ -18,8 +19,16 @@ from core.i18n import t
 from core.registry import registry
 from core.self_actions import consume_self_delete
 
+logger = logging.getLogger("bot.archive")
 router = Router(name="archive")
 registry.register_passive_module("archive")
+
+_MEDIA_SEND = {
+    "photo": ("send_photo", "photo"),
+    "video": ("send_video", "video"),
+    "voice": ("send_voice", "voice"),
+    "video_note": ("send_video_note", "video_note"),
+}
 
 _MEDIA_LABEL_KEYS = {
     "photo": "archive.media_photo",
@@ -94,15 +103,23 @@ async def _send_deleted_media(bot, chat_id, entry, locale):
     data = entry.get("media_data")
     if not kind or not data:
         return
-    method_name, kwarg = _MEDIA_SEND[kind]
+    spec = _MEDIA_SEND.get(kind)
+    if spec is None:
+        return
+    method_name, kwarg = spec
     file = BufferedInputFile(bytes(data), filename=f"deleted_{kind}")
     caption = t(_MEDIA_LABEL_KEYS.get(kind, "archive.media_placeholder"), locale)
     try:
-        await getattr(bot, method_name)(
-            chat_id=chat_id, caption=caption, **{kwarg: file}
-        )
+        if kind == "video_note":
+            # send_video_note не поддерживает caption — подпись шлём отдельным сообщением
+            await bot.send_video_note(chat_id=chat_id, video_note=file)
+            await bot.send_message(chat_id=chat_id, text=caption)
+        else:
+            await getattr(bot, method_name)(
+                chat_id=chat_id, caption=caption, **{kwarg: file}
+            )
     except Exception:
-        pass
+        logger.exception("Не удалось отправить сохранённое медиа (%s)", kind)
 
 
 @router.callback_query(F.data == "archive:link_unavailable")

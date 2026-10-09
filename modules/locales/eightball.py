@@ -12,10 +12,10 @@ RU = {
     "eightball.answer_11": 'Знаки говорят "да"',
     "eightball.answer_12": "Даже не думай",
     "eightball.usage": "Формат: .8ball [вопрос]\nПример: .8ball Стоит ли мне это делать?",
-    "cmdmeta.eightball.title": "Магический шар",
-    "cmdmeta.eightball.short": "Магический шар",
-    "cmdmeta.eightball.long": "Задайте вопрос — шар даст один из 12 случайных ответов в стиле классического Magic 8-ball.",
-    "cmdmeta.eightball.usage": ".8ball [вопрос]",
+    "cmdmeta.8ball.title": "Магический шар",
+    "cmdmeta.8ball.short": "Магический шар",
+    "cmdmeta.8ball.long": "Задайте вопрос — шар даст один из 12 случайных ответов в стиле классического Magic 8-ball.",
+    "cmdmeta.8ball.usage": ".8ball [вопрос]",
 }
 
 EN = {
@@ -32,10 +32,10 @@ EN = {
     "eightball.answer_11": "Signs point to yes",
     "eightball.answer_12": "Don't count on it",
     "eightball.usage": "Format: .8ball [question]\nExample: .8ball Should I do this?",
-    "cmdmeta.eightball.title": "Magic 8-ball",
-    "cmdmeta.eightball.short": "Magic 8-ball",
-    "cmdmeta.eightball.long": "Ask a question — the ball gives one of 12 random answers in the classic Magic 8-ball style.",
-    "cmdmeta.eightball.usage": ".8ball [question]",
+    "cmdmeta.8ball.title": "Magic 8-ball",
+    "cmdmeta.8ball.short": "Magic 8-ball",
+    "cmdmeta.8ball.long": "Ask a question — the ball gives one of 12 random answers in the classic Magic 8-ball style.",
+    "cmdmeta.8ball.usage": ".8ball [question]",
 }
 
 UK = {
@@ -52,8 +52,8 @@ UK = {
     "eightball.answer_11": 'Знаки кажуть "так"',
     "eightball.answer_12": "Навіть не думай",
     "eightball.usage": "Формат: .8ball [питання]\nПриклад: .8ball Чи варто мені це робити?",
-    "cmdmeta.eightball.title": "Магічна куля",
-    "cmdmeta.eightball.short": "Магічна куля",
-    "cmdmeta.eightball.long": "Поставте питання — куля дасть одну з 12 випадкових відповідей у стилі класичної Magic 8-ball.",
-    "cmdmeta.eightball.usage": ".8ball [питання]",
+    "cmdmeta.8ball.title": "Магічна куля",
+    "cmdmeta.8ball.short": "Магічна куля",
+    "cmdmeta.8ball.long": "Поставте питання — куля дасть одну з 12 випадкових відповідей у стилі класичної Magic 8-ball.",
+    "cmdmeta.8ball.usage": ".8ball [питання]",
 }

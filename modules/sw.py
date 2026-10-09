@@ -97,5 +97,4 @@ async def cmd_sw(ctx: CommandContext):
         if ctx.args:
             await ctx.edit_command_message(switch_layout(ctx.args))
         else:
-            await ctx.delete_command_message()
             await ctx.usage_error(ctx.t("sw.usage"))

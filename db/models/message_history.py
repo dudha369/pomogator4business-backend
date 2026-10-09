@@ -84,6 +84,15 @@ async def get_recent_history(connection_id, chat_id, limit):
         await MessageHistory.filter(connection_id=connection_id, chat_id=chat_id)
         .order_by("-created_at")
         .limit(limit)
-        .values()
+        .values(
+            "id",
+            "connection_id",
+            "chat_id",
+            "message_id",
+            "is_owner",
+            "text",
+            "media_type",
+            "created_at",
+        )
     )
     return list(reversed(rows))

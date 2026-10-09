@@ -81,6 +81,11 @@ from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
 __all__ = [
+    "add_keyword_reply",
+    "delete_keyword_reply",
+    "get_autoresponder_settings",
+    "list_keyword_replies",
+    "upsert_autoresponder_settings",
     "activate_from_warn",
     "bump_warn_count",
     "clear_mute",

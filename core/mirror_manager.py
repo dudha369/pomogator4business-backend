@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 import logging
 
 from aiogram import Bot, Dispatcher
@@ -48,7 +49,11 @@ class MirrorManager:
 
     def verify_secret(self, owner_id, secret_token):
         expected = self._secrets.get(owner_id)
-        return expected is not None and secret_token == expected
+        return (
+            expected is not None
+            and secret_token is not None
+            and hmac.compare_digest(secret_token, expected)
+        )
 
     async def start_mirror(self, owner_id, token):
         if owner_id in self._bots:
@@ -103,8 +108,15 @@ class MirrorManager:
     async def start_all(self):
         mirrors = await db.get_all_active_mirrors()
         for row in mirrors:
-            token = decrypt_token(row["token_encrypted"])
-            await self.start_mirror(row["owner_id"], token)
+            # Одно битое зеркало (например, после смены BOT_TOKEN токен уже
+            # не расшифровывается) не должно валить запуск всего приложения.
+            try:
+                token = decrypt_token(row["token_encrypted"])
+                await self.start_mirror(row["owner_id"], token)
+            except Exception:
+                logger.exception(
+                    "Не удалось запустить зеркало owner_id=%s", row["owner_id"]
+                )
 
     async def stop_all(self):
         """Закрывает только локальные HTTP-сессии — вебхуки на стороне

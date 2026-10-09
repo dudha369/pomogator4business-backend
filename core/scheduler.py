@@ -51,7 +51,7 @@ async def emoji_clock_tick(bot):
             except Exception:
                 pass
         except Exception:
-            pass
+            logger.exception("Не удалось обновить эмодзи-статус owner_id=%s", owner_id)
 
 
 async def run_emoji_clock(bot):
@@ -62,4 +62,4 @@ async def run_emoji_clock(bot):
         try:
             await emoji_clock_tick(bot)
         except Exception:
-            pass
+            logger.exception("Сбой тика эмодзи-часов")
