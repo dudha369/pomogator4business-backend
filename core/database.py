@@ -2,6 +2,20 @@ from db.models.archive_log import (
     get_archive_page,
     get_recent_archive,
     log_archive_event,
+    purge_archive,
+)
+from db.models.command_alias import (
+    add_command_alias,
+    count_command_aliases,
+    delete_command_alias,
+    get_command_alias,
+    list_command_aliases,
+)
+from db.models.favorite_chat import (
+    is_favorite_chat,
+    list_favorite_chat_ids,
+    set_favorite_chat,
+    toggle_favorite_chat,
 )
 from db.models.checkers import get_chk_game, save_chk_game
 from db.models.city import get_city_game, save_city_game
@@ -38,14 +52,21 @@ from db.models.guess import get_guess_game, save_guess_game
 from db.models.hangman import get_hangman_game, save_hangman_game
 from db.models.known_chat import is_known_chat, mark_known_chat
 from db.models.message_history import (
+    count_messages_since,
     delete_history,
+    expire_history_media,
     get_history_entry,
+    get_history_media,
     get_history_text,
     get_recent_history,
     has_other_messages,
+    list_last_incoming_by_chat,
+    list_recent_chats,
+    list_media_flags,
+    purge_history,
     save_history,
 )
-from db.models.message_log import log_message, pop_recent_message_ids
+from db.models.message_log import log_message, pop_recent_message_ids, trim_message_log
 from db.models.minesweeper import get_ms_game, save_ms_game
 from db.models.mirror_bot import (
     delete_mirror,
@@ -81,6 +102,24 @@ from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
 __all__ = [
+    "list_recent_chats",
+    "add_command_alias",
+    "count_command_aliases",
+    "count_messages_since",
+    "delete_command_alias",
+    "expire_history_media",
+    "get_command_alias",
+    "get_history_media",
+    "is_favorite_chat",
+    "list_command_aliases",
+    "list_favorite_chat_ids",
+    "list_last_incoming_by_chat",
+    "list_media_flags",
+    "purge_archive",
+    "purge_history",
+    "set_favorite_chat",
+    "toggle_favorite_chat",
+    "trim_message_log",
     "add_keyword_reply",
     "delete_keyword_reply",
     "get_autoresponder_settings",

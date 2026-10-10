@@ -11,6 +11,7 @@ from aiogram.types import (
 from core.context import CommandContext
 from core.registry import command
 from core import database as db
+from core.utils import log_suppressed
 
 _GRID = {
     3: (3, 1),
@@ -101,7 +102,7 @@ async def _post_all(bot, connection_id, tiles):
         try:
             await _post_tile(bot, connection_id, tile_bytes)
         except Exception:
-            pass
+            log_suppressed("modules/story.py:103")
         await asyncio.sleep(_POST_DELAY)
 
 
@@ -139,7 +140,7 @@ async def cmd_story(ctx: CommandContext):
             media=media,
         )
     except Exception:
-        pass
+        log_suppressed("modules/story.py:141")
 
 
 @command(

@@ -12,6 +12,9 @@ class Command:
     module: str
     aliases: list = field(default_factory=list)
     owner_only: bool = True
+    # где команда работает: "chat" — в бизнес-чатах (по умолчанию),
+    # "bot" — только в личке с ботом, "both" — и там и там
+    scope: str = "chat"
 
 
 class CommandRegistry:
@@ -38,7 +41,7 @@ class CommandRegistry:
 registry = CommandRegistry()
 
 
-def command(name, aliases=None, module=None, owner_only=True):
+def command(name, aliases=None, module=None, owner_only=True, scope="chat"):
     def decorator(func):
         registry.register(
             Command(
@@ -47,6 +50,7 @@ def command(name, aliases=None, module=None, owner_only=True):
                 module=module or name,
                 aliases=aliases or [],
                 owner_only=owner_only,
+                scope=scope,
             )
         )
         return func

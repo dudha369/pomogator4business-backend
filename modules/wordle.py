@@ -6,6 +6,7 @@ from core.i18n import t
 from core.registry import command
 from core.self_actions import delete_own_messages
 from modules.wordle_dictionary import WORDS
+from core.utils import log_suppressed
 
 _MAX_ATTEMPTS = 6
 _CIRCLES = {"green": "🟢", "blue": "🔵", "red": "🔴"}
@@ -145,6 +146,6 @@ async def handle_wordle_guess(bot, connection, message, locale, raw_guess):
                 connection["connection_id"], message.chat.id, message_id=sent.message_id
             )
     except Exception:
-        pass
+        log_suppressed("modules/wordle.py:147", benign=True)
 
     return True

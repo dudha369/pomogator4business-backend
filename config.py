@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     WEBHOOK_BASE_URL: str = ""
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
+    # Очистка старых данных (0 — не очищать). См. core/retention.py
+    MEDIA_RETENTION_DAYS: int = 14
+    HISTORY_RETENTION_DAYS: int = 90
+    ARCHIVE_RETENTION_DAYS: int = 0
+    MESSAGE_LOG_KEEP: int = 20000
+
+    # Документация API (/docs, /openapi.json) — только для разработки
+    ENABLE_DOCS: bool = False
+
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
 
@@ -74,6 +83,8 @@ TORTOISE_ORM = {
                 "db.models.mute",
                 "db.models.story",
                 "db.models.known_chat",
+                "db.models.favorite_chat",
+                "db.models.command_alias",
                 "db.models.message_history",
                 "db.models.archive_log",
                 "db.models.profile_backup",

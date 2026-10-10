@@ -9,6 +9,7 @@ from config import settings
 from core import database as db
 from core.crypto import decrypt_token
 from mirror.router import router as mirror_router
+from core.utils import log_suppressed
 
 logger = logging.getLogger("bot.mirror")
 
@@ -84,7 +85,7 @@ class MirrorManager:
             try:
                 await bot.session.close()
             except Exception:
-                pass
+                log_suppressed("core/mirror_manager.py:86", benign=True)
             return
 
         self._bots[owner_id] = bot
@@ -99,11 +100,11 @@ class MirrorManager:
         try:
             await bot.delete_webhook()
         except Exception:
-            pass
+            log_suppressed("core/mirror_manager.py:101", benign=True)
         try:
             await bot.session.close()
         except Exception:
-            pass
+            log_suppressed("core/mirror_manager.py:105", benign=True)
 
     async def start_all(self):
         mirrors = await db.get_all_active_mirrors()
@@ -130,7 +131,7 @@ class MirrorManager:
                 try:
                     await bot.session.close()
                 except Exception:
-                    pass
+                    log_suppressed("core/mirror_manager.py:132", benign=True)
 
 
 mirror_manager = MirrorManager()

@@ -3,6 +3,7 @@ from aiogram.types import Message
 from core.i18n import t
 from core.registry import registry
 from core import database as db
+from core.utils import log_suppressed
 
 registry.register_passive_module("scam")
 
@@ -99,4 +100,4 @@ async def handle_new_contact(bot, connection, message: Message):
     try:
         await bot.send_message(chat_id=connection["owner_chat_id"], text=text)
     except Exception:
-        pass
+        log_suppressed("modules/scam.py:101")

@@ -13,6 +13,7 @@ from config import TORTOISE_ORM, settings
 from core.loader import load_modules
 from core.logging_config import configure_logging
 from core.mirror_manager import mirror_dispatcher, mirror_manager
+from core.retention import run_retention_loop
 from core.scheduler import run_emoji_clock
 
 logger = logging.getLogger("bot.webhook")
@@ -54,6 +55,7 @@ async def lifespan(app: FastAPI):
         logger.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
 
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
+    _background_tasks.append(asyncio.create_task(run_retention_loop()))
 
     await mirror_manager.start_all()
 
@@ -72,7 +74,12 @@ async def lifespan(app: FastAPI):
     await Tortoise.close_connections()
 
 
-app = FastAPI(lifespan=lifespan)
+_docs_kwargs = (
+    {}
+    if settings.ENABLE_DOCS
+    else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+)
+app = FastAPI(lifespan=lifespan, **_docs_kwargs)
 
 if settings.CORS_ORIGINS:
     app.add_middleware(

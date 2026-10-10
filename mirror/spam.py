@@ -5,6 +5,7 @@ from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import Message
 
 from core.spam_control import clamp, is_spam_active, start_spam, stop_spam
+from core.utils import log_suppressed
 
 router = Router(name="mirror_spam")
 
@@ -18,7 +19,7 @@ async def _notify_owner(bot: Bot, owner_id: int, text: str) -> None:
     try:
         await bot.send_message(chat_id=owner_id, text=text)
     except Exception:
-        pass
+        log_suppressed("mirror/spam.py:20")
 
 
 def _clamp_notice(requested: int, count: int) -> str:

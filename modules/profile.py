@@ -1,3 +1,4 @@
+import logging
 import time
 
 from aiogram.types import BufferedInputFile, InputProfilePhotoStatic
@@ -7,12 +8,15 @@ from core.media import download_user_avatar
 from core.registry import command
 from core import database as db
 
+logger = logging.getLogger("bot.profile")
+
 
 async def _get_bio(bot, user_id):
     try:
         chat_info = await bot.get_chat(user_id)
         return getattr(chat_info, "bio", None)
     except Exception:
+        logger.warning("Не удалось получить био пользователя %s", user_id, exc_info=True)
         return None
 
 
@@ -31,8 +35,14 @@ async def cmd_profile(ctx: CommandContext):
 
     current_bio = await _get_bio(ctx.bot, owner_id)
     current_photo = await download_user_avatar(ctx.bot, owner_id)
+    owner = ctx.message.from_user  # команду пишет владелец — это его текущее имя
     await db.save_profile_backup(
-        ctx.connection_id, current_bio, current_photo, int(time.time())
+        ctx.connection_id,
+        current_bio,
+        current_photo,
+        int(time.time()),
+        first_name=owner.first_name if owner else None,
+        last_name=owner.last_name if owner else None,
     )
 
     target_user_id = target.from_user.id
@@ -41,6 +51,18 @@ async def cmd_profile(ctx: CommandContext):
 
     applied = []
 
+    # Имя: username не копируем — он уникален. Копируем имя и фамилию.
+    if target.from_user.first_name:
+        try:
+            await ctx.bot.set_business_account_name(
+                business_connection_id=ctx.connection_id,
+                first_name=target.from_user.first_name,
+                last_name=target.from_user.last_name,
+            )
+            applied.append(ctx.t("profile.item_name"))
+        except Exception:
+            logger.warning("Не удалось скопировать имя", exc_info=True)
+
     if target_bio is not None:
         try:
             await ctx.bot.set_business_account_bio(
@@ -48,7 +70,7 @@ async def cmd_profile(ctx: CommandContext):
             )
             applied.append(ctx.t("profile.item_bio"))
         except Exception:
-            pass
+            logger.warning("Не удалось скопировать био", exc_info=True)
 
     if target_photo:
         try:
@@ -60,7 +82,7 @@ async def cmd_profile(ctx: CommandContext):
             )
             applied.append(ctx.t("profile.item_avatar"))
         except Exception:
-            pass
+            logger.warning("Не удалось скопировать аватар", exc_info=True)
 
     if applied:
         await ctx.edit_command_message(
@@ -83,6 +105,17 @@ async def cmd_restore(ctx: CommandContext):
 
     restored = []
 
+    if backup.get("first_name"):
+        try:
+            await ctx.bot.set_business_account_name(
+                business_connection_id=ctx.connection_id,
+                first_name=backup["first_name"],
+                last_name=backup.get("last_name"),
+            )
+            restored.append(ctx.t("profile.item_name"))
+        except Exception:
+            logger.warning("Не удалось восстановить имя", exc_info=True)
+
     if backup["bio"] is not None:
         try:
             await ctx.bot.set_business_account_bio(
@@ -90,7 +123,7 @@ async def cmd_restore(ctx: CommandContext):
             )
             restored.append(ctx.t("profile.item_bio"))
         except Exception:
-            pass
+            logger.warning("Не удалось восстановить био", exc_info=True)
 
     if backup["photo_data"]:
         try:
@@ -102,7 +135,7 @@ async def cmd_restore(ctx: CommandContext):
             )
             restored.append(ctx.t("profile.item_avatar"))
         except Exception:
-            pass
+            logger.warning("Не удалось восстановить аватар", exc_info=True)
 
     if restored:
         await ctx.edit_command_message(

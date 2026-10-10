@@ -1,4 +1,5 @@
 import time
+from core.utils import log_suppressed
 
 _TTL_SECONDS = 30
 _pending: dict[tuple[str, int, int], float] = {}
@@ -46,4 +47,4 @@ async def delete_own_messages(
             message_ids=message_ids,
         )
     except Exception:
-        pass
+        log_suppressed("core/self_actions.py:48", benign=True)

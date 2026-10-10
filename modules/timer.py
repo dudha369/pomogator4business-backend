@@ -3,6 +3,7 @@ import asyncio
 from core.context import CommandContext
 from core.registry import command
 from core.utils import parse_duration
+from core.utils import log_suppressed
 
 _MAX_SECONDS = 24 * 3600
 
@@ -16,7 +17,7 @@ async def _fire(bot, connection_id, chat_id, seconds, text):
             text=text,
         )
     except Exception:
-        pass
+        log_suppressed("modules/timer.py:18", benign=True)
 
 
 @command(

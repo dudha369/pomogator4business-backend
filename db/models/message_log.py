@@ -31,3 +31,15 @@ async def pop_recent_message_ids(connection_id, chat_id, count):
     if log_ids:
         await MessageLog.filter(log_id__in=log_ids).delete()
     return message_ids
+
+
+async def trim_message_log(keep):
+    """Оставляет только последние `keep` записей журнала (он нужен лишь для
+    .del и подобных команд, которым важны свежие сообщения). Возвращает число
+    удалённых строк."""
+    rows = await MessageLog.all().order_by("-log_id").offset(keep).limit(1).values_list(
+        "log_id", flat=True
+    )
+    if not rows:
+        return 0
+    return await MessageLog.filter(log_id__lte=rows[0]).delete()

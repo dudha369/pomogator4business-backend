@@ -5,6 +5,7 @@ from aiogram.exceptions import TelegramForbiddenError
 from core.context import CommandContext
 from core.registry import command
 from core.spam_control import clamp, is_spam_active, start_spam, stop_spam
+from core.utils import log_suppressed
 
 _LIMIT = 100
 # Задержка чуть больше, чем в зеркале: сообщения тут уходят от РЕАЛЬНОГО
@@ -44,7 +45,7 @@ async def cmd_spam(ctx: CommandContext):
                 ),
             )
         except Exception:
-            pass
+            log_suppressed("modules/spam.py:46")
 
     start_spam(ctx.connection_id)
     try:

@@ -5,6 +5,7 @@ from core.ffmpeg import apply_audio_filter
 from core.registry import command
 from core.self_actions import delete_own_messages
 from core import database as db
+from core.utils import log_suppressed
 
 _FILTERS = {
     "helium": "asetrate=48000*1.6,aresample=48000,atempo=1/1.6",
@@ -58,6 +59,6 @@ async def handle_voice_message(bot, connection, message) -> bool:
             voice=BufferedInputFile(processed, filename="voice.ogg"),
         )
     except Exception:
-        pass
+        log_suppressed("modules/voice_effects.py:60")
 
     return True

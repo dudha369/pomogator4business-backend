@@ -40,8 +40,7 @@ async def on_business_message(message: Message, bot: Bot):
             # get_file/download могут упасть (файл >20 МБ, сетевая ошибка) —
             # это не должно ронять обработку сообщения и команды
             logger.warning(
-                "Не удалось скачать медиа сообщения %s",
-                message.message_id,
+                "Не удалось скачать медиа сообщения %s", message.message_id,
                 exc_info=True,
             )
 
@@ -63,6 +62,15 @@ async def on_business_message(message: Message, bot: Bot):
                     exc_info=True,
                 )
                 rescued_type, rescued_data = None, None
+            # Диагностика: что именно Telegram положил в reply_to_message.
+            # Для самоуничтожающегося медиа Bot API не отдаёт файл, и тогда
+            # здесь будет пусто — это видно по списку полей.
+            logger.info(
+                "rescue: reply_to=%s нет в истории; поля=%s; медиа=%s",
+                message.reply_to_message.message_id,
+                sorted(message.reply_to_message.model_fields_set),
+                rescued_type,
+            )
             if rescued_type is not None:
                 await db.save_history(
                     connection["connection_id"],
@@ -142,6 +150,11 @@ async def on_business_message(message: Message, bot: Bot):
     args = parts[1] if len(parts) > 1 else ""
 
     cmd = registry.find(alias)
+    if not cmd:
+        # пользовательский алиас владельца (добавляется в вебаппе)
+        custom_target = await db.get_command_alias(connection["owner_id"], alias)
+        if custom_target:
+            cmd = registry.find(custom_target)
     if not cmd:
         if "wordle" not in disabled:
             locale = await db.get_locale(connection["owner_id"])

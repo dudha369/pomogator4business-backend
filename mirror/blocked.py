@@ -4,6 +4,7 @@ mirror/spam.py — см. там)."""
 
 from aiogram import Bot, Router
 from aiogram.types import ChatMemberUpdated
+from core.utils import log_suppressed
 
 router = Router(name="mirror_blocked")
 
@@ -24,4 +25,4 @@ async def on_mirror_membership_changed(
             text=f"⚠️ Зеркало убрали/заблокировали в чате «{chat_title}».",
         )
     except Exception:
-        pass
+        log_suppressed("mirror/blocked.py:26")

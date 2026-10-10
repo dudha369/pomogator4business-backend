@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from api.deps import require_user
 from core import database as db
+from core.utils import log_suppressed
 
 router = APIRouter()
 
@@ -59,6 +60,6 @@ async def toggle_emoji_status(
                 user_id=user["id"], emoji_status_custom_emoji_id=""
             )
         except Exception:
-            pass
+            log_suppressed("api/emoji_status.py:61")
 
     return {"enabled": payload.enabled}

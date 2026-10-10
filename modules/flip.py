@@ -3,6 +3,7 @@ import random
 
 from core.context import CommandContext
 from core.registry import command
+from core.utils import log_suppressed
 
 
 @command(name="flip", module="flip")
@@ -25,4 +26,4 @@ async def cmd_flip(ctx: CommandContext):
             parse_mode="html",
         )
     except Exception:
-        pass
+        log_suppressed("modules/flip.py:27", benign=True)

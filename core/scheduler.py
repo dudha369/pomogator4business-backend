@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from core import database as db
+from core.utils import log_suppressed
 
 logger = logging.getLogger("bot.scheduler")
 
@@ -49,7 +50,7 @@ async def emoji_clock_tick(bot):
                     ),
                 )
             except Exception:
-                pass
+                log_suppressed("core/scheduler.py:51")
         except Exception:
             logger.exception("Не удалось обновить эмодзи-статус owner_id=%s", owner_id)
 

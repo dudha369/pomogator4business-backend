@@ -3,6 +3,7 @@ import asyncio
 from core.context import CommandContext
 from core.registry import command
 from core import database as db
+from core.utils import log_suppressed
 
 TYPE_TRIGGERS = ["_type", "=type", "-type", "#type", ">type", "|type"]
 
@@ -52,7 +53,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
                 text=cursor,
             )
         except Exception:
-            pass
+            log_suppressed("modules/type_.py:54", benign=True)
 
     for step_text in steps:
         await asyncio.sleep(_STEP_DELAY)
@@ -64,7 +65,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
                 text=step_text + cursor,
             )
         except Exception:
-            pass
+            log_suppressed("modules/type_.py:66", benign=True)
 
     try:
         await bot.edit_message_text(
@@ -74,7 +75,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
             text=text,
         )
     except Exception:
-        pass
+        log_suppressed("modules/type_.py:76", benign=True)
 
 
 async def handle_type_trigger(bot, message, connection, trigger):

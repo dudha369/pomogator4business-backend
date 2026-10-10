@@ -49,10 +49,16 @@ async def get_archive_page(
     chat_id=None,
     date_from=None,
     date_to=None,
+    ascending=False,
 ):
+    """before_id — курсор постраничной загрузки: для убывающей сортировки
+    берём записи с log_id < курсора, для возрастающей — с log_id > курсора."""
     query = ArchiveLog.filter(connection_id=connection_id)
     if before_id is not None:
-        query = query.filter(log_id__lt=before_id)
+        if ascending:
+            query = query.filter(log_id__gt=before_id)
+        else:
+            query = query.filter(log_id__lt=before_id)
     if event is not None:
         query = query.filter(event=event)
     if chat_id is not None:
@@ -68,6 +74,11 @@ async def get_archive_page(
             Q(old_text__icontains=search) | Q(new_text__icontains=search)
         )
 
-    rows = await query.order_by("-log_id").limit(limit + 1).values()
+    ordering = "log_id" if ascending else "-log_id"
+    rows = await query.order_by(ordering).limit(limit + 1).values()
     has_more = len(rows) > limit
     return rows[:limit], has_more
+
+
+async def purge_archive(older_than_ts):
+    return await ArchiveLog.filter(created_at__lt=older_than_ts).delete()

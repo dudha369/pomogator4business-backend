@@ -23,6 +23,7 @@ async def list_commands(locale: str = "ru"):
                     "long_description": t(f"cmdmeta.{cmd.name}.long", locale),
                     "usage": t(f"cmdmeta.{cmd.name}.usage", locale),
                     "owner_only": cmd.owner_only,
+                    "scope": cmd.scope,
                 }
             )
     return {"commands": result}

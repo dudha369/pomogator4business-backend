@@ -18,6 +18,7 @@ from core import database as db
 from core.i18n import t
 from core.registry import registry
 from core.self_actions import consume_self_delete
+from core.utils import log_suppressed
 
 logger = logging.getLogger("bot.archive")
 router = Router(name="archive")
@@ -133,7 +134,7 @@ async def on_delete_notice(call: CallbackQuery):
     try:
         await call.message.delete()
     except Exception:
-        pass
+        log_suppressed("modules/archive.py:135", benign=True)
     await call.answer()
 
 
@@ -181,7 +182,7 @@ async def on_business_edited(message: Message, bot: Bot):
                     link_preview_options=LinkPreviewOptions(is_disabled=True),
                 )
             except Exception:
-                pass
+                log_suppressed("modules/archive.py:183")
 
             await db.log_archive_event(
                 connection_id,
@@ -247,7 +248,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                 link_preview_options=LinkPreviewOptions(is_disabled=True),
             )
         except Exception:
-            pass
+            log_suppressed("modules/archive.py:249")
 
         await _send_deleted_media(bot, connection["owner_chat_id"], entry, locale)
 

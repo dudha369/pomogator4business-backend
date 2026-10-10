@@ -5,6 +5,7 @@ from core import database as db
 from core.i18n import t
 from core.registry import command
 from modules.wordle_dictionary import WORDS
+from core.utils import log_suppressed
 
 _MAX_MISTAKES = 6
 
@@ -100,7 +101,7 @@ async def _handle_guess(ctx, game, letter):
             )
             return
         except Exception:
-            pass
+            log_suppressed("modules/hangman.py:102", benign=True)
 
     sent = await ctx.reply(text)
     await db.save_hangman_game(
