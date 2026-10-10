@@ -5,9 +5,8 @@
 
 import time
 
-from tortoise import Tortoise
-
 from core.context import CommandContext
+from core.health import measure_health
 from core.registry import command
 
 _STARTED_AT = time.monotonic()
@@ -26,33 +25,21 @@ def format_uptime(seconds: int, ctx: CommandContext) -> str:
     return " ".join(parts)
 
 
-async def _timed(coro_factory):
-    started = time.perf_counter()
-    try:
-        await coro_factory()
-    except Exception:
-        return None
-    return (time.perf_counter() - started) * 1000
-
-
 @command(name="ping", aliases=["pong", "пинг"], module="ping", scope="both")
 async def cmd_ping(ctx: CommandContext):
-    api_ms = await _timed(ctx.bot.get_me)
-    db_ms = await _timed(
-        lambda: Tortoise.get_connection("default").execute_query("SELECT 1")
-    )
+    health = await measure_health(ctx.bot)
 
     # message.date имеет точность до секунды — это грубая оценка доставки
     delivery_s = max(0, int(time.time() - ctx.message.date.timestamp()))
 
     def ms(value):
-        return ctx.t("ping.failed") if value is None else f"{value:.0f} ms"
+        return ctx.t("ping.failed") if value is None else f"{value} ms"
 
     text = ctx.t(
         "ping.result",
-        api=ms(api_ms),
-        db=ms(db_ms),
+        api=ms(health["telegram_ms"]),
+        db=ms(health["db_ms"]),
         delivery=delivery_s,
-        uptime=format_uptime(time.monotonic() - _STARTED_AT, ctx),
+        uptime=format_uptime(health["uptime_seconds"], ctx),
     )
     await ctx.edit_command_message(text)

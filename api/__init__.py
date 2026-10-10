@@ -14,6 +14,7 @@ from api.aliases import router as aliases_router
 from api.stats import router as stats_router
 from api.favorites import router as favorites_router
 from api.chats import router as chats_router
+from api.ping import router as ping_router
 
 
 def setup_routers() -> APIRouter:
@@ -33,5 +34,6 @@ def setup_routers() -> APIRouter:
     router.include_router(stats_router)
     router.include_router(favorites_router)
     router.include_router(chats_router)
+    router.include_router(ping_router)
 
     return router
