@@ -28,7 +28,7 @@ def split_command(text: str, prefix: str):
     if is_slash:
         body = text[1:]
     elif prefix and text.startswith(prefix):
-        body = text[len(prefix):]
+        body = text[len(prefix) :]
     else:
         return None
 

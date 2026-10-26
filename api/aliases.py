@@ -22,7 +22,7 @@ def normalize_alias(raw: str, prefix: str) -> str:
     alias = raw.strip().lower()
     # пользователь мог ввести алиас вместе с префиксом (".п") — это не часть имени
     if prefix and alias.startswith(prefix):
-        alias = alias[len(prefix):]
+        alias = alias[len(prefix) :]
     return alias
 
 

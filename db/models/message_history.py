@@ -138,11 +138,9 @@ async def purge_history(older_than_ts):
 async def expire_history_media(older_than_ts):
     """Обнуляет сохранённые байты медиа старше порога, оставляя запись и
     media_type (в архиве останется понятно, что тут было медиа)."""
-    return (
-        await MessageHistory.filter(
-            created_at__lt=older_than_ts, media_data__not_isnull=True
-        ).update(media_data=None)
-    )
+    return await MessageHistory.filter(
+        created_at__lt=older_than_ts, media_data__not_isnull=True
+    ).update(media_data=None)
 
 
 async def get_history_media(connection_id, chat_id, message_id):
@@ -162,9 +160,7 @@ async def list_media_flags(connection_id, pairs):
     condition = Q()
     for chat_id, message_id in pairs:
         condition |= Q(chat_id=chat_id, message_id=message_id)
-    rows = (
-        await MessageHistory.filter(
-            condition, connection_id=connection_id, media_data__not_isnull=True
-        ).values("chat_id", "message_id", "media_type")
-    )
+    rows = await MessageHistory.filter(
+        condition, connection_id=connection_id, media_data__not_isnull=True
+    ).values("chat_id", "message_id", "media_type")
     return {(r["chat_id"], r["message_id"]): r["media_type"] for r in rows}

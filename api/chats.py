@@ -52,7 +52,11 @@ async def read_all(payload: ReadAllRequest, user: dict = Depends(require_user)):
     )
 
     if payload.dry_run:
-        return {"matched": len(await find_chats(connection, flt)), "done": 0, "failed": 0}
+        return {
+            "matched": len(await find_chats(connection, flt)),
+            "done": 0,
+            "failed": 0,
+        }
 
     from bot_instance import bot
 

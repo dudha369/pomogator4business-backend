@@ -73,6 +73,8 @@ async def get_archive_media(log_id: int, user: dict = Depends(require_user)):
 
     return Response(
         content=bytes(media["media_data"]),
-        media_type=_MEDIA_CONTENT_TYPES.get(media["media_type"], "application/octet-stream"),
+        media_type=_MEDIA_CONTENT_TYPES.get(
+            media["media_type"], "application/octet-stream"
+        ),
         headers={"Cache-Control": "private, max-age=3600"},
     )

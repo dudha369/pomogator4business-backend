@@ -16,7 +16,9 @@ async def _get_bio(bot, user_id):
         chat_info = await bot.get_chat(user_id)
         return getattr(chat_info, "bio", None)
     except Exception:
-        logger.warning("Не удалось получить био пользователя %s", user_id, exc_info=True)
+        logger.warning(
+            "Не удалось получить био пользователя %s", user_id, exc_info=True
+        )
         return None
 
 

@@ -1,4 +1,5 @@
-from aiogram import F, Router
+from aiogram import F, Router, html
+from aiogram.enums import parse_mode
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from core import database as db
@@ -17,7 +18,17 @@ _LINES = [
     (0, 4, 8),
     (2, 4, 6),
 ]
-_SYMBOLS = {"X": "❌", "O": "⭕", ".": "⠀"}
+_SYMBOLS = {
+    "X": '<tg-emoji emoji-id="5404337815045583229">❌</tg-emoji>',
+    "O": '<tg-emoji emoji-id="5402467554356668905">⭕️</tg-emoji>',
+    ".": "⠀",
+}
+
+
+def _format_mention(full_name, username, chat_id):
+    if username:
+        return f'<a href="https://t.me/{username}">{html.quote(full_name)}</a>'
+    return f'<a href="tg://user?id={chat_id}">{html.quote(full_name)}</a>'
 
 
 def _check_winner(board):
@@ -36,10 +47,14 @@ def _challenge_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅", callback_data="ttt:accept", style="success"
+                    text="<tg-emoji emoji-id='5258108352008823107'>✅</tg-emoji>",
+                    callback_data="ttt:accept",
+                    style="success",
                 ),
                 InlineKeyboardButton(
-                    text="❌", callback_data="ttt:decline", style="danger"
+                    text="<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji>",
+                    callback_data="ttt:decline",
+                    style="danger",
                 ),
             ]
         ]
@@ -90,24 +105,23 @@ def _build_keyboard(board, finished, winning_line=None):
 
 def _build_text(locale, game, winner):
     x_name = game["player_x_name"] or "X"
-    o_name = game["player_o_name"] or "?"
+    o_name = game["player_o_name"] or "O"
 
     if winner == "draw":
         status = t("ttt.draw", locale)
-    elif winner == "X":
-        status = t("ttt.win", locale, symbol="❌", name=x_name)
+    elif winner in "X":
+        status = t("ttt.win", locale, symbol=_SYMBOLS["X"], name=x_name)
     elif winner == "O":
-        status = t("ttt.win", locale, symbol="⭕", name=o_name)
+        status = t("ttt.win", locale, symbol=_SYMBOLS["O"], name=o_name)
     else:
-        current = "❌" if game["turn"] == "X" else "⭕"
-        status = t("ttt.turn", locale, symbol=current)
+        status = t("ttt.turn", locale, symbol=_SYMBOLS[game["turn"]])
 
     return t("ttt.header", locale, x_name=x_name, o_name=o_name) + "\n\n" + status
 
 
 @command(name="ttt", module="ttt", owner_only=False)
 async def cmd_ttt(ctx):
-    starter_name = ctx.message.from_user.full_name if ctx.message.from_user else "X"
+    starter_name = ctx.message.from_user.full_name
 
     await db.save_ttt_game(
         ctx.connection_id,
@@ -122,8 +136,18 @@ async def cmd_ttt(ctx):
         message_id=None,
     )
 
-    text = t("ttt.challenge", ctx.locale, name=starter_name)
-    await ctx.edit_command_message(text, reply_markup=_challenge_keyboard())
+    text = t(
+        "ttt.challenge",
+        ctx.locale,
+        mention=_format_mention(
+            starter_name,
+            ctx.message.from_user.username,
+            ctx.message.chat.id,
+        ),
+    )
+    await ctx.edit_command_message(
+        text, reply_markup=_challenge_keyboard(), parse_mode="html"
+    )
     await db.save_ttt_game(
         ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
     )
@@ -169,6 +193,7 @@ async def on_ttt_callback(call: CallbackQuery):
             await call.message.edit_text(
                 _build_text(locale, game, None),
                 reply_markup=_build_keyboard(game["board"], False),
+                parse_mode="html",
             )
             await call.answer()
             return
@@ -197,6 +222,7 @@ async def on_ttt_callback(call: CallbackQuery):
         await call.message.edit_text(
             t("ttt.challenge", locale, name=starter_name),
             reply_markup=_challenge_keyboard(),
+            parse_mode="html",
         )
         await call.answer()
         return
@@ -249,5 +275,6 @@ async def on_ttt_callback(call: CallbackQuery):
             bool(winner),
             winning_line,
         ),
+        parse_mode="html",
     )
     await call.answer()

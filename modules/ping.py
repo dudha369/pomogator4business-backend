@@ -29,7 +29,6 @@ def format_uptime(seconds: int, ctx: CommandContext) -> str:
 async def cmd_ping(ctx: CommandContext):
     health = await measure_health(ctx.bot)
 
-    # message.date имеет точность до секунды — это грубая оценка доставки
     delivery_s = max(0, int(time.time() - ctx.message.date.timestamp()))
 
     def ms(value):

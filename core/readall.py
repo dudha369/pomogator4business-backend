@@ -25,7 +25,9 @@ _NOFAV = {"nofav", "-fav", "безизбранных", "безизбр"}
 @dataclass
 class ReadFilter:
     last_seconds: int | None = None  # только чаты с входящим не старше N секунд
-    older_seconds: int | None = None  # только чаты, где последнее входящее старше N секунд
+    older_seconds: int | None = (
+        None  # только чаты, где последнее входящее старше N секунд
+    )
     exclude_fav: bool = False
 
 
@@ -91,7 +93,9 @@ async def find_chats(connection, flt, now=None):
         if flt.exclude_fav
         else set()
     )
-    return select_chats(rows, int(now if now is not None else time.time()), favorites, flt)
+    return select_chats(
+        rows, int(now if now is not None else time.time()), favorites, flt
+    )
 
 
 async def read_chats(bot, connection, flt, now=None):

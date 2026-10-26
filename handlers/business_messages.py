@@ -40,7 +40,8 @@ async def on_business_message(message: Message, bot: Bot):
             # get_file/download могут упасть (файл >20 МБ, сетевая ошибка) —
             # это не должно ронять обработку сообщения и команды
             logger.warning(
-                "Не удалось скачать медиа сообщения %s", message.message_id,
+                "Не удалось скачать медиа сообщения %s",
+                message.message_id,
                 exc_info=True,
             )
 

@@ -16,8 +16,10 @@ class CommandAlias(Model):
 
 
 async def list_command_aliases(owner_id):
-    return await CommandAlias.filter(owner_id=owner_id).order_by("id").values(
-        "alias", "command"
+    return (
+        await CommandAlias.filter(owner_id=owner_id)
+        .order_by("id")
+        .values("alias", "command")
     )
 
 
