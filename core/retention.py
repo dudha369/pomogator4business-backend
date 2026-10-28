@@ -29,6 +29,10 @@ async def run_retention_once(now=None):
         stats["media_expired"] = await db.expire_history_media(
             now - settings.MEDIA_RETENTION_DAYS * day
         )
+    if settings.ARCHIVE_MEDIA_RETENTION_DAYS > 0:
+        stats["archive_media_expired"] = await db.expire_archive_media(
+            now - settings.ARCHIVE_MEDIA_RETENTION_DAYS * day
+        )
     if settings.HISTORY_RETENTION_DAYS > 0:
         stats["history_purged"] = await db.purge_history(
             now - settings.HISTORY_RETENTION_DAYS * day
@@ -37,6 +41,9 @@ async def run_retention_once(now=None):
         stats["archive_purged"] = await db.purge_archive(
             now - settings.ARCHIVE_RETENTION_DAYS * day
         )
+    # журнал автоответов: приветствия не трогаем, остальное — старше 30 дней
+    stats["autoresponder_log_purged"] = await db.purge_autoresponder_log(now - 30 * day)
+    stats["ai_drafts_purged"] = await db.purge_old_drafts(now - 7 * day)
     if settings.MESSAGE_LOG_KEEP > 0:
         stats["message_log_trimmed"] = await db.trim_message_log(
             settings.MESSAGE_LOG_KEEP

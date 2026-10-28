@@ -1,8 +1,34 @@
 from db.models.archive_log import (
     get_archive_page,
     get_recent_archive,
+    count_archive_events_since,
+    expire_archive_media,
+    get_log_media,
+    list_log_media_availability,
     log_archive_event,
     purge_archive,
+)
+from db.models.ai import (
+    create_draft,
+    get_ai_settings,
+    get_draft,
+    purge_old_drafts,
+    set_draft_status,
+    set_draft_status_force,
+    upsert_ai_settings,
+)
+from db.models.reminders import (
+    get_reminder_settings,
+    list_reminder_owner_ids,
+    upsert_reminder_settings,
+)
+from db.models.chat_flags import get_chat_flags, list_chat_flags, set_chat_flags
+from db.models.quick_template import (
+    count_templates,
+    delete_template,
+    get_template,
+    list_templates,
+    save_template,
 )
 from db.models.command_alias import (
     add_command_alias,
@@ -46,6 +72,12 @@ from db.models.autoresponder import (
     list_keyword_replies,
     add_keyword_reply,
     delete_keyword_reply,
+    count_autoreplies_since,
+    count_keyword_replies,
+    last_autoreply_at,
+    last_autoreply_ref,
+    log_autoreply,
+    purge_autoresponder_log,
 )
 from db.models.g2048 import get_g2048_game, save_g2048_game
 from db.models.guess import get_guess_game, save_guess_game
@@ -60,6 +92,9 @@ from db.models.message_history import (
     get_history_text,
     get_recent_history,
     has_other_messages,
+    last_owner_message_at,
+    list_chat_history,
+    list_history_rows_since,
     list_last_incoming_by_chat,
     list_recent_chats,
     list_media_flags,
@@ -102,6 +137,37 @@ from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
 __all__ = [
+    "get_reminder_settings",
+    "last_autoreply_ref",
+    "list_reminder_owner_ids",
+    "upsert_reminder_settings",
+    "expire_archive_media",
+    "get_log_media",
+    "list_log_media_availability",
+    "count_archive_events_since",
+    "list_history_rows_since",
+    "set_draft_status_force",
+    "list_chat_history",
+    "create_draft",
+    "get_ai_settings",
+    "get_draft",
+    "purge_old_drafts",
+    "set_draft_status",
+    "upsert_ai_settings",
+    "get_chat_flags",
+    "list_chat_flags",
+    "set_chat_flags",
+    "count_templates",
+    "delete_template",
+    "get_template",
+    "list_templates",
+    "save_template",
+    "count_autoreplies_since",
+    "count_keyword_replies",
+    "last_autoreply_at",
+    "last_owner_message_at",
+    "log_autoreply",
+    "purge_autoresponder_log",
     "list_recent_chats",
     "add_command_alias",
     "count_command_aliases",

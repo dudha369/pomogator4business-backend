@@ -1,17 +1,12 @@
+import urllib.parse
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
-from api.deps import require_connection, require_user
+from api.deps import Owner, current_owner
 from core import database as db
-from db.models.archive_log import ArchiveLog
+from core.archive_media import attach_media_info, content_type, load_media
 
 router = APIRouter()
-
-_MEDIA_CONTENT_TYPES = {
-    "photo": "image/jpeg",
-    "video": "video/mp4",
-    "voice": "audio/ogg",
-    "video_note": "video/mp4",
-}
 
 
 @router.get("/archive")
@@ -24,9 +19,9 @@ async def get_archive(
     date_from: int | None = Query(default=None),
     date_to: int | None = Query(default=None),
     sort: str = Query(default="desc", pattern="^(asc|desc)$"),
-    user: dict = Depends(require_user),
+    owner: Owner = Depends(current_owner),
 ):
-    connection = await require_connection(user["id"])
+    connection = owner.connection
     entries, has_more = await db.get_archive_page(
         connection["connection_id"],
         before_id,
@@ -39,14 +34,7 @@ async def get_archive(
         ascending=(sort == "asc"),
     )
 
-    # media_type отдаём только если байты реально сохранены (иначе кнопка
-    # «показать медиа» вела бы в 404 — например, после очистки по сроку)
-    flags = await db.list_media_flags(
-        connection["connection_id"],
-        [(e["chat_id"], e["message_id"]) for e in entries],
-    )
-    for entry in entries:
-        entry["media_type"] = flags.get((entry["chat_id"], entry["message_id"]))
+    await attach_media_info(connection["connection_id"], entries)
 
     next_cursor = entries[-1]["log_id"] if entries and has_more else None
     return {
@@ -57,24 +45,18 @@ async def get_archive(
 
 
 @router.get("/archive/{log_id}/media")
-async def get_archive_media(log_id: int, user: dict = Depends(require_user)):
-    connection = await require_connection(user["id"])
-    rows = await ArchiveLog.filter(
-        log_id=log_id, connection_id=connection["connection_id"]
-    ).values("chat_id", "message_id")
-    if not rows:
-        raise HTTPException(status_code=404, detail="Запись архива не найдена")
-
-    media = await db.get_history_media(
-        connection["connection_id"], rows[0]["chat_id"], rows[0]["message_id"]
-    )
-    if not media or not media["media_data"]:
+async def get_archive_media(log_id: int, owner: Owner = Depends(current_owner)):
+    connection = owner.connection
+    media = await load_media(connection["connection_id"], log_id)
+    if media is None:
         raise HTTPException(status_code=404, detail="Медиа не сохранено")
 
+    media_type, mime, name, data = media
+    headers = {"Cache-Control": "private, max-age=3600"}
+    if name:
+        headers["Content-Disposition"] = (
+            f"inline; filename*=UTF-8''{urllib.parse.quote(name)}"
+        )
     return Response(
-        content=bytes(media["media_data"]),
-        media_type=_MEDIA_CONTENT_TYPES.get(
-            media["media_type"], "application/octet-stream"
-        ),
-        headers={"Cache-Control": "private, max-age=3600"},
+        content=data, media_type=content_type(media_type, mime), headers=headers
     )

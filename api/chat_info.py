@@ -1,9 +1,3 @@
-"""Отдаёт актуальные имя/username собеседника по его user_id (он же chat_id
-в бизнес-чате) напрямую через Bot API — без хранения в БД, потому что эти
-данные могут меняться, а Telegram и так отдаёт их по запросу для любого,
-кто хоть раз писал этому владельцу (то же условие доступа, что и для
-аватарки в api/avatar.py)."""
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.deps import require_user

@@ -20,7 +20,7 @@ async def cmd_8ball(ctx: CommandContext):
         f"""
 <blockquote>{args}</blockquote>
 ────────────────────
-🎱 Шар говорит: <b>{ctx.t(f'eightball.answer_{index}')}</b>
+🎱 Шар говорит: <b>{ctx.t(f"eightball.answer_{index}")}</b>
 ────────────────────""",
         parse_mode="html",
     )

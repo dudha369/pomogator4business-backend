@@ -184,8 +184,6 @@ def _game_keyboard(
 
 @command(name="ms", module="ms", owner_only=False)
 async def cmd_ms(ctx):
-    starter_name = ctx.message.from_user.full_name if ctx.message.from_user else "?"
-
     await db.save_ms_game(
         ctx.connection_id,
         ctx.chat_id,
@@ -197,7 +195,6 @@ async def cmd_ms(ctx):
         flagged="[]",
         flag_mode=False,
         starter_id=ctx.message.from_user.id,
-        starter_name=starter_name,
         phase="settings",
         message_id=None,
     )

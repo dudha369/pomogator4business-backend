@@ -12,6 +12,9 @@ class MessageHistory(Model):
     text = fields.TextField(null=True)
     media_type = fields.CharField(max_length=16, null=True)
     media_data = fields.BinaryField(null=True)
+    media_mime = fields.CharField(max_length=255, null=True)
+    media_name = fields.CharField(max_length=255, null=True)
+    media_status = fields.CharField(max_length=16, null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -29,7 +32,12 @@ async def save_history(
     created_at,
     media_type=None,
     media_data=None,
+    media_mime=None,
+    media_name=None,
+    media_status=None,
 ):
+    if media_type is not None and media_status is None:
+        media_status = "saved" if media_data is not None else "failed"
     obj, created = await MessageHistory.get_or_create(
         connection_id=connection_id,
         chat_id=chat_id,
@@ -39,6 +47,9 @@ async def save_history(
             "text": text,
             "media_type": media_type,
             "media_data": media_data,
+            "media_mime": media_mime,
+            "media_name": media_name,
+            "media_status": media_status,
             "created_at": created_at,
         },
     )
@@ -48,7 +59,16 @@ async def save_history(
         if media_type is not None:
             obj.media_type = media_type
             obj.media_data = media_data
-            update_fields += ["media_type", "media_data"]
+            obj.media_mime = media_mime
+            obj.media_name = media_name
+            obj.media_status = media_status
+            update_fields += [
+                "media_type",
+                "media_data",
+                "media_mime",
+                "media_name",
+                "media_status",
+            ]
         await obj.save(update_fields=update_fields)
 
 
@@ -94,14 +114,12 @@ async def get_recent_history(connection_id, chat_id, limit):
             "text",
             "media_type",
             "created_at",
-        )  # без media_data — не тянем бинарники в память ради текстовой истории
+        )
     )
     return list(reversed(rows))
 
 
 async def list_last_incoming_by_chat(connection_id):
-    """По каждому чату — id и время последнего ВХОДЯЩЕГО сообщения, которое
-    бот видел. Нужно для .readall: прочитать чат = прочитать это сообщение."""
     return (
         await MessageHistory.filter(connection_id=connection_id, is_owner=False)
         .group_by("chat_id")
@@ -111,7 +129,6 @@ async def list_last_incoming_by_chat(connection_id):
 
 
 async def list_recent_chats(connection_id, limit):
-    """Чаты, которые бот видел (любое направление), свежие сверху."""
     return (
         await MessageHistory.filter(connection_id=connection_id)
         .group_by("chat_id")
@@ -122,8 +139,40 @@ async def list_recent_chats(connection_id, limit):
     )
 
 
+async def list_history_rows_since(connection_id, since_ts, limit=100000):
+    return (
+        await MessageHistory.filter(
+            connection_id=connection_id, created_at__gte=since_ts
+        )
+        .order_by("created_at")
+        .limit(limit)
+        .values("chat_id", "message_id", "is_owner", "created_at")
+    )
+
+
+async def list_chat_history(connection_id, chat_id, limit):
+    rows = (
+        await MessageHistory.filter(connection_id=connection_id, chat_id=chat_id)
+        .order_by("-created_at", "-message_id")
+        .limit(limit)
+        .values("message_id", "is_owner", "text", "created_at")
+    )
+    return list(reversed(rows))
+
+
+async def last_owner_message_at(connection_id, chat_id):
+    rows = (
+        await MessageHistory.filter(
+            connection_id=connection_id, chat_id=chat_id, is_owner=True
+        )
+        .order_by("-created_at")
+        .limit(1)
+        .values_list("created_at", flat=True)
+    )
+    return rows[0] if rows else None
+
+
 async def count_messages_since(connection_id, since_ts):
-    """Сколько сообщений (всего / входящих) в истории начиная с since_ts."""
     query = MessageHistory.filter(connection_id=connection_id, created_at__gte=since_ts)
     total = await query.count()
     incoming = await query.filter(is_owner=False).count()
@@ -131,28 +180,23 @@ async def count_messages_since(connection_id, since_ts):
 
 
 async def purge_history(older_than_ts):
-    """Полностью удаляет записи истории старше порога. Возвращает число строк."""
     return await MessageHistory.filter(created_at__lt=older_than_ts).delete()
 
 
 async def expire_history_media(older_than_ts):
-    """Обнуляет сохранённые байты медиа старше порога, оставляя запись и
-    media_type (в архиве останется понятно, что тут было медиа)."""
     return await MessageHistory.filter(
         created_at__lt=older_than_ts, media_data__not_isnull=True
-    ).update(media_data=None)
+    ).update(media_data=None, media_status="expired")
 
 
 async def get_history_media(connection_id, chat_id, message_id):
     rows = await MessageHistory.filter(
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
-    ).values("media_type", "media_data")
+    ).values("media_type", "media_data", "media_mime", "media_name")
     return rows[0] if rows else None
 
 
 async def list_media_flags(connection_id, pairs):
-    """pairs: [(chat_id, message_id)]. Возвращает {(chat_id, message_id):
-    media_type} только для сообщений, у которых сохранены байты медиа."""
     if not pairs:
         return {}
     from tortoise.expressions import Q
@@ -160,7 +204,26 @@ async def list_media_flags(connection_id, pairs):
     condition = Q()
     for chat_id, message_id in pairs:
         condition |= Q(chat_id=chat_id, message_id=message_id)
-    rows = await MessageHistory.filter(
-        condition, connection_id=connection_id, media_data__not_isnull=True
-    ).values("chat_id", "message_id", "media_type")
-    return {(r["chat_id"], r["message_id"]): r["media_type"] for r in rows}
+    base = MessageHistory.filter(
+        condition, connection_id=connection_id, media_type__not_isnull=True
+    )
+    rows = await base.values(
+        "chat_id",
+        "message_id",
+        "media_type",
+        "media_mime",
+        "media_name",
+        "media_status",
+    )
+    with_data = set(
+        await base.filter(media_data__not_isnull=True).values_list(
+            "chat_id", "message_id"
+        )
+    )
+    return {
+        (r["chat_id"], r["message_id"]): {
+            **r,
+            "available": (r["chat_id"], r["message_id"]) in with_data,
+        }
+        for r in rows
+    }

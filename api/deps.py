@@ -3,8 +3,9 @@
 """
 
 import json
+from dataclasses import dataclass
 
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
 
 from config import settings
 from core import database as db
@@ -29,3 +30,22 @@ async def require_connection(owner_id: int):
     if not connection:
         raise HTTPException(status_code=404, detail="Business connection not found")
     return connection
+
+
+@dataclass
+class Owner:
+    """Владелец, открывший мини-приложение, и его бизнес-подключение."""
+
+    user: dict  # данные пользователя из initData (id, имя, язык...)
+    connection: dict
+
+    @property
+    def id(self) -> int:
+        return self.user["id"]
+
+
+async def current_owner(user: dict = Depends(require_user)) -> Owner:
+    """Зависимость для эндпоинтов, которым нужно и подтверждённый пользователь,
+    и его бизнес-подключение: один вызов вместо пары require_user +
+    require_connection. Нет подключения — 404, как и раньше."""
+    return Owner(user=user, connection=await require_connection(user["id"]))

@@ -1,9 +1,9 @@
-from aiogram import F, Router, html
-from aiogram.enums import parse_mode
+from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from core import database as db
 from core.i18n import t
+from core.mentions import format_mention, mention, remember
 from core.registry import command
 
 router = Router(name="ttt")
@@ -23,12 +23,6 @@ _SYMBOLS = {
     "O": '<tg-emoji emoji-id="5402467554356668905">⭕️</tg-emoji>',
     ".": "⠀",
 }
-
-
-def _format_mention(full_name, username, chat_id):
-    if username:
-        return f'<a href="https://t.me/{username}">{html.quote(full_name)}</a>'
-    return f'<a href="tg://user?id={chat_id}">{html.quote(full_name)}</a>'
 
 
 def _check_winner(board):
@@ -103,35 +97,46 @@ def _build_keyboard(board, finished, winning_line=None):
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def _build_text(locale, game, winner):
-    x_name = game["player_x_name"] or "X"
-    o_name = game["player_o_name"] or "O"
+async def _players(bot, game, locale):
+    fallback = t("ttt.player", locale)
+    return {
+        "X": (
+            await mention(bot, game["player_x_id"], fallback)
+            if game["player_x_id"]
+            else "X"
+        ),
+        "O": (
+            await mention(bot, game["player_o_id"], fallback)
+            if game["player_o_id"]
+            else "O"
+        ),
+    }
 
+
+def _build_text(locale, game, winner, players):
     if winner == "draw":
         status = t("ttt.draw", locale)
-    elif winner in "X":
-        status = t("ttt.win", locale, symbol=_SYMBOLS["X"], name=x_name)
-    elif winner == "O":
-        status = t("ttt.win", locale, symbol=_SYMBOLS["O"], name=o_name)
+    elif winner in ("X", "O"):
+        status = t("ttt.win", locale, symbol=_SYMBOLS[winner], name=players[winner])
     else:
         status = t("ttt.turn", locale, symbol=_SYMBOLS[game["turn"]])
 
-    return t("ttt.header", locale, x_name=x_name, o_name=o_name) + "\n\n" + status
+    header = t("ttt.header", locale, x_name=players["X"], o_name=players["O"])
+    return header + "\n\n" + status
 
 
 @command(name="ttt", module="ttt", owner_only=False)
 async def cmd_ttt(ctx):
-    starter_name = ctx.message.from_user.full_name
+    starter = ctx.message.from_user
+    remember(starter)
 
     await db.save_ttt_game(
         ctx.connection_id,
         ctx.chat_id,
         board=".........",
         turn="X",
-        player_x_id=ctx.message.from_user.id,
-        player_x_name=starter_name,
+        player_x_id=starter.id,
         player_o_id=None,
-        player_o_name=None,
         status="pending",
         message_id=None,
     )
@@ -139,11 +144,7 @@ async def cmd_ttt(ctx):
     text = t(
         "ttt.challenge",
         ctx.locale,
-        mention=_format_mention(
-            starter_name,
-            ctx.message.from_user.username,
-            ctx.message.chat.id,
-        ),
+        mention=format_mention(starter.full_name, starter.username, starter.id),
     )
     await ctx.edit_command_message(
         text, reply_markup=_challenge_keyboard(), parse_mode="html"
@@ -154,7 +155,7 @@ async def cmd_ttt(ctx):
 
 
 @router.callback_query(F.data.startswith("ttt:"))
-async def on_ttt_callback(call: CallbackQuery):
+async def on_ttt_callback(call: CallbackQuery, bot: Bot):
     action = call.data.split(":", 1)[1]
     business_connection_id = call.message.business_connection_id
     chat_id = call.message.chat.id
@@ -182,16 +183,16 @@ async def on_ttt_callback(call: CallbackQuery):
             if call.from_user.id == game["player_x_id"]:
                 await call.answer(t("ttt.cant_accept_own", locale), show_alert=True)
                 return
+            remember(call.from_user)
             await db.save_ttt_game(
                 business_connection_id,
                 chat_id,
                 player_o_id=call.from_user.id,
-                player_o_name=call.from_user.full_name,
                 status="active",
             )
             game = await db.get_ttt_game(business_connection_id, chat_id)
             await call.message.edit_text(
-                _build_text(locale, game, None),
+                _build_text(locale, game, None, await _players(bot, game, locale)),
                 reply_markup=_build_keyboard(game["board"], False),
                 parse_mode="html",
             )
@@ -206,21 +207,24 @@ async def on_ttt_callback(call: CallbackQuery):
         return
 
     if action == "restart":
-        starter_name = call.from_user.full_name
+        starter = call.from_user
+        remember(starter)
         await db.save_ttt_game(
             business_connection_id,
             chat_id,
             board=".........",
             turn="X",
-            player_x_id=call.from_user.id,
-            player_x_name=starter_name,
+            player_x_id=starter.id,
             player_o_id=None,
-            player_o_name=None,
             status="pending",
             message_id=call.message.message_id,
         )
         await call.message.edit_text(
-            t("ttt.challenge", locale, name=starter_name),
+            t(
+                "ttt.challenge",
+                locale,
+                mention=format_mention(starter.full_name, starter.username, starter.id),
+            ),
             reply_markup=_challenge_keyboard(),
             parse_mode="html",
         )
@@ -268,8 +272,9 @@ async def on_ttt_callback(call: CallbackQuery):
     )
     game = await db.get_ttt_game(business_connection_id, chat_id)
 
+    remember(call.from_user)
     await call.message.edit_text(
-        _build_text(locale, game, winner),
+        _build_text(locale, game, winner, await _players(bot, game, locale)),
         reply_markup=_build_keyboard(
             board_str,
             bool(winner),

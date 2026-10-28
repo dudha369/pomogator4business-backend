@@ -6,7 +6,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from api.deps import require_connection, require_user
+from api.deps import Owner, current_owner
 from core import database as db
 from core.readall import ReadFilter, find_chats, read_chats
 
@@ -14,8 +14,8 @@ router = APIRouter()
 
 
 @router.get("/chats")
-async def list_chats(user: dict = Depends(require_user)):
-    connection = await require_connection(user["id"])
+async def list_chats(owner: Owner = Depends(current_owner)):
+    user, connection = owner.user, owner.connection
     chats = await db.list_recent_chats(connection["connection_id"], 200)
     incoming = {
         row["chat_id"]: row["last_at"]
@@ -43,8 +43,8 @@ class ReadAllRequest(BaseModel):
 
 
 @router.post("/readall")
-async def read_all(payload: ReadAllRequest, user: dict = Depends(require_user)):
-    connection = await require_connection(user["id"])
+async def read_all(payload: ReadAllRequest, owner: Owner = Depends(current_owner)):
+    connection = owner.connection
     flt = ReadFilter(
         last_seconds=payload.last_hours * 3600 if payload.last_hours else None,
         older_seconds=payload.older_hours * 3600 if payload.older_hours else None,

@@ -11,9 +11,7 @@ class ChkGame(Model):
     board = fields.TextField(default="")
     turn = fields.CharField(max_length=1, default="w")
     player_w_id = fields.BigIntField(null=True)
-    player_w_name = fields.CharField(max_length=255, null=True)
     player_b_id = fields.BigIntField(null=True)
-    player_b_name = fields.CharField(max_length=255, null=True)
     selected = fields.IntField(null=True)
     forced_continue = fields.BooleanField(default=False)
     status = fields.CharField(max_length=16, default="active")
@@ -28,9 +26,7 @@ _DEFAULTS = {
     "board": "",
     "turn": "w",
     "player_w_id": None,
-    "player_w_name": None,
     "player_b_id": None,
-    "player_b_name": None,
     "selected": None,
     "forced_continue": False,
     "status": "active",

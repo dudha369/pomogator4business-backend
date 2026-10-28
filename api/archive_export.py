@@ -12,8 +12,9 @@ from aiogram.types import BufferedInputFile
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from api.deps import require_connection, require_user
+from api.deps import Owner, current_owner
 from core import archive_export as export
+from core.archive_media import attach_media_info, load_media
 from core import database as db
 
 logger = logging.getLogger("bot.archive_export")
@@ -75,28 +76,26 @@ async def _chat_names(bot, chat_ids):
 
 
 async def _collect_photos(connection_id, entries):
+    """Байты фото, которые можно вшить в HTML (суммарно не больше лимита)."""
     photos, total = {}, 0
-    flags = await db.list_media_flags(
-        connection_id, [(e["chat_id"], e["message_id"]) for e in entries]
-    )
     for e in entries:
-        if flags.get((e["chat_id"], e["message_id"])) != "photo":
+        if e.get("media_type") != "photo" or not e.get("media_available"):
             continue
-        media = await db.get_history_media(connection_id, e["chat_id"], e["message_id"])
-        if not media or not media["media_data"]:
+        media = await load_media(connection_id, e["log_id"])
+        if media is None:
             continue
-        data = bytes(media["media_data"])
+        data = media[3]
         if total + len(data) > _MAX_EMBEDDED_PHOTO_BYTES:
             break
         photos[e["log_id"]] = data
         total += len(data)
-    return photos, flags
+    return photos
 
 
 @router.post("/archive/export")
-async def export_archive(req: ExportRequest, user: dict = Depends(require_user)):
-    connection = await require_connection(user["id"])
-    owner_id = user["id"]
+async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owner)):
+    connection = owner.connection
+    owner_id = owner.id
     if owner_id in _running:
         raise HTTPException(status_code=429, detail="Export already running")
 
@@ -109,16 +108,10 @@ async def export_archive(req: ExportRequest, user: dict = Depends(require_user))
         from bot_instance import bot
 
         # типы медиа нужны всем форматам (для подписи), байты фото — только HTML
-        photos, flags = ({}, {})
+        await attach_media_info(connection["connection_id"], entries)
+        photos = {}
         if req.format == "html" and req.include_media:
-            photos, flags = await _collect_photos(connection["connection_id"], entries)
-        else:
-            flags = await db.list_media_flags(
-                connection["connection_id"],
-                [(e["chat_id"], e["message_id"]) for e in entries],
-            )
-        for e in entries:
-            e["media_type"] = flags.get((e["chat_id"], e["message_id"]))
+            photos = await _collect_photos(connection["connection_id"], entries)
 
         names = await _chat_names(bot, [e["chat_id"] for e in entries])
         offset = await db.get_timezone_offset(owner_id)

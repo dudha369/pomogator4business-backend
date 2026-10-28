@@ -7,6 +7,8 @@
 и отправляет. На каждое входящее сообщение уходит не больше ОДНОГО автоответа
 (приоритет: ключевое слово → «нет на месте» → приветствие).
 
+ИИ (core/ai.py) подключается последним: если не сработало ни одно правило.
+
 Защита от спама и циклов:
 - не отвечаем ботам и не-личным чатам;
 - не отвечаем на сообщения-команды (начинаются с префикса);
@@ -21,6 +23,7 @@ import logging
 import time
 from dataclasses import dataclass
 
+from core import ai
 from core import database as db
 
 logger = logging.getLogger("bot.autoresponder")
@@ -29,6 +32,17 @@ AWAY_COOLDOWN_SECONDS = 6 * 3600
 KEYWORD_COOLDOWN_SECONDS = 300
 OWNER_ACTIVE_WINDOW_SECONDS = 600
 MAX_REPLY_LENGTH = 4096  # лимит Telegram на длину сообщения
+
+
+_NO_SETTINGS = {
+    "greeting_enabled": False,
+    "greeting_text": None,
+    "away_enabled": False,
+    "away_text": None,
+    "away_start_minutes": None,
+    "away_end_minutes": None,
+    "auto_read_enabled": False,
+}
 
 
 @dataclass(frozen=True)
@@ -163,12 +177,16 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
         return None
 
     owner_id = connection["owner_id"]
-    settings = await db.get_autoresponder_settings(owner_id)
-    if not settings:
-        return None
+    # строки настроек может не быть (например, включён только ИИ) — берём «всё выключено»
+    settings = await db.get_autoresponder_settings(owner_id) or _NO_SETTINGS
 
     if settings["auto_read_enabled"]:
         await _auto_read(bot, connection, message)
+
+    chat_id = message.chat.id
+    flags = await db.get_chat_flags(owner_id, chat_id)
+    if flags["no_autoreply"]:
+        return None  # чат в режиме «не беспокоить» (авто-прочтение выше — по своей настройке)
 
     text = message.text or message.caption or ""
     is_command = bool(text) and text.startswith(connection["prefix"])
@@ -176,11 +194,21 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
     keywords = (
         await db.list_keyword_replies(owner_id) if text and not is_command else []
     )
-    if not (settings["greeting_enabled"] or settings["away_enabled"] or keywords):
+    ai_settings = await db.get_ai_settings(owner_id)
+    ai_on = bool(
+        ai_settings
+        and ai_settings["enabled"]
+        and ai.is_configured()
+        and text
+        and not is_command
+        and not flags["no_ai"]
+    )
+    if not (
+        settings["greeting_enabled"] or settings["away_enabled"] or keywords or ai_on
+    ):
         return None
 
     now = int(now if now is not None else time.time())
-    chat_id = message.chat.id
     last_owner_at = await db.last_owner_message_at(connection["connection_id"], chat_id)
     # «новый собеседник»: ни владелец, ни он сам раньше в этом чате не писали
     # (по сохранённой истории) и приветствия ему ещё не отправлялись
@@ -224,5 +252,18 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
             # первое сообщение уже получило ответ — приветствовать задним числом не нужно
             await db.log_autoreply(owner_id, chat_id, "greeting", None, now)
         return reply
+
+    # Ничего из «правил» не подошло — последний рубеж: ИИ (если включён)
+    if ai_on and not owner_recently_active:
+        try:
+            reply_text = await ai.generate_reply(
+                connection, ai_settings, chat_id, message, text, now
+            )
+            if reply_text and await ai.deliver_reply(
+                bot, connection, ai_settings, message, text, reply_text, now
+            ):
+                return AutoReply("ai", None, reply_text)
+        except Exception:
+            logger.warning("Сбой ИИ-ответа chat=%s", chat_id, exc_info=True)
 
     return None

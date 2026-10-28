@@ -21,7 +21,7 @@ async def cmd_flip(ctx: CommandContext):
         await ctx.edit_command_message(
             text=f"""
 ────────────────────
-<tg-emoji emoji-id="5379600444098093058">🪙</tg-emoji> <b>Результат</b>: Выпал{'а' if result == 'РЕШКА' else ''} <b><u>{result}</u></b>! 
+<tg-emoji emoji-id="5379600444098093058">🪙</tg-emoji> <b>Результат</b>: Выпал{"а" if result == "РЕШКА" else ""} <b><u>{result}</u></b>! 
 ────────────────────""",
             parse_mode="html",
         )

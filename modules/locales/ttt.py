@@ -1,8 +1,9 @@
 RU = {
+    "ttt.player": "Игрок",
     "ttt.header": (
-        "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> <b>Крестики-нолики</b>\n\n",
-        "<tg-emoji emoji-id='5404337815045583229'>❌</tg-emoji> {x_name}\n",
-        "<tg-emoji emoji-id='5402467554356668905'>⭕️</tg-emoji> {o_name}",
+        "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> <b>Крестики-нолики</b>\n\n"
+        "<tg-emoji emoji-id='5404337815045583229'>❌</tg-emoji> {x_name}\n"
+        "<tg-emoji emoji-id='5402467554356668905'>⭕️</tg-emoji> {o_name}"
     ),
     "ttt.turn": "<b>Ход:</b> {symbol}",
     "ttt.win": "<tg-emoji emoji-id='5258262708838472996'>🏆</tg-emoji> Победа {symbol} {name}!",
@@ -20,6 +21,7 @@ RU = {
 }
 
 EN = {
+    "ttt.player": "Player",
     "ttt.header": "❌ {x_name}\n⭕ {o_name}",
     "ttt.turn": "Turn: {symbol}",
     "ttt.win": "🏆 {symbol} {name} wins!",
@@ -27,7 +29,7 @@ EN = {
     "ttt.not_your_game": "This isn't your game.",
     "ttt.not_your_turn": "It's not your turn.",
     "ttt.cell_taken": "That cell is taken.",
-    "ttt.challenge": "🎮 {name} challenges you to tic-tac-toe!",
+    "ttt.challenge": "🎮 {mention} challenges you to tic-tac-toe!",
     "ttt.declined": "❌ Challenge declined.",
     "ttt.cant_accept_own": "You can't accept your own challenge.",
     "cmdmeta.ttt.title": "Tic-tac-toe",
@@ -37,6 +39,7 @@ EN = {
 }
 
 UK = {
+    "ttt.player": "Гравець",
     "ttt.header": "❌ {x_name}\n⭕ {o_name}",
     "ttt.turn": "Хід: {symbol}",
     "ttt.win": "🏆 Перемога {symbol} {name}!",
@@ -44,7 +47,7 @@ UK = {
     "ttt.not_your_game": "Це не ваша гра.",
     "ttt.not_your_turn": "Зараз не ваш хід.",
     "ttt.cell_taken": "Клітинка вже зайнята.",
-    "ttt.challenge": "🎮 {name} запрошує зіграти у хрестики-нулики!",
+    "ttt.challenge": "🎮 {mention} запрошує зіграти у хрестики-нулики!",
     "ttt.declined": "❌ Виклик відхилено.",
     "ttt.cant_accept_own": "Не можна прийняти власний виклик.",
     "cmdmeta.ttt.title": "Хрестики-нулики",

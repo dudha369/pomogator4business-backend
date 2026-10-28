@@ -15,6 +15,12 @@ from api.stats import router as stats_router
 from api.favorites import router as favorites_router
 from api.chats import router as chats_router
 from api.ping import router as ping_router
+from api.archive_export import router as archive_export_router
+from api.templates import router as templates_router
+from api.chat_flags import router as chat_flags_router
+from api.ai import router as ai_router
+from api.reminders import router as reminders_router
+from api.backup import router as backup_router
 
 
 def setup_routers() -> APIRouter:
@@ -35,5 +41,11 @@ def setup_routers() -> APIRouter:
     router.include_router(favorites_router)
     router.include_router(chats_router)
     router.include_router(ping_router)
+    router.include_router(archive_export_router)
+    router.include_router(templates_router)
+    router.include_router(chat_flags_router)
+    router.include_router(ai_router)
+    router.include_router(reminders_router)
+    router.include_router(backup_router)
 
     return router

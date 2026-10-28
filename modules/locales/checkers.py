@@ -1,4 +1,5 @@
 RU = {
+    "chk.player": "Игрок",
     "chk.header": "⚪ {w_name}\n⚫ {b_name}",
     "chk.white": "Белые",
     "chk.black": "Чёрные",
@@ -20,6 +21,7 @@ RU = {
 }
 
 EN = {
+    "chk.player": "Player",
     "chk.header": "⚪ {w_name}\n⚫ {b_name}",
     "chk.white": "White",
     "chk.black": "Black",
@@ -41,6 +43,7 @@ EN = {
 }
 
 UK = {
+    "chk.player": "Гравець",
     "chk.header": "⚪ {w_name}\n⚫ {b_name}",
     "chk.white": "Білі",
     "chk.black": "Чорні",

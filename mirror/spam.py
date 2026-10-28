@@ -23,10 +23,7 @@ async def _notify_owner(bot: Bot, owner_id: int, text: str) -> None:
 
 
 def _clamp_notice(requested: int, count: int) -> str:
-    return (
-        f"Запрошено {requested}, но лимит зеркала — {_MAX_COUNT}. "
-        f"Отправляю {count}."
-    )
+    return f"Запрошено {requested}, но лимит зеркала — {_MAX_COUNT}. Отправляю {count}."
 
 
 async def _send_sequence(

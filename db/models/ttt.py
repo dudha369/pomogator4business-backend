@@ -11,9 +11,7 @@ class TttGame(Model):
     board = fields.CharField(max_length=16, default=".........")
     turn = fields.CharField(max_length=1, default="X")
     player_x_id = fields.BigIntField(null=True)
-    player_x_name = fields.CharField(max_length=255, null=True)
     player_o_id = fields.BigIntField(null=True)
-    player_o_name = fields.CharField(max_length=255, null=True)
     status = fields.CharField(max_length=16, default="active")
     message_id = fields.BigIntField(null=True)
 
@@ -26,9 +24,7 @@ _DEFAULTS = {
     "board": ".........",
     "turn": "X",
     "player_x_id": None,
-    "player_x_name": None,
     "player_o_id": None,
-    "player_o_name": None,
     "status": "active",
     "message_id": None,
 }

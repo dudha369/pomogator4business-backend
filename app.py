@@ -13,6 +13,7 @@ from config import TORTOISE_ORM, settings
 from core.loader import load_modules
 from core.logging_config import configure_logging
 from core.mirror_manager import mirror_dispatcher, mirror_manager
+from core.reminders import run_reminders_loop
 from core.retention import run_retention_loop
 from core.scheduler import run_emoji_clock
 
@@ -48,14 +49,13 @@ async def lifespan(app: FastAPI):
                 allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
             )
         except Exception:
-            # Временная ошибка Telegram API не должна ронять весь сервис
-            # (включая мини-приложение и /health) на старте.
             logger.exception("Не удалось установить вебхук %s", settings.WEBHOOK_URL)
     else:
         logger.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
 
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
     _background_tasks.append(asyncio.create_task(run_retention_loop()))
+    _background_tasks.append(asyncio.create_task(run_reminders_loop(bot)))
 
     await mirror_manager.start_all()
 
@@ -106,9 +106,6 @@ async def telegram_webhook(
     try:
         await dp.feed_webhook_update(bot, data)
     except Exception:
-        # Раньше ошибка разбора апдейта (например, нетипизированное поле
-        # в self-destruct-сообщении) проваливалась до UpdateLoggingMiddleware
-        # и не оставляла следа в логах вообще — бот просто "молчал".
         logger.exception("Не удалось обработать апдейт: %s", data)
     return Response(status_code=200)
 

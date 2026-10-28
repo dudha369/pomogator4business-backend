@@ -1,6 +1,8 @@
-"""Локализация модуля archive."""
-
 RU = {
+    "archive.media_animation": "🎞 GIF сохранён",
+    "archive.media_audio": "🎵 Аудио сохранено",
+    "archive.media_sticker": "🖼 Стикер сохранён",
+    "archive.media_document": "📄 Файл сохранён",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Сообщение изменено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}\n\n'
@@ -25,6 +27,10 @@ RU = {
 }
 
 EN = {
+    "archive.media_animation": "🎞 GIF saved",
+    "archive.media_audio": "🎵 Audio saved",
+    "archive.media_sticker": "🖼 Sticker saved",
+    "archive.media_document": "📄 File saved",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Message edited!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}\n\n'
@@ -49,6 +55,10 @@ EN = {
 }
 
 UK = {
+    "archive.media_animation": "🎞 GIF збережено",
+    "archive.media_audio": "🎵 Аудіо збережено",
+    "archive.media_sticker": "🖼 Стікер збережено",
+    "archive.media_document": "📄 Файл збережено",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Повідомлення змінено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}\n\n'

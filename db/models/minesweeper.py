@@ -16,7 +16,6 @@ class MsGame(Model):
     flagged = fields.TextField(default="[]")
     flag_mode = fields.BooleanField(default=False)
     starter_id = fields.BigIntField(null=True)
-    starter_name = fields.CharField(max_length=255, null=True)
     phase = fields.CharField(max_length=16, default="settings")
     message_id = fields.BigIntField(null=True)
 
@@ -34,7 +33,6 @@ _DEFAULTS = {
     "flagged": "[]",
     "flag_mode": False,
     "starter_id": None,
-    "starter_name": None,
     "phase": "settings",
     "message_id": None,
 }

@@ -8,7 +8,7 @@ import re
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.deps import require_connection, require_user
+from api.deps import Owner, current_owner, require_user
 from core import database as db
 from core.registry import registry
 
@@ -37,8 +37,8 @@ class AliasCreate(BaseModel):
 
 
 @router.post("/aliases")
-async def create_alias(payload: AliasCreate, user: dict = Depends(require_user)):
-    connection = await require_connection(user["id"])
+async def create_alias(payload: AliasCreate, owner: Owner = Depends(current_owner)):
+    user, connection = owner.user, owner.connection
     owner_id = user["id"]
 
     cmd = registry.find(payload.command.strip().lower())

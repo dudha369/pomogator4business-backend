@@ -26,10 +26,18 @@ class Settings(BaseSettings):
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
     # Очистка старых данных (0 — не очищать). См. core/retention.py
-    MEDIA_RETENTION_DAYS: int = 14
+    MEDIA_RETENTION_DAYS: int = 14  # байты медиа в истории чата
+    # байты медиа, сохранённые в записях архива (удалённые сообщения): дольше,
+    # потому что ради них архив и нужен
+    ARCHIVE_MEDIA_RETENTION_DAYS: int = 90
     HISTORY_RETENTION_DAYS: int = 90
     ARCHIVE_RETENTION_DAYS: int = 0
     MESSAGE_LOG_KEEP: int = 20000
+
+    # ИИ-ответы (см. core/ai.py). Без ключа функция недоступна.
+    AI_API_KEY: str = ""
+    AI_MODEL: str = "claude-haiku-5-5"
+    AI_API_URL: str = "https://api.anthropic.com/v1/messages"
 
     # Документация API (/docs, /openapi.json) — только для разработки
     ENABLE_DOCS: bool = False
@@ -85,6 +93,10 @@ TORTOISE_ORM = {
                 "db.models.known_chat",
                 "db.models.favorite_chat",
                 "db.models.command_alias",
+                "db.models.quick_template",
+                "db.models.chat_flags",
+                "db.models.ai",
+                "db.models.reminders",
                 "db.models.message_history",
                 "db.models.archive_log",
                 "db.models.profile_backup",

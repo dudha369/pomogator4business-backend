@@ -1,13 +1,16 @@
 import json
+import logging
 
 from aiogram import Bot, Router
 from aiogram.types import BusinessConnection
 
 from core import database as db
+from core.connection_migration import adopt_previous_connection
 from core.i18n import t
 from core.webapp import webapp_keyboard
 from core.utils import log_suppressed
 
+logger = logging.getLogger("bot.connection")
 router = Router(name="connection")
 
 
@@ -25,6 +28,14 @@ async def on_business_connection(connection: BusinessConnection, bot: Bot):
         owner_username=connection.user.username,
         rights_json=json.dumps(rights, ensure_ascii=False),
     )
+
+    if previous is None and connection.is_enabled:
+        # новое подключение (например, после переподключения бота в настройках
+        # Telegram): переносим данные со старого, чтобы архив и настройки не пропали
+        try:
+            await adopt_previous_connection(connection.id, connection.user.id)
+        except Exception:
+            logger.exception("Не удалось перенести данные на новое подключение")
 
     was_enabled = bool(previous and previous["is_enabled"])
     if connection.is_enabled == was_enabled:

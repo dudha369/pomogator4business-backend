@@ -15,6 +15,7 @@ from aiogram.types import (
 )
 
 from core import database as db
+from core.mentions import format_mention
 from core.i18n import t
 from core.registry import registry
 from core.self_actions import consume_self_delete
@@ -29,6 +30,10 @@ _MEDIA_SEND = {
     "video": ("send_video", "video"),
     "voice": ("send_voice", "voice"),
     "video_note": ("send_video_note", "video_note"),
+    "animation": ("send_animation", "animation"),
+    "audio": ("send_audio", "audio"),
+    "sticker": ("send_sticker", "sticker"),
+    "document": ("send_document", "document"),
 }
 
 _MEDIA_LABEL_KEYS = {
@@ -36,7 +41,14 @@ _MEDIA_LABEL_KEYS = {
     "video": "archive.media_video",
     "voice": "archive.media_voice",
     "video_note": "archive.media_video_note",
+    "animation": "archive.media_animation",
+    "audio": "archive.media_audio",
+    "sticker": "archive.media_sticker",
+    "document": "archive.media_document",
 }
+
+# этот способ отправки не поддерживает подпись — шлём её отдельным сообщением
+_NO_CAPTION = {"video_note", "sticker"}
 
 
 def highlight_changes(old_text: str, new_text: str) -> str:
@@ -55,12 +67,6 @@ def highlight_changes(old_text: str, new_text: str) -> str:
                 result.append(f"<b>{escape(new_part)}</b>")
 
     return "".join(result)
-
-
-def _format_mention(full_name, username, chat_id):
-    if username:
-        return f'<a href="https://t.me/{username}">{html.quote(full_name)}</a>'
-    return f'<a href="tg://user?id={chat_id}">{html.quote(full_name)}</a>'
 
 
 def _message_link(username, message_id):
@@ -108,12 +114,13 @@ async def _send_deleted_media(bot, chat_id, entry, locale):
     if spec is None:
         return
     method_name, kwarg = spec
-    file = BufferedInputFile(bytes(data), filename=f"deleted_{kind}")
+    file = BufferedInputFile(
+        bytes(data), filename=entry.get("media_name") or f"deleted_{kind}"
+    )
     caption = t(_MEDIA_LABEL_KEYS.get(kind, "archive.media_placeholder"), locale)
     try:
-        if kind == "video_note":
-            # send_video_note не поддерживает caption — подпись шлём отдельным сообщением
-            await bot.send_video_note(chat_id=chat_id, video_note=file)
+        if kind in _NO_CAPTION:
+            await getattr(bot, method_name)(chat_id=chat_id, **{kwarg: file})
             await bot.send_message(chat_id=chat_id, text=caption)
         else:
             await getattr(bot, method_name)(
@@ -164,7 +171,7 @@ async def on_business_edited(message: Message, bot: Bot):
             text = t(
                 "archive.edited_notice",
                 locale,
-                mention=_format_mention(
+                mention=format_mention(
                     message.from_user.full_name,
                     message.from_user.username,
                     message.chat.id,
@@ -234,7 +241,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
         text = t(
             "archive.deleted_notice",
             locale,
-            mention=_format_mention(
+            mention=format_mention(
                 event.chat.full_name, event.chat.username, event.chat.id
             ),
             old_text=body,
@@ -260,5 +267,12 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
             entry["text"],
             None,
             int(time.time()),
+            # медиа переезжает в запись архива: историю ниже чистят, а архив
+            # должен показывать фото/видео и дальше
+            media_type=entry.get("media_type"),
+            media_data=entry.get("media_data"),
+            media_mime=entry.get("media_mime"),
+            media_name=entry.get("media_name"),
+            media_status=entry.get("media_status"),
         )
         await db.delete_history(connection_id, event.chat.id, message_id)
