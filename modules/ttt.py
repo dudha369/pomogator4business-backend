@@ -31,24 +31,24 @@ def _check_winner(board):
             return board[a], {a, b, c}
 
     if "." not in board:
-        return "draw", set()
+        return "draw", range(9)
 
     return None, set()
 
 
-def _challenge_keyboard():
+def _challenge_keyboard(accept: str, decline: str):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="<tg-emoji emoji-id='5258108352008823107'>✅</tg-emoji>",
-                    callback_data="ttt:accept",
-                    style="success",
-                ),
-                InlineKeyboardButton(
-                    text="<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji>",
+                    text=f"<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji> {decline}",
                     callback_data="ttt:decline",
                     style="danger",
+                ),
+                InlineKeyboardButton(
+                    text=f"<tg-emoji emoji-id='5258108352008823107'>✅</tg-emoji> {accept}",
+                    callback_data="ttt:accept",
+                    style="success",
                 ),
             ]
         ]
@@ -147,7 +147,9 @@ async def cmd_ttt(ctx):
         mention=format_mention(starter.full_name, starter.username, starter.id),
     )
     await ctx.edit_command_message(
-        text, reply_markup=_challenge_keyboard(), parse_mode="html"
+        text,
+        reply_markup=_challenge_keyboard(**t("ttt.choice", ctx.locale)),
+        parse_mode="html",
     )
     await db.save_ttt_game(
         ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id

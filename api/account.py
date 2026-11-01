@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_user
+from api.emoji_status import build_styles_payload
 from core import database as db
 
 router = APIRouter()
@@ -47,6 +48,8 @@ async def get_account(user: dict = Depends(require_user)):
         "emoji_status": {
             "granted": await db.is_emoji_status_granted(owner_id),
             "enabled": await db.is_emoji_status_enabled(owner_id),
+            "style": await db.get_emoji_status_style(owner_id),
+            "styles": await build_styles_payload(),
         },
         "timezone_offset_minutes": await db.get_timezone_offset(owner_id),
     }

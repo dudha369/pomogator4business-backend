@@ -48,6 +48,7 @@ from db.models.city import get_city_game, save_city_game
 from db.models.clock import (
     count_clock_emojis,
     get_clock_emoji,
+    get_completed_clock_styles,
     get_clock_pack,
     save_clock_emoji,
     upsert_clock_pack,
@@ -61,6 +62,9 @@ from db.models.connection import (
 from db.models.echo import is_echo_enabled, toggle_echo
 from db.models.emoji_status import (
     get_active_emoji_status_owners,
+    get_active_emoji_status_settings,
+    get_emoji_status_style,
+    set_emoji_status_style,
     is_emoji_status_enabled,
     is_emoji_status_granted,
     set_emoji_status_enabled,
@@ -200,6 +204,10 @@ __all__ = [
     "disable_module",
     "enable_module",
     "get_active_emoji_status_owners",
+    "get_active_emoji_status_settings",
+    "get_completed_clock_styles",
+    "get_emoji_status_style",
+    "set_emoji_status_style",
     "get_all_active_mirrors",
     "get_chk_game",
     "get_city_game",
