@@ -6,8 +6,8 @@ RU = {
         "<tg-emoji emoji-id='5402467554356668905'>⭕️</tg-emoji> {o_name}"
     ),
     "ttt.turn": "<b>Ход:</b> {symbol}",
-    "ttt.win": "<tg-emoji emoji-id='5258262708838472996'>🏆</tg-emoji> Победа {symbol} {name}!",
-    "ttt.draw": "<tg-emoji emoji-id='5258262708838472996'>🤝</tg-emoji> Ничья!",
+    "ttt.win": "<tg-emoji emoji-id='5258262708838472996'>🏆</tg-emoji> <b>Победа {symbol} {name}!</b></b>",
+    "ttt.draw": "<tg-emoji emoji-id='5258262708838472996'>🤝</tg-emoji> <b>Ничья!</b>",
     "ttt.not_your_game": "Это не ваша игра.",
     "ttt.not_your_turn": "Сейчас не ваш ход.",
     "ttt.cell_taken": "Клетка уже занята.",
@@ -23,36 +23,46 @@ RU = {
 
 EN = {
     "ttt.player": "Player",
-    "ttt.header": "❌ {x_name}\n⭕ {o_name}",
-    "ttt.turn": "Turn: {symbol}",
-    "ttt.win": "🏆 {symbol} {name} wins!",
-    "ttt.draw": "🤝 Draw!",
+    "ttt.header": (
+        "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> <b>Tic-tac-toe</b>\n\n"
+        "<tg-emoji emoji-id='5404337815045583229'>❌</tg-emoji> {x_name}\n"
+        "<tg-emoji emoji-id='5402467554356668905'>⭕️</tg-emoji> {o_name}"
+    ),
+    "ttt.turn": "<b>Turn:</b> {symbol}",
+    "ttt.win": "<tg-emoji emoji-id='5258262708838472996'>🏆</tg-emoji> {symbol} {name} <b>wins!</b>",
+    "ttt.draw": "<tg-emoji emoji-id='5258262708838472996'>🤝</tg-emoji> <b>Draw!</b>",
     "ttt.not_your_game": "This isn't your game.",
     "ttt.not_your_turn": "It's not your turn.",
-    "ttt.cell_taken": "That cell is taken.",
-    "ttt.challenge": "🎮 {mention} challenges you to tic-tac-toe!",
-    "ttt.declined": "❌ Challenge declined.",
+    "ttt.cell_taken": "That cell is already occupied.",
+    "ttt.challenge": "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> {mention} challenges you to a game of tic-tac-toe!",
+    "ttt.choice": {"accept": "Accept", "decline": "Decline"},
+    "ttt.declined": "<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji> Challenge declined.",
     "ttt.cant_accept_own": "You can't accept your own challenge.",
     "cmdmeta.ttt.title": "Tic-tac-toe",
-    "cmdmeta.ttt.short": "Tic-tac-toe",
-    "cmdmeta.ttt.long": "Sends a tic-tac-toe challenge in the chat — the other person can accept or decline with buttons under the message.",
+    "cmdmeta.ttt.short": "Tic-tac-toe game",
+    "cmdmeta.ttt.long": "Starts a tic-tac-toe challenge in the chat — the other person can accept or decline the invitation using the buttons below the message.",
     "cmdmeta.ttt.usage": ".ttt",
 }
 
 UK = {
     "ttt.player": "Гравець",
-    "ttt.header": "❌ {x_name}\n⭕ {o_name}",
-    "ttt.turn": "Хід: {symbol}",
-    "ttt.win": "🏆 Перемога {symbol} {name}!",
-    "ttt.draw": "🤝 Нічия!",
+    "ttt.header": (
+        "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> <b>Хрестики-нулики</b>\n\n"
+        "<tg-emoji emoji-id='5404337815045583229'>❌</tg-emoji> {x_name}\n"
+        "<tg-emoji emoji-id='5402467554356668905'>⭕️</tg-emoji> {o_name}"
+    ),
+    "ttt.turn": "<b>Хід:</b> {symbol}",
+    "ttt.win": "<tg-emoji emoji-id='5258262708838472996'>🏆</tg-emoji> <b>Переміг {symbol} {name}!</b>",
+    "ttt.draw": "<tg-emoji emoji-id='5258262708838472996'>🤝</tg-emoji> <b>Нічия!</b>",
     "ttt.not_your_game": "Це не ваша гра.",
     "ttt.not_your_turn": "Зараз не ваш хід.",
     "ttt.cell_taken": "Клітинка вже зайнята.",
-    "ttt.challenge": "🎮 {mention} запрошує зіграти у хрестики-нулики!",
-    "ttt.declined": "❌ Виклик відхилено.",
+    "ttt.challenge": "<tg-emoji emoji-id='5258508428212445001'>🎮</tg-emoji> {mention} кидає вам виклик у грі «Хрестики-нулики»!",
+    "ttt.choice": {"accept": "Прийняти", "decline": "Відхилити"},
+    "ttt.declined": "<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji> Виклик відхилено.",
     "ttt.cant_accept_own": "Не можна прийняти власний виклик.",
     "cmdmeta.ttt.title": "Хрестики-нулики",
-    "cmdmeta.ttt.short": "Хрестики-нулики",
-    "cmdmeta.ttt.long": "Надсилає виклик на хрестики-нулики в чаті — співрозмовник може прийняти або відхилити запрошення кнопками під повідомленням.",
+    "cmdmeta.ttt.short": "Гра в хрестики-нулики",
+    "cmdmeta.ttt.long": "Запускає виклик на гру в хрестики-нулики в чаті — співрозмовник може прийняти або відхилити запрошення кнопками під повідомленням.",
     "cmdmeta.ttt.usage": ".ttt",
 }

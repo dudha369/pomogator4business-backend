@@ -88,7 +88,9 @@ async def _upload_pack(bot, me, style, pack_index, chunk):
 
         uploaded_count = len(first_batch)
         await db.upsert_clock_pack(pack_index, pack_name, uploaded_count, 0, style)
-        print(f"[{style}] pack {pack_index}: создан, {uploaded_count} эмодзи")
+        print(
+            f"[{style}] pack {pack_index}: создан, {uploaded_count} эмодзи, https://t.me/addemoji/{pack_name}"
+        )
 
     for time_key in chunk[uploaded_count:]:
         sticker = _build_input_sticker(style, pack_index, time_key)

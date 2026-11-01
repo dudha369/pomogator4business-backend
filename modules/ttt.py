@@ -150,13 +150,13 @@ async def cmd_ttt(ctx):
         message_id=None,
     )
 
-    text = t(
-        "ttt.challenge",
-        ctx.locale,
-        mention=format_mention(starter.full_name, starter.username, starter.id),
-    )
     await ctx.edit_command_message(
-        text,
+        text=t(
+            "ttt.challenge",
+            ctx.locale,
+            mention=format_mention(starter.full_name, starter.username, starter.id),
+        ),
+        disable_web_page_preview=True,
         reply_markup=_challenge_keyboard(**t("ttt.choice", ctx.locale)),
         parse_mode="html",
     )
