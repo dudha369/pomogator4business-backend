@@ -23,6 +23,11 @@ _SYMBOLS = {
     "O": '<tg-emoji emoji-id="5402467554356668905">⭕️</tg-emoji>',
     ".": "⠀",
 }
+_SYMBOLS_ICONS_IDS = {
+    "X": "5404337815045583229",
+    "O": "5402467554356668905",
+    ".": None,
+}
 
 
 def _check_winner(board):
@@ -41,12 +46,14 @@ def _challenge_keyboard(accept: str, decline: str):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=f"<tg-emoji emoji-id='5260342697075416641'>❌</tg-emoji> {decline}",
+                    icon_custom_emoji_id="5260342697075416641",
+                    text=decline,
                     callback_data="ttt:decline",
                     style="danger",
                 ),
                 InlineKeyboardButton(
-                    text=f"<tg-emoji emoji-id='5258108352008823107'>✅</tg-emoji> {accept}",
+                    icon_custom_emoji_id="5258108352008823107",
+                    text=accept,
                     callback_data="ttt:accept",
                     style="success",
                 ),
@@ -72,7 +79,8 @@ def _build_keyboard(board, finished, winning_line=None):
                 callback_data = f"ttt:{idx}" if cell == "." else "ttt:taken"
 
             button_kwargs = {
-                "text": _SYMBOLS[cell],
+                "icon_custom_emoji_id": _SYMBOLS_ICONS_IDS[cell],
+                "text": "​",
                 "callback_data": callback_data,
             }
 
@@ -87,7 +95,8 @@ def _build_keyboard(board, finished, winning_line=None):
         rows.append(
             [
                 InlineKeyboardButton(
-                    text="🔄",
+                    icon_custom_emoji_id="5258420634785947640",
+                    text="​",
                     callback_data="ttt:restart",
                     style="primary",
                 )
