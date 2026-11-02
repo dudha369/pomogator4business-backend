@@ -13,6 +13,9 @@ from .conftest import CONNECTION_ID, FakeBot, make_message
 
 CHAT = 7
 ANYA, BORIS = 7, 8
+# id сообщения, в котором «живёт» последняя запущенная игра (как в Telegram,
+# где кнопки принадлежат конкретному сообщению)
+_LAST = {"message_id": 500}
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +28,7 @@ def clean_mentions():
 class Call:
     """Нажатие inline-кнопки."""
 
-    def __init__(self, data, user_id, name, username=None, message_id=500):
+    def __init__(self, data, user_id, name, username=None, message_id=None):
         self.data = data
         self.from_user = types.SimpleNamespace(
             id=user_id, full_name=name, username=username
@@ -34,12 +37,12 @@ class Call:
         self.message = types.SimpleNamespace(
             business_connection_id=CONNECTION_ID,
             chat=types.SimpleNamespace(id=CHAT),
-            message_id=message_id,
+            message_id=message_id or _LAST["message_id"],
             edit_text=self._edit,
             edit_reply_markup=self._noop,
         )
 
-    async def _edit(self, text, reply_markup=None, parse_mode=None):
+    async def _edit(self, text, reply_markup=None, parse_mode=None, **kw):
         self.edits.append(
             {"text": text, "markup": reply_markup, "parse_mode": parse_mode}
         )
@@ -58,6 +61,7 @@ def command_ctx(bot, connection, user_id, name, username=None):
     msg.from_user = types.SimpleNamespace(
         id=user_id, full_name=name, username=username, first_name=name, last_name=None
     )
+    _LAST["message_id"] = msg.message_id
     return CommandContext(
         bot=bot, message=msg, connection=connection, args="", locale="ru"
     )
@@ -197,3 +201,71 @@ async def test_minesweeper_start_without_name_column(connection, bot):
     await cmd_ms(command_ctx(bot, connection, ANYA, "Аня"))
     game = await db.get_ms_game(CONNECTION_ID, CHAT)
     assert game["starter_id"] == ANYA and "starter_name" not in game
+
+
+# --- регрессии: падения, из-за которых игра «не принималась» ---------------
+
+
+def test_ttt_keyboard_buttons_always_have_text():
+    """Без text aiogram кидает ValidationError (так сломался «Принять»)."""
+    from modules.ttt import _build_keyboard
+
+    for board, finished in (
+        (".........", False),
+        ("XOX.O.XO.", False),
+        ("XXXOO....", True),
+    ):
+        kb = _build_keyboard(board, finished, {0, 1, 2} if finished else None)
+        assert all(b.text for row in kb.inline_keyboard for b in row)
+
+
+async def test_ttt_stray_actions_do_not_crash(connection, bot):
+    """Повторный accept / мусорные данные в активной игре — тихий ответ, не исключение."""
+    await start_ttt(bot, connection)
+    await on_ttt_callback(Call("ttt:accept", BORIS, "Боря"), bot)
+    for data in (
+        "ttt:accept",
+        "ttt:decline",
+        "ttt:restart",
+        "ttt:99",
+        "ttt:abc",
+        "ttt:noop",
+    ):
+        call = Call(data, BORIS, "Боря")
+        await on_ttt_callback(call, bot)
+        assert call.answers and not call.edits
+    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "active"
+
+
+async def test_ttt_failed_message_edit_does_not_leave_game_active(connection, bot):
+    await start_ttt(bot, connection)
+    accept = Call("ttt:accept", BORIS, "Боря")
+
+    async def boom(*a, **kw):
+        raise RuntimeError("telegram error")
+
+    accept.message.edit_text = boom
+    with pytest.raises(RuntimeError):
+        await on_ttt_callback(accept, bot)
+    game = await db.get_ttt_game(CONNECTION_ID, CHAT)
+    assert game["status"] == "pending" and game["player_o_id"] is None
+    # и повторное нажатие работает
+    retry = Call("ttt:accept", BORIS, "Боря")
+    await on_ttt_callback(retry, bot)
+    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "active"
+
+
+async def test_ttt_buttons_of_old_message_do_not_touch_new_game(connection, bot):
+    await start_ttt(bot, connection)
+    old = Call("ttt:accept", BORIS, "Боря", message_id=1)  # другое сообщение
+    await on_ttt_callback(old, bot)
+    assert not old.edits
+    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "pending"
+
+
+async def test_ttt_decline_and_restart_after_finish(connection, bot):
+    await start_ttt(bot, connection)
+    decline = Call("ttt:decline", BORIS, "Боря")
+    await on_ttt_callback(decline, bot)
+    assert "отклонён" in decline.edits[-1]["text"]
+    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "finished"

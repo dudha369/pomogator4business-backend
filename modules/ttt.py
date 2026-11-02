@@ -1,5 +1,12 @@
+from dataclasses import dataclass
+
 from aiogram import Bot, F, Router
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    LinkPreviewOptions,
+)
 
 from core import database as db
 from core.i18n import t
@@ -23,6 +30,7 @@ _SYMBOLS = {
     "O": '<tg-emoji emoji-id="5402467554356668905">⭕️</tg-emoji>',
     ".": "⠀",
 }
+_BTN_TEXT = "\u200b"
 _SYMBOLS_ICONS_IDS = {
     "X": "5404337815045583229",
     "O": "5402467554356668905",
@@ -41,7 +49,9 @@ def _check_winner(board):
     return None, set()
 
 
-def _challenge_keyboard(accept: str, decline: str):
+def _challenge_keyboard(locale: str):
+    accept = t("ttt.btn_accept", locale)
+    decline = t("ttt.btn_decline", locale)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -80,7 +90,7 @@ def _build_keyboard(board, finished, winning_line=None):
 
             button_kwargs = {
                 "icon_custom_emoji_id": _SYMBOLS_ICONS_IDS[cell],
-                # "text": "​",
+                "text": _BTN_TEXT,
                 "callback_data": callback_data,
             }
 
@@ -96,7 +106,7 @@ def _build_keyboard(board, finished, winning_line=None):
             [
                 InlineKeyboardButton(
                     icon_custom_emoji_id="5258420634785947640",
-                    text="​",
+                    text=_BTN_TEXT,
                     callback_data="ttt:restart",
                     style="primary",
                 )
@@ -156,8 +166,8 @@ async def cmd_ttt(ctx):
             ctx.locale,
             mention=format_mention(starter.full_name, starter.username, starter.id),
         ),
-        disable_web_page_preview=True,
-        reply_markup=_challenge_keyboard(**t("ttt.choice", ctx.locale)),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+        reply_markup=_challenge_keyboard(ctx.locale),
         parse_mode="html",
     )
     await db.save_ttt_game(
@@ -165,88 +175,67 @@ async def cmd_ttt(ctx):
     )
 
 
-@router.callback_query(F.data.startswith("ttt:"))
-async def on_ttt_callback(call: CallbackQuery, bot: Bot):
-    action = call.data.split(":", 1)[1]
-    business_connection_id = call.message.business_connection_id
-    chat_id = call.message.chat.id
+async def _show(call, bot, locale, game, winner=None, winning_line=None):
+    """Единственное место, где перерисовывается сообщение с игрой."""
+    finished = bool(winner)
+    await call.message.edit_text(
+        _build_text(locale, game, winner, await _players(bot, game, locale)),
+        reply_markup=_build_keyboard(game["board"], finished, winning_line),
+        parse_mode="html",
+    )
 
-    game = await db.get_ttt_game(business_connection_id, chat_id)
-    if not game:
-        await call.answer()
+
+async def _on_decline(call, ctx):
+    await db.save_ttt_game(ctx.conn_id, ctx.chat_id, status="finished")
+    await call.message.edit_text(t("ttt.declined", ctx.locale), parse_mode="html")
+
+
+async def _on_accept(call, bot, ctx):
+    game = ctx.game
+    if call.from_user.id == game["player_x_id"]:
+        await call.answer(t("ttt.cant_accept_own", ctx.locale), show_alert=True)
         return
-
-    connection = await db.get_connection(business_connection_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
-
-    if action == "noop":
-        await call.answer()
-        return
-
-    if game["status"] == "pending":
-        if action == "decline":
-            await db.save_ttt_game(business_connection_id, chat_id, status="finished")
-            await call.message.edit_text(t("ttt.declined", locale))
-            await call.answer()
-            return
-
-        if action == "accept":
-            if call.from_user.id == game["player_x_id"]:
-                await call.answer(t("ttt.cant_accept_own", locale), show_alert=True)
-                return
-            remember(call.from_user)
-            await db.save_ttt_game(
-                business_connection_id,
-                chat_id,
-                player_o_id=call.from_user.id,
-                status="active",
-            )
-            game = await db.get_ttt_game(business_connection_id, chat_id)
-            await call.message.edit_text(
-                _build_text(locale, game, None, await _players(bot, game, locale)),
-                reply_markup=_build_keyboard(game["board"], False),
-                parse_mode="html",
-            )
-            await call.answer()
-            return
-
-        await call.answer()
-        return
-
-    if action == "taken":
-        await call.answer(t("ttt.cell_taken", locale), show_alert=False)
-        return
-
-    if action == "restart":
-        starter = call.from_user
-        remember(starter)
+    remember(call.from_user)
+    await db.save_ttt_game(
+        ctx.conn_id, ctx.chat_id, player_o_id=call.from_user.id, status="active"
+    )
+    game = await db.get_ttt_game(ctx.conn_id, ctx.chat_id)
+    try:
+        await _show(call, bot, ctx.locale, game)
+    except Exception:
         await db.save_ttt_game(
-            business_connection_id,
-            chat_id,
-            board=".........",
-            turn="X",
-            player_x_id=starter.id,
-            player_o_id=None,
-            status="pending",
-            message_id=call.message.message_id,
+            ctx.conn_id, ctx.chat_id, player_o_id=None, status="pending"
         )
-        await call.message.edit_text(
-            t(
-                "ttt.challenge",
-                locale,
-                mention=format_mention(starter.full_name, starter.username, starter.id),
-            ),
-            reply_markup=_challenge_keyboard(),
-            parse_mode="html",
-        )
-        await call.answer()
-        return
+        raise
 
-    if game["status"] != "active":
-        await call.answer()
-        return
 
-    idx = int(action)
+async def _on_restart(call, ctx):
+    starter = call.from_user
+    remember(starter)
+    await db.save_ttt_game(
+        ctx.conn_id,
+        ctx.chat_id,
+        board=".........",
+        turn="X",
+        player_x_id=starter.id,
+        player_o_id=None,
+        status="pending",
+        message_id=call.message.message_id,
+    )
+    await call.message.edit_text(
+        t(
+            "ttt.challenge",
+            ctx.locale,
+            mention=format_mention(starter.full_name, starter.username, starter.id),
+        ),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+        reply_markup=_challenge_keyboard(ctx.locale),
+        parse_mode="html",
+    )
+
+
+async def _on_move(call, bot, ctx, idx):
+    game = ctx.game
     user_id = call.from_user.id
 
     if user_id == game["player_x_id"]:
@@ -254,43 +243,78 @@ async def on_ttt_callback(call: CallbackQuery, bot: Bot):
     elif user_id == game["player_o_id"]:
         symbol = "O"
     else:
-        await call.answer(t("ttt.not_your_game", locale), show_alert=True)
+        await call.answer(t("ttt.not_your_game", ctx.locale), show_alert=True)
         return
 
     if symbol != game["turn"]:
-        await call.answer(t("ttt.not_your_turn", locale), show_alert=True)
+        await call.answer(t("ttt.not_your_turn", ctx.locale), show_alert=True)
         return
 
     board = list(game["board"])
     if board[idx] != ".":
-        await call.answer(t("ttt.cell_taken", locale))
+        await call.answer(t("ttt.cell_taken", ctx.locale))
         return
 
     board[idx] = symbol
     board_str = "".join(board)
-
     winner, winning_line = _check_winner(board_str)
 
-    next_turn = "O" if symbol == "X" else "X"
-    status = "finished" if winner else "active"
-
     await db.save_ttt_game(
-        business_connection_id,
-        chat_id,
+        ctx.conn_id,
+        ctx.chat_id,
         board=board_str,
-        turn=next_turn,
-        status=status,
+        turn="O" if symbol == "X" else "X",
+        status="finished" if winner else "active",
     )
-    game = await db.get_ttt_game(business_connection_id, chat_id)
-
+    game = await db.get_ttt_game(ctx.conn_id, ctx.chat_id)
     remember(call.from_user)
-    await call.message.edit_text(
-        _build_text(locale, game, winner, await _players(bot, game, locale)),
-        reply_markup=_build_keyboard(
-            board_str,
-            bool(winner),
-            winning_line,
-        ),
-        parse_mode="html",
-    )
+    await _show(call, bot, ctx.locale, game, winner, winning_line)
+
+
+def _parse_action(action: str):
+    """'0'..'8' -> ('move', idx); иначе ('name', None)."""
+    if action.isdigit() and 0 <= int(action) <= 8:
+        return "move", int(action)
+    return action, None
+
+
+@dataclass
+class _Ctx:
+    conn_id: str
+    chat_id: int
+    locale: str
+    game: dict
+
+
+@router.callback_query(F.data.startswith("ttt:"))
+async def on_ttt_callback(call: CallbackQuery, bot: Bot):
+    action, idx = _parse_action(call.data.split(":", 1)[1])
+    conn_id = call.message.business_connection_id
+    chat_id = call.message.chat.id
+
+    game = await db.get_ttt_game(conn_id, chat_id)
+    stale = game and game["message_id"] not in (None, call.message.message_id)
+    if not game or stale:
+        await call.answer()
+        return
+
+    connection = await db.get_connection(conn_id)
+    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    ctx = _Ctx(conn_id, chat_id, locale, game)
+    status = game["status"]
+
+    if status == "pending" and action == "decline":
+        await _on_decline(call, ctx)
+    elif status == "pending" and action == "accept":
+        await _on_accept(call, bot, ctx)
+    elif status == "active" and action == "move":
+        await _on_move(call, bot, ctx, idx)
+    elif status == "active" and action == "taken":
+        await call.answer(t("ttt.cell_taken", locale))
+        return
+    elif status == "finished" and action == "restart":
+        await _on_restart(call, ctx)
+    else:
+        pass
+
     await call.answer()
