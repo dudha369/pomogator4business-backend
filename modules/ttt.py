@@ -80,7 +80,7 @@ def _build_keyboard(board, finished, winning_line=None):
 
             button_kwargs = {
                 "icon_custom_emoji_id": _SYMBOLS_ICONS_IDS[cell],
-                "text": "​",
+                # "text": "​",
                 "callback_data": callback_data,
             }
 
