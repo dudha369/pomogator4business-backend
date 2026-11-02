@@ -1,3 +1,5 @@
+import pytest
+
 from modules.ping import cmd_ping
 from core.context import CommandContext
 
@@ -28,3 +30,14 @@ async def test_ping_command_replies_with_pong(connection, bot):
     )
     await cmd_ping(ctx)
     assert "pong" in bot.sent[-1]["text"]
+
+
+@pytest.mark.parametrize("path", ["/", "/health"])
+def test_health_endpoints_accept_head_for_uptime_monitors(path):
+    import app as app_module
+
+    methods = set()
+    for route in app_module.app.routes:
+        if getattr(route, "path", None) == path:
+            methods |= route.methods
+    assert {"GET", "HEAD"} <= methods

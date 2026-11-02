@@ -133,11 +133,11 @@ async def mirror_webhook(
     return Response(status_code=200)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 async def root():
     return {"status": "ok"}
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
 async def health():
     return {"status": "ok"}
