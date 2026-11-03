@@ -1,7 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
-from core.clock_styles import DEFAULT_CLOCK_STYLE, normalize_clock_style
+from emoji_clock import DEFAULT_STYLE_ID as DEFAULT_CLOCK_STYLE
+from emoji_clock import normalize_style_id as normalize_clock_style
 
 
 class EmojiStatusSetting(Model):
@@ -49,6 +50,7 @@ async def get_active_emoji_status_owners():
 
 
 async def get_active_emoji_status_settings():
+    """[(owner_id, clock_style), ...] для всех, у кого часы включены."""
     rows = await EmojiStatusSetting.filter(enabled=True, granted=True).values_list(
         "owner_id", "clock_style"
     )

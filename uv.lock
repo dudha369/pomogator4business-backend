@@ -351,15 +351,6 @@ wheels = [
 ]
 
 [[package]]
-name = "atlastk"
-version = "0.13.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/24/0a/05fb6abea27b2b8483328d5e4c8bbe16c5be1c2cb58946a478b79d744132/atlastk-0.13.5.tar.gz", hash = "sha256:1679045b090e1d411806a55a8bef26d6ca268c0ac31ad07dbd17052774316009", size = 19719, upload-time = "2025-05-27T12:51:23.519Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/e1/c8209555c5ff5e2f13c13aa18d1b46eec1618a7e5cc6ec2c548e88a18901/atlastk-0.13.5-py3-none-any.whl", hash = "sha256:70184097f424a70d83822d783d46c7579427c4a6e7227ec54099368fd1fb2750", size = 24933, upload-time = "2025-05-27T12:51:22.046Z" },
-]
-
-[[package]]
 name = "attrs"
 version = "26.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1293,7 +1284,6 @@ dependencies = [
     { name = "qrcode" },
     { name = "speechrecognition" },
     { name = "tomlkit" },
-    { name = "tortoise" },
     { name = "tortoise-orm" },
     { name = "uvicorn" },
 ]
@@ -1318,8 +1308,7 @@ requires-dist = [
     { name = "qrcode", specifier = ">=8.2" },
     { name = "speechrecognition", specifier = ">=3.10" },
     { name = "tomlkit", specifier = ">=0.15.1" },
-    { name = "tortoise", specifier = ">=0.1.1" },
-    { name = "tortoise-orm", specifier = ">=1.0" },
+    { name = "tortoise-orm", specifier = "==0.25.4" },
     { name = "uvicorn", specifier = ">=0.39.0" },
 ]
 provides-extras = ["migration"]
@@ -1625,6 +1614,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pytz"
+version = "2026.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/b0/168030b0bfcc334cf09fa3313afdb888d892c8a0027324683d1de0ec277e/pytz-2026.6.tar.gz", hash = "sha256:3b0fc2727707663d6e517936f444fd8a8b240f1fc32f4bf7ee03274245945284", size = 318520, upload-time = "2026-10-29T09:05:47.011Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/25/564f3fc5b70c1398d706c51f2b1470d0ea0b1b2f96fee67877b6f5bdf3b6/pytz-2026.6-py2.py3-none-any.whl", hash = "sha256:7fed3fee8fd6bd4a2b7b75a8d56021d0624127bf69bd5691f115db929ac570b3", size = 506321, upload-time = "2026-10-29T09:05:45.14Z" },
+]
+
+[[package]]
 name = "qrcode"
 version = "8.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1719,32 +1717,20 @@ wheels = [
 ]
 
 [[package]]
-name = "tortoise"
-version = "0.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "atlastk" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/98/970d10bcc02eda8370c425dd6306526eec8b407aa83f13bb0ebe7da41012/tortoise-0.1.1.tar.gz", hash = "sha256:a4ebd69b152d266174b3b0f2a22e3fb8995101eb749d3114813a98f405ab10bb", size = 4114, upload-time = "2019-08-03T15:54:19.508Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/ef/b314819f12e48e7a99f07825d064b596d58cc4a0c3b75939d0d10fedf90d/tortoise-0.1.1-py3-none-any.whl", hash = "sha256:bcb58a56d6796cad0db330104450df2caf2ea9e98d844bb2906274bd15c12804", size = 5263, upload-time = "2019-08-03T15:54:17.909Z" },
-]
-
-[[package]]
 name = "tortoise-orm"
-version = "1.1.8"
+version = "0.25.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "anyio" },
     { name = "iso8601", marker = "python_full_version < '4'" },
     { name = "pypika-tortoise" },
-    { name = "tomlkit", marker = "python_full_version < '3.11'" },
+    { name = "pytz" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/8c/059f284ed7a08e9cf3a45973e2b9d013a8f242fbb1051a06c3d60c638920/tortoise_orm-1.1.8.tar.gz", hash = "sha256:09e27be9db148824dacea470d01018ab571676f94aa5428a05bcaec44c413ec7", size = 398141, upload-time = "2026-08-10T10:46:46.452Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/44/8a75e91a5d0e2e2545485de3e084fac1f4ff2ba4859e39240fa204c748d5/tortoise_orm-0.25.4.tar.gz", hash = "sha256:88c231ebe158f1287fc9c9497313f9a46cfb70b66c458ba39900921a4e52d01b", size = 232871, upload-time = "2026-02-02T17:57:10.825Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/52/5508cea1339bf9de5016a1ace71e2cca51faf07c54cf54dc3d3ce25e07e1/tortoise_orm-1.1.8-py3-none-any.whl", hash = "sha256:3f771365c54297543b3b2b7fab4ecb03e89de0a68a41328d2e171c043e08e911", size = 278732, upload-time = "2026-08-10T10:46:44.795Z" },
+    { url = "https://files.pythonhosted.org/packages/af/8c/c5825518f67fb9042c4020c272f4c872e10ea5358424e087eb943cef6561/tortoise_orm-0.25.4-py3-none-any.whl", hash = "sha256:a699e629632abf760d14794e8afd3579a9c844623d50a58a6fbdcd6f52b5a37d", size = 168512, upload-time = "2026-02-02T17:57:08.776Z" },
 ]
 
 [[package]]

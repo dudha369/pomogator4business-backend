@@ -5,13 +5,15 @@ from datetime import datetime, timedelta, timezone
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from core import database as db
-from core.clock_styles import DEFAULT_CLOCK_STYLE
+from emoji_clock import DEFAULT_STYLE_ID as DEFAULT_CLOCK_STYLE
 from core.utils import log_suppressed
 
 logger = logging.getLogger("bot.scheduler")
 
 
 async def _emoji_id_for(cache, time_key, style):
+    """custom_emoji_id для (стиль, минута). Если пак выбранного стиля ещё не
+    загружен/обновляется — подставляем стиль по умолчанию, чтобы статус не пропал."""
     for candidate in (style, DEFAULT_CLOCK_STYLE):
         key = (candidate, time_key)
         if key not in cache:
@@ -70,6 +72,8 @@ async def emoji_clock_tick(bot):
 
 
 async def refresh_emoji_status(bot, owner_id):
+    """Сразу применить текущую минуту (например, после смены стиля в приложении),
+    не дожидаясь следующего тика."""
     style = await db.get_emoji_status_style(owner_id)
     offsets = await db.get_timezone_offsets_for([owner_id])
     time_key = _local_time_key(datetime.now(timezone.utc), offsets.get(owner_id, 180))

@@ -1,5 +1,3 @@
-"""Архив: снимки сообщений (тип, файл по file_id, форматирование, пересылка, raw)."""
-
 from tortoise import BaseDBAsyncClient
 
 RUN_IN_TRANSACTION = True
@@ -7,40 +5,40 @@ RUN_IN_TRANSACTION = True
 
 async def upgrade(db: BaseDBAsyncClient) -> str:
     return """
+        ALTER TABLE "message_history" ADD "bot_id" BIGINT;
+        ALTER TABLE "message_history" ADD "entities" JSONB;
+        ALTER TABLE "message_history" ADD "forward" JSONB;
+        ALTER TABLE "message_history" ADD "file_unique_id" VARCHAR(64);
+        ALTER TABLE "message_history" ADD "file_id" VARCHAR(255);
+        ALTER TABLE "message_history" ADD "file_size" BIGINT;
+        ALTER TABLE "message_history" ADD "kind" VARCHAR(24);
+        ALTER TABLE "message_history" ADD "show_caption_above" BOOL NOT NULL DEFAULT False;
+        ALTER TABLE "message_history" ADD "payload" JSONB;
+        ALTER TABLE "message_history" ADD "has_spoiler" BOOL NOT NULL DEFAULT False;
+        ALTER TABLE "message_history" ADD "raw_json" JSONB;
         ALTER TABLE "archive_log" ADD "kind" VARCHAR(24);
-        ALTER TABLE "archive_log" ADD "edit_kind" VARCHAR(24);
         ALTER TABLE "archive_log" ADD "old_snapshot" JSONB;
         ALTER TABLE "archive_log" ADD "new_snapshot" JSONB;
-        ALTER TABLE "message_history" ADD "kind" VARCHAR(24);
-        ALTER TABLE "message_history" ADD "entities" JSONB;
-        ALTER TABLE "message_history" ADD "show_caption_above" BOOL NOT NULL DEFAULT False;
-        ALTER TABLE "message_history" ADD "has_spoiler" BOOL NOT NULL DEFAULT False;
-        ALTER TABLE "message_history" ADD "file_id" VARCHAR(255);
-        ALTER TABLE "message_history" ADD "file_unique_id" VARCHAR(64);
-        ALTER TABLE "message_history" ADD "file_size" BIGINT;
-        ALTER TABLE "message_history" ADD "payload" JSONB;
-        ALTER TABLE "message_history" ADD "forward" JSONB;
-        ALTER TABLE "message_history" ADD "raw_json" JSONB;
-        ALTER TABLE "message_history" ADD "bot_id" BIGINT;"""
+        ALTER TABLE "archive_log" ADD "edit_kind" VARCHAR(24);"""
 
 
 async def downgrade(db: BaseDBAsyncClient) -> str:
     return """
         ALTER TABLE "archive_log" DROP COLUMN "kind";
-        ALTER TABLE "archive_log" DROP COLUMN "edit_kind";
         ALTER TABLE "archive_log" DROP COLUMN "old_snapshot";
         ALTER TABLE "archive_log" DROP COLUMN "new_snapshot";
-        ALTER TABLE "message_history" DROP COLUMN "kind";
+        ALTER TABLE "archive_log" DROP COLUMN "edit_kind";
+        ALTER TABLE "message_history" DROP COLUMN "bot_id";
         ALTER TABLE "message_history" DROP COLUMN "entities";
-        ALTER TABLE "message_history" DROP COLUMN "show_caption_above";
-        ALTER TABLE "message_history" DROP COLUMN "has_spoiler";
-        ALTER TABLE "message_history" DROP COLUMN "file_id";
-        ALTER TABLE "message_history" DROP COLUMN "file_unique_id";
-        ALTER TABLE "message_history" DROP COLUMN "file_size";
-        ALTER TABLE "message_history" DROP COLUMN "payload";
         ALTER TABLE "message_history" DROP COLUMN "forward";
-        ALTER TABLE "message_history" DROP COLUMN "raw_json";
-        ALTER TABLE "message_history" DROP COLUMN "bot_id";"""
+        ALTER TABLE "message_history" DROP COLUMN "file_unique_id";
+        ALTER TABLE "message_history" DROP COLUMN "file_id";
+        ALTER TABLE "message_history" DROP COLUMN "file_size";
+        ALTER TABLE "message_history" DROP COLUMN "kind";
+        ALTER TABLE "message_history" DROP COLUMN "show_caption_above";
+        ALTER TABLE "message_history" DROP COLUMN "payload";
+        ALTER TABLE "message_history" DROP COLUMN "has_spoiler";
+        ALTER TABLE "message_history" DROP COLUMN "raw_json";"""
 
 
 MODELS_STATE = (

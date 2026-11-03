@@ -7,17 +7,22 @@ from pydantic import BaseModel
 
 from api.deps import require_user
 from core import database as db
-from core.clock_styles import CLOCK_PACK_COUNT, CLOCK_STYLES, is_valid_clock_style
+from emoji_clock import STYLES, is_valid_style_id
 from core.utils import log_suppressed
 
 router = APIRouter()
 
 
 async def build_styles_payload():
-    ready = await db.get_completed_clock_styles(CLOCK_PACK_COUNT)
+    """Список стилей для выбора. available=False — паки стиля ещё не загружены."""
+    ready = await db.get_clock_pack_counts()
     return [
-        {"id": style.id, "titles": style.titles, "available": style.id in ready}
-        for style in CLOCK_STYLES
+        {
+            "id": style.id,
+            "titles": style.titles,
+            "available": ready.get(style.id, 0) >= style.pack_count,
+        }
+        for style in STYLES
     ]
 
 
@@ -85,12 +90,15 @@ class EmojiStatusStyle(BaseModel):
 async def set_emoji_status_style(
     payload: EmojiStatusStyle, user: dict = Depends(require_user)
 ):
+    """Выбор вида часов. Применяется сразу, если часы уже включены."""
     owner_id = user["id"]
-    if not is_valid_clock_style(payload.style):
+    if not is_valid_style_id(payload.style):
         raise HTTPException(status_code=400, detail="Unknown clock style")
 
-    ready = await db.get_completed_clock_styles(CLOCK_PACK_COUNT)
-    if payload.style not in ready:
+    available = {
+        item["id"] for item in await build_styles_payload() if item["available"]
+    }
+    if payload.style not in available:
         raise HTTPException(status_code=400, detail="Clock style is not available yet")
 
     await db.set_emoji_status_style(owner_id, payload.style)
