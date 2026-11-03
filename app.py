@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     configure_logging()
 
     load_modules()
-    await Tortoise.init(config=TORTOISE_ORM, _enable_global_fallback=True)
+    await Tortoise.init(config=TORTOISE_ORM)
 
     if settings.WEBHOOK_URL:
         try:
