@@ -41,7 +41,7 @@ async def run_retention_once(now=None):
         stats["archive_purged"] = await db.purge_archive(
             now - settings.ARCHIVE_RETENTION_DAYS * day
         )
-    # журнал автоответов: приветствия не трогаем, остальное — старше 30 дней
+
     stats["autoresponder_log_purged"] = await db.purge_autoresponder_log(now - 30 * day)
     stats["ai_drafts_purged"] = await db.purge_old_drafts(now - 7 * day)
     if settings.MESSAGE_LOG_KEEP > 0:

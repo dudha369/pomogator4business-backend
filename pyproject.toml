@@ -17,6 +17,7 @@ dependencies = [
     "tomlkit>=0.15.1",
     "tortoise-orm>=1.0",
     "uvicorn>=0.39.0",
+    "tortoise>=0.1.1",
 ]
 
 [project.optional-dependencies]

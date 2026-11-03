@@ -8,7 +8,9 @@ from aiogram.types import Message
 from core import database as db
 from core.autoresponder import handle_incoming as handle_autoresponder
 from core.context import CommandContext
+from config import settings
 from core.media import extract_history_media, extract_media_from_reply
+from core.snapshot import build_snapshot
 from core.registry import registry
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
@@ -58,9 +60,10 @@ def _media_fields(media):
 
 async def step_history(inc: Incoming) -> bool:
     message, connection_id = inc.message, inc.connection_id
+    snapshot = build_snapshot(message, bot_id=getattr(inc.bot, "id", None))
     media = None
 
-    if inc.enabled("archive"):
+    if inc.enabled("archive") and settings.KEEP_MEDIA_BYTES:
         try:
             media = await extract_history_media(inc.bot, message)
         except Exception:
@@ -73,7 +76,7 @@ async def step_history(inc: Incoming) -> bool:
     if inc.enabled("archive") and inc.is_owner and message.reply_to_message is not None:
         await _rescue_replied_media(inc)
 
-    if inc.text is not None or media is not None:
+    if inc.text is not None or snapshot is not None:
         await db.save_history(
             connection_id,
             inc.chat_id,
@@ -81,45 +84,10 @@ async def step_history(inc: Incoming) -> bool:
             inc.is_owner,
             inc.text,
             int(message.date.timestamp()) if message.date else int(time.time()),
+            snapshot=snapshot,
             **_media_fields(media),
         )
     return False
-
-
-async def _rescue_replied_media(inc: Incoming) -> None:
-    message, replied = inc.message, inc.message.reply_to_message
-    existing = await db.get_history_entry(
-        inc.connection_id, inc.chat_id, replied.message_id
-    )
-    if existing is not None:
-        return
-
-    try:
-        rescued = await extract_media_from_reply(inc.bot, message)
-    except Exception:
-        logger.warning(
-            "Не удалось достать медиа из reply_to_message %s",
-            replied.message_id,
-            exc_info=True,
-        )
-        rescued = None
-
-    logger.info(
-        "rescue: reply_to=%s нет в истории; поля=%s; медиа=%s",
-        replied.message_id,
-        sorted(replied.model_fields_set),
-        rescued.kind if rescued else None,
-    )
-    if rescued is not None:
-        await db.save_history(
-            inc.connection_id,
-            inc.chat_id,
-            replied.message_id,
-            False,
-            None,
-            int(replied.date.timestamp()),
-            **_media_fields(rescued),
-        )
 
 
 async def step_voice(inc: Incoming) -> bool:
@@ -195,7 +163,6 @@ async def step_command(inc: Incoming) -> bool:
 
     cmd = registry.find(alias)
     if not cmd:
-        # пользовательский алиас владельца (добавляется в вебаппе)
         custom_target = await db.get_command_alias(inc.connection["owner_id"], alias)
         if custom_target:
             cmd = registry.find(custom_target)

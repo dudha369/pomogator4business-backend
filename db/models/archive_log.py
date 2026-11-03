@@ -15,6 +15,10 @@ class ArchiveLog(Model):
     media_name = fields.CharField(max_length=255, null=True)
     media_status = fields.CharField(max_length=16, null=True)
     media_data = fields.BinaryField(null=True)
+    kind = fields.CharField(max_length=24, null=True)
+    edit_kind = fields.CharField(max_length=24, null=True)
+    old_snapshot = fields.JSONField(null=True)
+    new_snapshot = fields.JSONField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -34,6 +38,10 @@ LIST_COLUMNS = (
     "media_mime",
     "media_name",
     "media_status",
+    "kind",
+    "edit_kind",
+    "old_snapshot",
+    "new_snapshot",
     "created_at",
 )
 
@@ -51,6 +59,10 @@ async def log_archive_event(
     media_mime=None,
     media_name=None,
     media_status=None,
+    kind=None,
+    edit_kind=None,
+    old_snapshot=None,
+    new_snapshot=None,
 ):
     if media_type is not None and media_status is None:
         media_status = "saved" if media_data is not None else "failed"
@@ -66,6 +78,10 @@ async def log_archive_event(
         media_mime=media_mime,
         media_name=media_name,
         media_status=media_status,
+        kind=kind,
+        edit_kind=edit_kind,
+        old_snapshot=old_snapshot,
+        new_snapshot=new_snapshot,
         created_at=created_at,
     )
 
@@ -144,6 +160,9 @@ async def list_log_media_availability(connection_id, log_ids):
 async def get_log_media(connection_id, log_id):
     rows = await ArchiveLog.filter(connection_id=connection_id, log_id=log_id).values(
         "log_id",
+        "event",
+        "old_snapshot",
+        "new_snapshot",
         "chat_id",
         "message_id",
         "media_type",

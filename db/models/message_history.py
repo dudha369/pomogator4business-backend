@@ -2,6 +2,8 @@ from tortoise import fields
 from tortoise.functions import Max
 from tortoise.models import Model
 
+from core.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES, SNAPSHOT_COLUMNS
+
 
 class MessageHistory(Model):
     id = fields.IntField(pk=True)
@@ -15,6 +17,17 @@ class MessageHistory(Model):
     media_mime = fields.CharField(max_length=255, null=True)
     media_name = fields.CharField(max_length=255, null=True)
     media_status = fields.CharField(max_length=16, null=True)
+    kind = fields.CharField(max_length=24, null=True)
+    entities = fields.JSONField(null=True)
+    show_caption_above = fields.BooleanField(default=False)
+    has_spoiler = fields.BooleanField(default=False)
+    file_id = fields.CharField(max_length=255, null=True)
+    file_unique_id = fields.CharField(max_length=64, null=True)
+    file_size = fields.BigIntField(null=True)
+    payload = fields.JSONField(null=True)
+    forward = fields.JSONField(null=True)
+    raw_json = fields.JSONField(null=True)
+    bot_id = fields.BigIntField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -35,9 +48,27 @@ async def save_history(
     media_mime=None,
     media_name=None,
     media_status=None,
+    snapshot=None,
 ):
+    """Сохраняет (или обновляет при правке) сообщение.
+
+    snapshot — результат core.snapshot.build_snapshot; media_* — байты файла
+    (нужны только для исчезающих медиа, обычные файлы достаются по file_id)."""
+    snapshot = snapshot or {}
+    if media_type is None and snapshot.get("kind") in FILE_KINDS:
+        media_type = snapshot["kind"]
+        media_mime = media_mime or snapshot.get("media_mime")
+        media_name = media_name or snapshot.get("media_name")
     if media_type is not None and media_status is None:
-        media_status = "saved" if media_data is not None else "failed"
+        if media_data is not None:
+            media_status = "saved"
+        elif snapshot.get("file_id"):
+            too_large = (snapshot.get("file_size") or 0) > MAX_DOWNLOAD_BYTES
+            media_status = "too_large" if too_large else "remote"
+        else:
+            media_status = "failed"
+
+    snap_values = {c: snapshot[c] for c in SNAPSHOT_COLUMNS if c in snapshot}
     obj, created = await MessageHistory.get_or_create(
         connection_id=connection_id,
         chat_id=chat_id,
@@ -51,6 +82,7 @@ async def save_history(
             "media_name": media_name,
             "media_status": media_status,
             "created_at": created_at,
+            **snap_values,
         },
     )
     if not created:
@@ -58,17 +90,17 @@ async def save_history(
         update_fields = ["text"]
         if media_type is not None:
             obj.media_type = media_type
-            obj.media_data = media_data
             obj.media_mime = media_mime
             obj.media_name = media_name
             obj.media_status = media_status
-            update_fields += [
-                "media_type",
-                "media_data",
-                "media_mime",
-                "media_name",
-                "media_status",
-            ]
+            update_fields += ["media_type", "media_mime", "media_name", "media_status"]
+
+            if media_data is not None:
+                obj.media_data = media_data
+                update_fields.append("media_data")
+        for column, value in snap_values.items():
+            setattr(obj, column, value)
+        update_fields += list(snap_values)
         await obj.save(update_fields=update_fields)
 
 

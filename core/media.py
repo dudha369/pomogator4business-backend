@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 
 logger = logging.getLogger("bot.media_rescue")
+
 _MAX_MEDIA_BYTES = 20 * 1024 * 1024
 
 
@@ -35,7 +36,7 @@ class Media:
     status: str = "saved"  # saved | too_large | failed
 
 
-def _describe(message):
+def describe_media(message):
     """(kind, объект Telegram, mime, имя файла) первого найденного медиа или None.
 
     Порядок важен: у GIF-сообщения Telegram заполняет и animation, и document —
@@ -92,7 +93,7 @@ async def extract_history_media(bot, message):
 
     Файл больше лимита Bot API (20 МБ) и сбой скачивания не теряются молча:
     возвращается Media с data=None и статусом — архив покажет причину."""
-    described = _describe(message)
+    described = describe_media(message)
     if described is None:
         return None
     kind, obj, mime, name = described

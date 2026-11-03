@@ -25,16 +25,13 @@ class Settings(BaseSettings):
     WEBHOOK_BASE_URL: str = ""
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
-    # Очистка старых данных (0 — не очищать). См. core/retention.py
-    MEDIA_RETENTION_DAYS: int = 14  # байты медиа в истории чата
-    # байты медиа, сохранённые в записях архива (удалённые сообщения): дольше,
-    # потому что ради них архив и нужен
+    KEEP_MEDIA_BYTES: bool = False
+    MEDIA_RETENTION_DAYS: int = 14
     ARCHIVE_MEDIA_RETENTION_DAYS: int = 90
     HISTORY_RETENTION_DAYS: int = 90
     ARCHIVE_RETENTION_DAYS: int = 0
     MESSAGE_LOG_KEEP: int = 20000
 
-    # ИИ-ответы (см. core/ai.py). Без ключа функция недоступна.
     AI_API_KEY: str = ""
     AI_MODEL: str = "claude-haiku-5-5"
     AI_API_URL: str = "https://api.anthropic.com/v1/messages"

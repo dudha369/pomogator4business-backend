@@ -45,9 +45,13 @@ async def get_archive(
 
 
 @router.get("/archive/{log_id}/media")
-async def get_archive_media(log_id: int, owner: Owner = Depends(current_owner)):
+async def get_archive_media(
+    log_id: int,
+    which: str = Query(default="auto", pattern="^(auto|old|new)$"),
+    owner: Owner = Depends(current_owner),
+):
     connection = owner.connection
-    media = await load_media(connection["connection_id"], log_id)
+    media = await load_media(connection["connection_id"], log_id, which)
     if media is None:
         raise HTTPException(status_code=404, detail="Медиа не сохранено")
 

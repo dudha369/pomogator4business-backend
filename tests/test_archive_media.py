@@ -12,7 +12,7 @@ CHAT = 7
 
 
 @pytest.fixture
-async def archive_ready(connection):
+async def archive_ready(connection, api_bot):
     await db.disable_module(CONNECTION_ID, "scam")  # без лишних уведомлений в тестах
     return connection
 
@@ -112,17 +112,25 @@ async def test_too_large_file_is_reported_not_silently_lost(archive_ready, bot, 
     ).status_code == 404
 
 
-async def test_expired_media_keeps_type_and_says_why(archive_ready, bot, client):
+async def test_retention_frees_bytes_but_file_id_keeps_media_available(
+    archive_ready, bot, client, monkeypatch
+):
+    """Байты (если их хранили) чистятся по сроку, а файл остаётся доступен по file_id."""
+    from config import settings
     from core.retention import run_retention_once
 
+    monkeypatch.setattr(settings, "KEEP_MEDIA_BYTES", True)
     msg = await receive(bot, photo=[tg_file("p")])
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
     await run_retention_once(now=10**10)  # через много лет
     entry = (await client.get("/api/archive", headers=client.owner)).json()["entries"][
         0
     ]
-    assert entry["media_type"] == "photo" and entry["media_available"] is False
-    assert entry["media_status"] == "expired"
+    assert entry["media_type"] == "photo" and entry["media_available"] is True
+    media = await client.get(
+        f"/api/archive/{entry['log_id']}/media", headers=client.owner
+    )
+    assert media.content == b"bytes:files/p"  # из Telegram, а не из нашей БД
 
 
 async def test_edited_message_media_stays_available(archive_ready, bot, client):
@@ -130,7 +138,9 @@ async def test_edited_message_media_stays_available(archive_ready, bot, client):
     from modules.archive import on_business_edited
 
     msg = await receive(bot, caption="до", photo=[tg_file("p")])
-    edited = make_message("после", chat_id=CHAT, from_id=CHAT)
+    edited = make_message(
+        caption="после", photo=[tg_file("p")], chat_id=CHAT, from_id=CHAT
+    )
     edited.message_id = msg.message_id
     await on_business_edited(edited, bot)
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)

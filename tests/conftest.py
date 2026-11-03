@@ -114,6 +114,15 @@ class FakeBot:
     async def send_sticker(self, **kw):
         return await self._send_media("sticker", **kw)
 
+    async def send_location(self, **kw):
+        return await self._send_media("location", **kw)
+
+    async def send_venue(self, **kw):
+        return await self._send_media("venue", **kw)
+
+    async def send_contact(self, **kw):
+        return await self._send_media("contact", **kw)
+
     async def get_me(self):
         return types.SimpleNamespace(id=1, username="testbot")
 
@@ -241,6 +250,8 @@ def api_bot(monkeypatch, bot):
         "send_document",
         "get_chat",
         "get_me",
+        "get_file",
+        "download_file",
     ):
         monkeypatch.setattr(bot_instance.bot, name, getattr(bot, name))
     return bot
