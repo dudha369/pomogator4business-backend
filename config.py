@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
     KEEP_MEDIA_BYTES: bool = False
+    ARCHIVE_RICH: bool = True
     MEDIA_RETENTION_DAYS: int = 14
     ARCHIVE_MEDIA_RETENTION_DAYS: int = 90
     HISTORY_RETENTION_DAYS: int = 90

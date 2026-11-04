@@ -16,6 +16,10 @@ _STRIPPED_ENTITIES = {"blockquote", "expandable_blockquote", "pre", "code"}
 
 _TAGS = re.compile(r"<[^>]+>")
 
+# Невидимый, но не «пустой» для Telegram символ (BRAILLE PATTERN BLANK): пустую цитату
+# в «Было/Стало» отправить нельзя, а с этим символом она выглядит как пустая.
+EMPTY = "\u2800"
+
 
 def visible_len(markup: str) -> int:
     """Длина текста так, как её считает Telegram: без тегов, с раскрытыми &amp;."""
@@ -52,21 +56,26 @@ def user_link(user_id, username) -> str | None:
     return None
 
 
+def forward_link(forward) -> str | None:
+    """Ссылка на источник пересылки, если она возможна."""
+    if not forward:
+        return None
+    kind = forward.get("type")
+    username = forward.get("username")
+    if kind == "user":
+        return user_link(forward.get("id"), username)
+    if kind in ("chat", "channel") and username:
+        message_id = forward.get("message_id")
+        return f"https://t.me/{username}" + (f"/{message_id}" if message_id else "")
+    return None
+
+
 def format_forward(forward) -> str | None:
     """Откуда переслано -> HTML-фрагмент (со ссылкой, если она возможна)."""
     if not forward:
         return None
-    name = forward.get("name") or forward.get("signature")
-    kind = forward.get("type")
-    username = forward.get("username")
-    if kind == "user":
-        link = user_link(forward.get("id"), username)
-    elif kind in ("chat", "channel") and username:
-        message_id = forward.get("message_id")
-        link = f"https://t.me/{username}" + (f"/{message_id}" if message_id else "")
-    else:
-        link = None
-    label = escape(name or "—")
+    label = escape(forward.get("name") or forward.get("signature") or "—")
+    link = forward_link(forward)
     return f'<a href="{link}">{label}</a>' if link else label
 
 
@@ -78,15 +87,15 @@ def kind_detail(locale, snap) -> str:
     if kind == "venue":
         lines = [label, escape(p.get("title") or ""), escape(p.get("address") or "")]
     elif kind == "location":
-        lines = [label, f'{p.get("latitude")}, {p.get("longitude")}']
+        lines = [label, f"{p.get('latitude')}, {p.get('longitude')}"]
     elif kind == "contact":
         name = " ".join(x for x in (p.get("first_name"), p.get("last_name")) if x)
-        lines = [label, escape(f'{name} {p.get("phone_number") or ""}'.strip())]
+        lines = [label, escape(f"{name} {p.get('phone_number') or ''}".strip())]
     elif kind == "poll":
         options = [f"• {escape(o.get('text', ''))}" for o in p.get("options") or []]
         lines = [label, escape(p.get("question") or "")] + options
     elif kind == "dice":
-        lines = [f'{p.get("emoji") or "🎲"} {label}: {p.get("value")}']
+        lines = [f"{p.get('emoji') or '🎲'} {label}: {p.get('value')}"]
     else:
         lines = [label]
     return "\n".join(line for line in lines if line)

@@ -58,10 +58,19 @@ class FakeBot:
         self.deleted = []  # delete_business_messages
         self.reads = []  # read_business_message
         self.documents = []  # send_document
-        self.media_sent = (
-            []
-        )  # send_photo/video/... (повторная отправка удалённого медиа)
+        self.media_sent = []  # send_photo/video/... (повторная отправка удалённого медиа)
+        self.rich_sent = []  # send_rich_message
+        self.album_sent = []  # send_media_group
         self._next_id = 1000
+
+    async def send_rich_message(self, **kwargs):
+        self.rich_sent.append(kwargs)
+        self._next_id += 1
+        return types.SimpleNamespace(message_id=self._next_id)
+
+    async def send_media_group(self, **kwargs):
+        self.album_sent.append(kwargs)
+        return []
 
     async def send_message(self, **kwargs):
         self.sent.append(kwargs)

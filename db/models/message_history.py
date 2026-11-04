@@ -28,6 +28,7 @@ class MessageHistory(Model):
     forward = fields.JSONField(null=True)
     raw_json = fields.JSONField(null=True)
     bot_id = fields.BigIntField(null=True)
+    media_group_id = fields.CharField(max_length=64, null=True)
     created_at = fields.BigIntField()
 
     class Meta:

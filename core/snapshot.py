@@ -57,6 +57,7 @@ SNAPSHOT_COLUMNS = (
     "forward",
     "raw_json",
     "bot_id",
+    "media_group_id",
 )
 
 # файлы, которые Bot API отдаёт через getFile (лимит 20 МБ)
@@ -175,6 +176,7 @@ def build_snapshot(message, bot_id=None):
         "forward": _forward(message),
         "raw_json": _raw(message),
         "bot_id": bot_id,
+        "media_group_id": getattr(message, "media_group_id", None),
     }
 
     described = describe_media(message)
@@ -236,6 +238,7 @@ def public_view(snap):
         "file_name": snap.get("media_name"),
         "payload": snap.get("payload"),
         "forward": snap.get("forward"),
+        "media_group_id": snap.get("media_group_id"),
     }
 
 

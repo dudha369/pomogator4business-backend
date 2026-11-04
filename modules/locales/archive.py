@@ -36,11 +36,11 @@ RU = {
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Медиа заменено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
     ),
-    "archive.forwarded_from": "↪️ <b>Переслано от:</b> {source}",
+    "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано от:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ Файл не удалось восстановить",
-    "archive.caption_before": "⏲️ <b>Было</b>",
-    "archive.caption_after": "⏱️ <b>Стало</b>",
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Было</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало</b>',
     "archive.detail_venue": "📍 Место",
     "archive.detail_location": "📍 Геолокация",
     "archive.detail_contact": "👤 Контакт",
@@ -53,6 +53,9 @@ RU = {
     "archive.detail_paid_media": "⭐ Платное медиа",
     "archive.detail_live_photo": "📸 Живое фото",
     "archive.detail_other": "📎 Сообщение неподдерживаемого типа",
+    "archive.btn_deleted": "Сообщение удалено!",
+    "archive.btn_forwarded": "Переслано от {name}",
+    "archive.toast_deleted": "Собеседник удалил это сообщение",
 }
 
 EN = {
@@ -93,11 +96,11 @@ EN = {
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Media replaced!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
     ),
-    "archive.forwarded_from": "↪️ <b>Forwarded from:</b> {source}",
+    "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Forwarded from:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ The file could not be recovered",
-    "archive.caption_before": "⏲️ <b>Was</b>",
-    "archive.caption_after": "⏱️ <b>Now</b>",
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Was</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Now</b>',
     "archive.detail_venue": "📍 Venue",
     "archive.detail_location": "📍 Location",
     "archive.detail_contact": "👤 Contact",
@@ -110,6 +113,9 @@ EN = {
     "archive.detail_paid_media": "⭐ Paid media",
     "archive.detail_live_photo": "📸 Live photo",
     "archive.detail_other": "📎 Unsupported message type",
+    "archive.btn_deleted": "Message deleted!",
+    "archive.btn_forwarded": "Forwarded from {name}",
+    "archive.toast_deleted": "The contact deleted this message",
 }
 
 UK = {
@@ -150,11 +156,11 @@ UK = {
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Медіа замінено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
     ),
-    "archive.forwarded_from": "↪️ <b>Переслано від:</b> {source}",
+    "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано від:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ Не вдалося відновити файл",
-    "archive.caption_before": "⏲️ <b>Було</b>",
-    "archive.caption_after": "⏱️ <b>Стало</b>",
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Було</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало</b>',
     "archive.detail_venue": "📍 Місце",
     "archive.detail_location": "📍 Геолокація",
     "archive.detail_contact": "👤 Контакт",
@@ -167,4 +173,7 @@ UK = {
     "archive.detail_paid_media": "⭐ Платне медіа",
     "archive.detail_live_photo": "📸 Жива фотографія",
     "archive.detail_other": "📎 Непідтримуваний тип повідомлення",
+    "archive.btn_deleted": "Повідомлення видалено!",
+    "archive.btn_forwarded": "Переслано від {name}",
+    "archive.toast_deleted": "Співрозмовник видалив це повідомлення",
 }

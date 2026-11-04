@@ -12,7 +12,10 @@ CHAT = 7
 
 
 @pytest.fixture
-async def archive_ready(connection, api_bot):
+async def archive_ready(connection, api_bot, monkeypatch):
+    from config import settings
+
+    monkeypatch.setattr(settings, "ARCHIVE_RICH", False)  # здесь проверяем обычный путь
     await db.disable_module(CONNECTION_ID, "scam")  # без лишних уведомлений в тестах
     return connection
 
