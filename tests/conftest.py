@@ -58,7 +58,9 @@ class FakeBot:
         self.deleted = []  # delete_business_messages
         self.reads = []  # read_business_message
         self.documents = []  # send_document
-        self.media_sent = []  # send_photo/video/... (повторная отправка удалённого медиа)
+        self.media_sent = (
+            []
+        )  # send_photo/video/... (повторная отправка удалённого медиа)
         self.rich_sent = []  # send_rich_message
         self.album_sent = []  # send_media_group
         self._next_id = 1000

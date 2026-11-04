@@ -215,14 +215,16 @@ def _sender_keyboard(locale, sender, snap, *, profile=True):
         href = forward_link(forward)
         rows.append(
             [
-                InlineKeyboardButton(
-                    text=label, icon_custom_emoji_id=_ICON_FORWARD, url=href
-                )
-                if href
-                else InlineKeyboardButton(
-                    text=label,
-                    icon_custom_emoji_id=_ICON_FORWARD,
-                    callback_data="archive:info",
+                (
+                    InlineKeyboardButton(
+                        text=label, icon_custom_emoji_id=_ICON_FORWARD, url=href
+                    )
+                    if href
+                    else InlineKeyboardButton(
+                        text=label,
+                        icon_custom_emoji_id=_ICON_FORWARD,
+                        callback_data="archive:info",
+                    )
                 )
             ]
         )
