@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
@@ -5,13 +6,14 @@ from dataclasses import dataclass, field
 from aiogram import Bot, Router
 from aiogram.types import Message
 
+from config import settings
 from core import database as db
+from core.archive_prefs import load_prefs
 from core.autoresponder import handle_incoming as handle_autoresponder
 from core.context import CommandContext
-from config import settings
 from core.media import extract_history_media, extract_media_from_reply
-from core.snapshot import build_snapshot
 from core.registry import registry
+from core.snapshot import build_snapshot
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
 from modules.type_ import TYPE_TRIGGERS, handle_type_trigger
@@ -58,6 +60,28 @@ def _media_fields(media):
     }
 
 
+_VOICE_MAX_SECONDS = 120
+_background: set = set()  # ссылки на фоновые задачи, чтобы их не собрал сборщик мусора
+
+
+async def _transcribe_into_history(bot, connection_id, chat_id, message_id, voice):
+    """Распознаёт голосовое и дописывает текст в историю (в фоне: распознавание
+    занимает секунды, а цепочка обработки сообщения ждать не должна)."""
+    try:
+        from core.stt import transcribe_audio
+
+        connection = await db.get_connection(connection_id)
+        locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+        file = await bot.get_file(voice.file_id)
+        data = (await bot.download_file(file.file_path)).read()
+        text = await transcribe_audio(data, locale)
+    except Exception:
+        logger.warning("Не удалось распознать голосовое %s", message_id, exc_info=True)
+        return
+    if text:
+        await db.set_history_transcript(connection_id, chat_id, message_id, text)
+
+
 async def step_history(inc: Incoming) -> bool:
     message, connection_id = inc.message, inc.connection_id
     snapshot = build_snapshot(message, bot_id=getattr(inc.bot, "id", None))
@@ -87,7 +111,63 @@ async def step_history(inc: Incoming) -> bool:
             snapshot=snapshot,
             **_media_fields(media),
         )
+
+    voice = getattr(message, "voice", None)
+    if (
+        voice is not None
+        and not inc.is_owner
+        and inc.enabled("archive")
+        and (getattr(voice, "duration", 0) or 0) <= _VOICE_MAX_SECONDS
+        and (await load_prefs(connection_id)).voice_transcript
+    ):
+        task = asyncio.create_task(
+            _transcribe_into_history(
+                inc.bot, connection_id, inc.chat_id, message.message_id, voice
+            )
+        )
+        _background.add(task)
+        task.add_done_callback(_background.discard)
     return False
+
+
+async def _rescue_replied_media(inc: Incoming) -> None:
+    """Владелец ответил на сообщение, которого нет в истории (так выглядит исчезающее
+    медиа: отдельным апдейтом оно не приходит). Достаём файл из reply_to_message сейчас,
+    пока Telegram его туда вкладывает, и сохраняем БАЙТАМИ: file_id такого медиа может
+    перестать работать, поэтому полагаться на него нельзя."""
+    message, replied = inc.message, inc.message.reply_to_message
+    existing = await db.get_history_entry(
+        inc.connection_id, inc.chat_id, replied.message_id
+    )
+    if existing is not None:
+        return
+
+    try:
+        rescued = await extract_media_from_reply(inc.bot, message)
+    except Exception:
+        logger.warning(
+            "Не удалось достать медиа из reply_to_message %s",
+            replied.message_id,
+            exc_info=True,
+        )
+        rescued = None
+
+    logger.info(
+        "rescue: reply_to=%s нет в истории; медиа=%s",
+        replied.message_id,
+        rescued.kind if rescued else None,
+    )
+    if rescued is not None:
+        await db.save_history(
+            inc.connection_id,
+            inc.chat_id,
+            replied.message_id,
+            False,
+            getattr(replied, "text", None) or getattr(replied, "caption", None),
+            int(replied.date.timestamp()),
+            snapshot=build_snapshot(replied, bot_id=getattr(inc.bot, "id", None)),
+            **_media_fields(rescued),
+        )
 
 
 async def step_voice(inc: Incoming) -> bool:

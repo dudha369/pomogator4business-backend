@@ -266,9 +266,11 @@ async def test_forwarded_from_hidden_user_is_plain_name(ready, bot):
 # ------------------------------- правки ---------------------------------------
 
 
-async def edit(bot, msg, text=None, **kwargs):
+async def edit(bot, msg, text=None, group=None, **kwargs):
     edited = make_message(text, chat_id=CHAT, from_id=CHAT, **kwargs)
     edited.message_id = msg.message_id
+    if group:
+        edited.media_group_id = group
     await on_business_edited(edited, bot)
 
 
@@ -362,33 +364,84 @@ def photo(file_id, uid=None):
     ]
 
 
+def plain(value):
+    """RichText -> простая строка."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return "".join(plain(v) for v in value)
+    if hasattr(value, "alternative_text"):
+        return value.alternative_text
+    return plain(getattr(value, "text", ""))
+
+
+def block_text(block):
+    kind = block.type
+    if kind in ("paragraph", "footer", "heading"):
+        return plain(block.text)
+    if kind in ("blockquote", "details"):
+        inner = " ".join(block_text(b) for b in block.blocks)
+        return (plain(block.summary) + " " if kind == "details" else "") + inner
+    return ""
+
+
+def kinds(rich_message):
+    return [b.type for b in rich_message.blocks]
+
+
+def texts(rich_message):
+    return " | ".join(filter(None, (block_text(b) for b in rich_message.blocks)))
+
+
+def media_of(block):
+    for field in ("photo", "video", "animation", "audio", "voice_note", "document"):
+        if hasattr(block, field):
+            return getattr(block, field).media
+    return None
+
+
 async def test_rich_photo_caption_stays_below_by_default(rich, bot):
     msg = await receive(bot, caption="Мой чек", photo=photo("p"))
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
 
     assert bot.media_sent == [] and bot.sent == []  # одно сообщение, и это Rich
     (call,) = bot.rich_sent
-    rich_message = call["rich_message"]
-    html = rich_message.html
-    assert "Сообщение удалено" in html and "tg-emoji" in html
-    assert html.index("<img") < html.index("Мой чек")  # подпись под фото
-    assert rich_message.media[0].media.media == "p"
+    message = call["rich_message"]
+    types_ = kinds(message)
+    assert types_.index("photo") < types_.index("blockquote")  # подпись под фото
+    assert "Сообщение удалено" in texts(message) and "Мой чек" in texts(message)
+    assert media_of(message.blocks[types_.index("photo")]) == "p"
     assert "Удалить у себя" in str(call["reply_markup"])
+
+
+async def test_rich_header_uses_archive_box_not_trash(rich, bot):
+    msg = await receive(bot, photo=photo("p"))
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+    first = bot.rich_sent[0]["rich_message"].blocks[0].text
+    assert first[0].custom_emoji_id == "5258389041006518073"
 
 
 async def test_rich_photo_caption_above_if_it_was_above(rich, bot):
     msg = await receive(bot, caption="Мой чек", photo=photo("p"), above=True)
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
-    html = bot.rich_sent[0]["rich_message"].html
-    assert html.index("Мой чек") < html.index("<img")
+    types_ = kinds(bot.rich_sent[0]["rich_message"])
+    assert types_.index("blockquote") < types_.index("photo")
 
 
-async def test_rich_voice_has_text_before_the_file(rich, bot):
+async def test_voice_is_regular_by_default_but_can_go_rich(rich, bot, monkeypatch):
     msg = await receive(bot, caption="послушай", voice=tg_file("vo", duration=3))
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
-    html = bot.rich_sent[0]["rich_message"].html
-    assert html.index("послушай") < html.index("<audio")
-    assert bot.media_sent == []
+    # на iPhone Rich показывает голосовое как «Unknown track» — по умолчанию обычное
+    assert bot.rich_sent == [] and bot.media_sent[0][0] == "voice"
+
+    monkeypatch.setattr(settings, "ARCHIVE_RICH_KINDS", "photo,voice")
+    msg2 = await receive(bot, caption="ещё", voice=tg_file("vo2", duration=3))
+    await on_business_deleted(deleted_event(CHAT, [msg2.message_id]), bot)
+    message = bot.rich_sent[0]["rich_message"]
+    assert "voice_note" in kinds(message)
+    assert kinds(message).index("blockquote") < kinds(message).index("voice_note")
 
 
 async def test_rich_failure_falls_back_to_regular_notice(rich, bot, monkeypatch):
@@ -403,13 +456,14 @@ async def test_rich_failure_falls_back_to_regular_notice(rich, bot, monkeypatch)
     assert kind == "photo" and "чек" in kw["caption"]
 
 
-async def test_documents_and_stickers_do_not_use_rich(rich, bot):
-    doc = await receive(bot, document=tg_file("d", file_name="a.png"))
+async def test_document_goes_rich_but_sticker_does_not(rich, bot):
+    doc = await receive(bot, caption="скан", document=tg_file("d", file_name="a.png"))
     st = await receive(bot, sticker=tg_file("st"))
     await on_business_deleted(deleted_event(CHAT, [doc.message_id, st.message_id]), bot)
-    assert bot.rich_sent == []
+    (call,) = bot.rich_sent  # документ — одним Rich-сообщением с блоком document
+    assert "document" in kinds(call["rich_message"])
     assert [k for k, _ in bot.media_sent] == ["sticker"]
-    assert len(bot.documents) == 1  # документ ушёл обычной отправкой
+    assert bot.documents == []
 
 
 async def test_deleted_album_is_one_rich_carousel(rich, bot, client):
@@ -425,18 +479,40 @@ async def test_deleted_album_is_one_rich_carousel(rich, bot, client):
     await on_business_deleted(deleted_event(CHAT, ids), bot)
 
     (call,) = bot.rich_sent
-    html = call["rich_message"].html
-    assert html.count("<tg-slideshow>") == 1 and html.count("<img") == 3
-    assert "Поездка" in html and [
-        m.media.media for m in call["rich_message"].media
-    ] == ["p0", "p1", "p2"]
+    message = call["rich_message"]
+    slideshow = next(b for b in message.blocks if b.type == "slideshow")
+    assert [media_of(b) for b in slideshow.blocks] == ["p0", "p1", "p2"]
+    assert "Поездка" in texts(message)
     assert bot.sent == [] and bot.media_sent == [] and bot.album_sent == []
-    assert (
-        len(await archive_events(client)) == 3
-    )  # в вебе каждое сообщение — своя запись
+    assert len(await archive_events(client)) == 3
 
 
-async def test_deleted_album_regular_fallback_is_one_album_plus_button(ready, bot):
+async def test_album_style_collage_is_configurable(rich, bot, monkeypatch):
+    monkeypatch.setattr(settings, "ARCHIVE_ALBUM_STYLE", "collage")
+    ids = [
+        (await receive(bot, photo=photo(f"p{i}"), group="g")).message_id
+        for i in range(2)
+    ]
+    await on_business_deleted(deleted_event(CHAT, ids), bot)
+    assert "collage" in kinds(bot.rich_sent[0]["rich_message"])
+
+
+async def test_document_album_is_one_rich_message(rich, bot):
+    ids = [
+        (
+            await receive(
+                bot, document=tg_file(f"d{i}", file_name=f"{i}.png"), group="g"
+            )
+        ).message_id
+        for i in range(3)
+    ]
+    await on_business_deleted(deleted_event(CHAT, ids), bot)
+    (call,) = bot.rich_sent
+    assert kinds(call["rich_message"]).count("document") == 3
+    assert bot.sent == []  # никакого «сырого» второго сообщения
+
+
+async def test_regular_album_fallback_starts_with_header_then_files(ready, bot):
     ids = []
     for index in range(3):
         msg = await receive(
@@ -448,40 +524,58 @@ async def test_deleted_album_regular_fallback_is_one_album_plus_button(ready, bo
         ids.append(msg.message_id)
     await on_business_deleted(deleted_event(CHAT, ids), bot)
 
+    (header,) = bot.sent
+    assert "Сообщение удалено" in header["text"] and "Поездка" in header["text"]
+    assert "Удалить у себя" in str(header["reply_markup"])
     (album,) = bot.album_sent
     assert [m.media for m in album["media"]] == ["p0", "p1", "p2"]
-    assert "Поездка" in album["media"][0].caption and album["media"][1].caption is None
-    assert len(bot.sent) == 1 and "Удалить у себя" in str(bot.sent[0]["reply_markup"])
+    assert all(m.caption is None for m in album["media"])
 
 
 async def test_forward_shown_once_for_forwarded_album(rich, bot):
-    ids = []
-    for index in range(2):
-        msg = await receive(
-            bot, photo=photo(f"p{index}"), group="g", forward=fwd_user()
-        )
-        ids.append(msg.message_id)
+    ids = [
+        (
+            await receive(bot, photo=photo(f"p{i}"), group="g", forward=fwd_user())
+        ).message_id
+        for i in range(2)
+    ]
     await on_business_deleted(deleted_event(CHAT, ids), bot)
-    html = bot.rich_sent[0]["rich_message"].html
-    assert html.count("Переслано от") == 1 and "Вася" in html
+    text = texts(bot.rich_sent[0]["rich_message"])
+    assert text.count("Переслано от") == 1 and "Вася" in text
+
+
+async def test_forwarded_photo_with_caption_in_rich(rich, bot):
+    msg = await receive(
+        bot, caption="пересланное", photo=photo("p"), forward=fwd_user()
+    )
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+    text = texts(bot.rich_sent[0]["rich_message"])
+    assert "Переслано от" in text and "Вася" in text and "пересланное" in text
 
 
 async def test_separately_deleted_album_items_are_still_notified(rich, bot):
     first = await receive(bot, photo=photo("a"), group="g")
     await receive(bot, photo=photo("b"), group="g")
     await on_business_deleted(deleted_event(CHAT, [first.message_id]), bot)
-    assert len(bot.rich_sent) == 1  # удалили одну фотку — одно уведомление
+    assert len(bot.rich_sent) == 1
 
 
-async def test_replaced_photo_rich_before_and_after(rich, bot):
+async def test_replaced_photo_rich_before_and_after_with_colons(rich, bot):
     msg = await receive(bot, photo=photo("old", "u1"))
     await edit(bot, msg, photo=photo("new", "u2"))
     (call,) = bot.rich_sent
-    html = call["rich_message"].html
-    assert "Медиа заменено" in html and "Было" in html and "Стало" in html
-    assert html.index("Было") < html.index("tg://photo?id=m0") < html.index("Стало")
-    assert [m.media.media for m in call["rich_message"].media] == ["old", "new"]
+    message = call["rich_message"]
+    text = texts(message)
+    assert "Медиа заменено" in text and "Было:" in text and "Стало:" in text
+    assert [media_of(b) for b in message.blocks if b.type == "photo"] == ["old", "new"]
     assert bot.sent == [] and bot.media_sent == []
+
+
+async def test_replaced_document_is_rich_too(rich, bot):
+    msg = await receive(bot, document=tg_file("d1", file_unique_id="u1", file_name="a"))
+    await edit(bot, msg, document=tg_file("d2", file_unique_id="u2", file_name="b"))
+    (call,) = bot.rich_sent
+    assert kinds(call["rich_message"]).count("document") == 2
 
 
 async def test_replaced_voice_uses_regular_before_and_after(rich, bot):
@@ -499,3 +593,189 @@ async def test_rescued_bytes_are_not_sent_through_rich(rich, bot):
     assert (
         can_use_rich([(entry_snapshot(entry), {**entry, "media_data": b"x"})]) is False
     )
+
+
+# ----------------------- история правок в одном сообщении ----------------------
+
+
+async def test_all_edits_of_one_message_share_one_notice(rich, bot, client):
+    msg = await receive(bot, "v1")
+    await edit(bot, msg, "v2")
+    await edit(bot, msg, "v3")
+    await edit(bot, msg, "v4")
+
+    assert len(bot.rich_sent) == 1  # одно уведомление…
+    assert len(bot.edited) == 2  # …которое обновили на 2-й и 3-й правках
+    last = bot.edited[-1]["rich_message"]
+    text = texts(last)
+    assert "Было: | v3" in text.replace("\n", " ") or "v3" in text
+    assert "v4" in text and "Ранние версии: 2" in text and "Изменений: 3" in text
+    assert "details" in kinds(last)
+    # версии идут по порядку: в свёрнутом блоке самая ранняя
+    details = next(b for b in last.blocks if b.type == "details")
+    assert "v1" in block_text(details) and "v2" in block_text(details)
+    assert block_text(details).index("v1") < block_text(details).index("v2")
+    assert bot.edited[-1]["message_id"] == 1001
+
+
+async def test_first_edit_has_no_collapsed_history(rich, bot):
+    msg = await receive(bot, "было")
+    await edit(bot, msg, "стало")
+    message = bot.rich_sent[0]["rich_message"]
+    assert "details" not in kinds(message) and "Изменений: 1" in texts(message)
+    assert "Сообщение изменено" in texts(message)
+
+
+async def test_edit_goes_to_new_message_if_notice_is_gone(rich, bot, monkeypatch):
+    msg = await receive(bot, "a")
+    await edit(bot, msg, "b")
+
+    async def gone(**kw):
+        raise RuntimeError("Bad Request: message to edit not found")
+
+    monkeypatch.setattr(bot, "edit_message_text", gone)
+    await edit(bot, msg, "c")
+    assert len(bot.rich_sent) == 2  # новое уведомление, а не тишина
+    assert "Изменений: 2" in texts(
+        bot.rich_sent[1]["rich_message"]
+    )  # история сохранена
+
+
+async def test_different_messages_do_not_share_a_notice(rich, bot):
+    first = await receive(bot, "a")
+    second = await receive(bot, "x")
+    await edit(bot, first, "b")
+    await edit(bot, second, "y")
+    assert len(bot.rich_sent) == 2 and bot.edited == []
+
+
+async def test_caption_edit_shows_the_photo_between_header_and_diff(rich, bot):
+    uid = photo("p", "u1")
+    msg = await receive(bot, caption="до", photo=uid)
+    await edit(bot, msg, caption="после", photo=uid)
+    message = bot.rich_sent[0]["rich_message"]
+    types_ = kinds(message)
+    assert "Подпись изменена" in texts(message)
+    assert types_.index("photo") < types_.index("blockquote")  # файл над «Было/Стало»
+
+
+async def test_caption_edit_of_album_shows_whole_album(rich, bot):
+    first = await receive(bot, caption="до", photo=photo("a", "ua"), group="g")
+    await receive(bot, photo=photo("b", "ub"), group="g")
+    await edit(bot, first, caption="после", photo=photo("a", "ua"), group="g")
+    message = bot.rich_sent[0]["rich_message"]
+    slideshow = next(b for b in message.blocks if b.type == "slideshow")
+    assert [media_of(b) for b in slideshow.blocks] == ["a", "b"]
+
+
+async def test_caption_edit_without_rich_photo_kind_is_text_only(
+    rich, bot, monkeypatch
+):
+    monkeypatch.setattr(settings, "ARCHIVE_RICH_KINDS", "document")
+    uid = photo("p", "u1")
+    msg = await receive(bot, caption="до", photo=uid)
+    await edit(bot, msg, caption="после", photo=uid)
+    assert "photo" not in kinds(bot.rich_sent[0]["rich_message"])
+
+
+async def test_edit_history_is_stored_with_notice_id(rich, bot):
+    msg = await receive(bot, "a")
+    await edit(bot, msg, "b")
+    rows = await db.get_edit_history(CONNECTION_ID, CHAT, msg.message_id)
+    assert rows[0]["notice_message_id"] == 1001 and rows[0]["edit_kind"] == "text"
+
+
+# ------------------------------ кнопки и подарки ------------------------------
+
+
+async def test_button_roles_and_colors(ready, bot):
+    msg = await receive(bot, sticker=tg_file("st"), forward=fwd_user())
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+    rows = bot.media_sent[0][1]["reply_markup"].inline_keyboard
+    stub, profile, forward, delete = (r[0] for r in rows)
+    assert stub.callback_data == "archive:info" and stub.style is None
+    assert stub.icon_custom_emoji_id == "5258389041006518073"  # коробка, не мусорка
+    assert profile.text.startswith("Собеседник:") and profile.style == "primary"
+    assert forward.style == "primary"
+    assert (
+        delete.style == "danger"
+        and delete.icon_custom_emoji_id == "5258130763148172425"
+    )
+
+
+async def test_gift_is_resent_as_its_sticker_with_summary_button(ready, bot):
+    from aiogram.types import Gift, GiftInfo, Sticker
+
+    sticker = Sticker(
+        file_id="gift-st",
+        file_unique_id="u",
+        type="regular",
+        width=512,
+        height=512,
+        is_animated=True,
+        is_video=False,
+    )
+    msg = make_message(chat_id=CHAT, from_id=CHAT)
+    msg.gift = GiftInfo(
+        gift=Gift(id="g1", sticker=sticker, star_count=25), text="с днём"
+    )
+    await on_business_message(msg, bot)
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+
+    assert bot.sent == []
+    ((kind, kw),) = bot.media_sent
+    assert kind == "sticker" and kw["sticker"] == "gift-st"
+    summary = kw["reply_markup"].inline_keyboard[1][0]
+    assert (
+        "25" in summary.text and summary.icon_custom_emoji_id == "5963213811597970978"
+    )
+
+
+async def test_gift_without_sticker_gets_formatted_text(ready, bot):
+    msg = make_message(chat_id=CHAT, from_id=CHAT)
+    msg.gift = types.SimpleNamespace(text="привет")
+    await on_business_message(msg, bot)
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+    text = bot.sent[0]["text"]
+    assert "5963213811597970978" in text and "<blockquote>" in text and "<b>" in text
+
+
+def test_dice_results_are_described():
+    from core.archive_notice import describe_dice
+
+    assert "5" in describe_dice("ru", "🎲", 5) and "⚄" in describe_dice("ru", "🎲", 5)
+    assert "Гол" in describe_dice("ru", "⚽", 4) and "Мимо" in describe_dice(
+        "ru", "⚽", 1
+    )
+    assert "Страйк" in describe_dice("ru", "🎳", 6)
+    assert "Яблочко" in describe_dice("ru", "🎯", 6)
+    assert "7️⃣ 7️⃣ 7️⃣" in describe_dice("ru", "🎰", 64) and "Джекпот" in describe_dice(
+        "ru", "🎰", 64
+    )
+    assert "BAR BAR BAR" in describe_dice("ru", "🎰", 1)
+
+
+async def test_dice_notice_is_bold_quote(ready, bot):
+    msg = make_message(chat_id=CHAT, from_id=CHAT)
+    msg.dice = types.SimpleNamespace(emoji="🎰", value=64)
+    await on_business_message(msg, bot)
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
+    text = bot.sent[0]["text"]
+    assert "<blockquote><b>🎰" in text and "Джекпот" in text
+
+
+def test_html_to_rich_converts_our_markup():
+    from core.rich_text import html_to_rich
+
+    result = html_to_rich(
+        '<tg-emoji emoji-id="1">📦</tg-emoji> <b>Привет</b> <a href="tg://user?id=7">Аня &amp; Ко</a>'
+    )
+    assert [getattr(r, "type", r) for r in result] == [
+        "custom_emoji",
+        " ",
+        "bold",
+        " ",
+        "url",
+    ]
+    assert result[4].text == "Аня & Ко" and result[4].url == "tg://user?id=7"
+    assert html_to_rich("просто") == "просто" and html_to_rich("") == ""

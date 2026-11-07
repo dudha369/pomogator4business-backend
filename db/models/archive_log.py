@@ -19,6 +19,8 @@ class ArchiveLog(Model):
     edit_kind = fields.CharField(max_length=24, null=True)
     old_snapshot = fields.JSONField(null=True)
     new_snapshot = fields.JSONField(null=True)
+    # id сообщения-уведомления в чате с ботом: его правим, а не шлём новое
+    notice_message_id = fields.BigIntField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -63,10 +65,11 @@ async def log_archive_event(
     edit_kind=None,
     old_snapshot=None,
     new_snapshot=None,
+    notice_message_id=None,
 ):
     if media_type is not None and media_status is None:
         media_status = "saved" if media_data is not None else "failed"
-    await ArchiveLog.create(
+    row = await ArchiveLog.create(
         connection_id=connection_id,
         chat_id=chat_id,
         message_id=message_id,
@@ -82,8 +85,10 @@ async def log_archive_event(
         edit_kind=edit_kind,
         old_snapshot=old_snapshot,
         new_snapshot=new_snapshot,
+        notice_message_id=notice_message_id,
         created_at=created_at,
     )
+    return row.log_id
 
 
 async def get_recent_archive(connection_id, limit):
@@ -178,3 +183,24 @@ async def expire_archive_media(older_than_ts):
     return await ArchiveLog.filter(
         created_at__lt=older_than_ts, media_data__not_isnull=True
     ).update(media_data=None, media_status="expired")
+
+
+async def get_edit_history(connection_id, chat_id, message_id):
+    """Все правки одного сообщения (старые первыми): тексты, время, id уведомления."""
+    return await (
+        ArchiveLog.filter(
+            connection_id=connection_id,
+            chat_id=chat_id,
+            message_id=message_id,
+            event="edited",
+        )
+        .order_by("log_id")
+        .values(
+            "log_id",
+            "old_text",
+            "new_text",
+            "edit_kind",
+            "notice_message_id",
+            "created_at",
+        )
+    )

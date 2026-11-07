@@ -25,7 +25,7 @@ RU = {
     "archive.media_video_note": "⭕ Видео-кружок сохранён",
     "archive.delete_notice_button": "Удалить у себя",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Сообщение удалено!</b>\n'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Сообщение удалено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
     ),
     "archive.edited_caption_header": (
@@ -39,15 +39,15 @@ RU = {
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано от:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ Файл не удалось восстановить",
-    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Было</b>',
-    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало</b>',
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Было:</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало:</b>',
     "archive.detail_venue": "📍 Место",
     "archive.detail_location": "📍 Геолокация",
     "archive.detail_contact": "👤 Контакт",
     "archive.detail_poll": "📊 Опрос",
     "archive.detail_dice": "Выпало",
-    "archive.detail_gift": "🎁 Подарок",
-    "archive.detail_unique_gift": "🎁 Уникальный подарок",
+    "archive.detail_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Подарок',
+    "archive.detail_unique_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Уникальный подарок',
     "archive.detail_story": "📖 История",
     "archive.detail_checklist": "✅ Чек-лист",
     "archive.detail_paid_media": "⭐ Платное медиа",
@@ -56,6 +56,24 @@ RU = {
     "archive.btn_deleted": "Сообщение удалено!",
     "archive.btn_forwarded": "Переслано от {name}",
     "archive.toast_deleted": "Собеседник удалил это сообщение",
+    "archive.btn_sender": "Собеседник: {name}",
+    "archive.dice_hit": "Попал!",
+    "archive.dice_goal": "Гол!",
+    "archive.dice_miss": "Мимо",
+    "archive.dice_strike": "Страйк!",
+    "archive.dice_bullseye": "Яблочко!",
+    "archive.dice_jackpot": "Джекпот!",
+    "archive.dice_triple": "Три в ряд!",
+    "archive.dice_of": "{value} из {max}",
+    "archive.dice_rolled": "Выпало",
+    "archive.history_earlier": "Ранние версии: {count}",
+    "archive.edits_count": "Изменений: {count}",
+    "archive.edited_text_header": (
+        '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Сообщение изменено!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
+    ),
+    "archive.collapsed_media": "Вложения: {count}",
+    "archive.transcript": "Расшифровка",
 }
 
 EN = {
@@ -85,7 +103,7 @@ EN = {
     "archive.media_video_note": "⭕ Video note saved",
     "archive.delete_notice_button": "Delete for me",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Message deleted!</b>\n'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Message deleted!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
     ),
     "archive.edited_caption_header": (
@@ -99,15 +117,15 @@ EN = {
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Forwarded from:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ The file could not be recovered",
-    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Was</b>',
-    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Now</b>',
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Was:</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Now:</b>',
     "archive.detail_venue": "📍 Venue",
     "archive.detail_location": "📍 Location",
     "archive.detail_contact": "👤 Contact",
     "archive.detail_poll": "📊 Poll",
     "archive.detail_dice": "Rolled",
-    "archive.detail_gift": "🎁 Gift",
-    "archive.detail_unique_gift": "🎁 Unique gift",
+    "archive.detail_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Gift',
+    "archive.detail_unique_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Unique gift',
     "archive.detail_story": "📖 Story",
     "archive.detail_checklist": "✅ Checklist",
     "archive.detail_paid_media": "⭐ Paid media",
@@ -116,6 +134,24 @@ EN = {
     "archive.btn_deleted": "Message deleted!",
     "archive.btn_forwarded": "Forwarded from {name}",
     "archive.toast_deleted": "The contact deleted this message",
+    "archive.btn_sender": "Contact: {name}",
+    "archive.dice_hit": "Scored!",
+    "archive.dice_goal": "Goal!",
+    "archive.dice_miss": "Miss",
+    "archive.dice_strike": "Strike!",
+    "archive.dice_bullseye": "Bullseye!",
+    "archive.dice_jackpot": "Jackpot!",
+    "archive.dice_triple": "Three in a row!",
+    "archive.dice_of": "{value} of {max}",
+    "archive.dice_rolled": "Rolled",
+    "archive.history_earlier": "Earlier versions: {count}",
+    "archive.edits_count": "Edits: {count}",
+    "archive.edited_text_header": (
+        '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Message edited!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
+    ),
+    "archive.collapsed_media": "Attachments: {count}",
+    "archive.transcript": "Transcript",
 }
 
 UK = {
@@ -145,7 +181,7 @@ UK = {
     "archive.media_video_note": "⭕ Відео-гурток збережено",
     "archive.delete_notice_button": "Видалити у себе",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Повідомлення видалено!</b>\n'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Повідомлення видалено!</b>\n'
         '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
     ),
     "archive.edited_caption_header": (
@@ -159,15 +195,15 @@ UK = {
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано від:</b> {source}',
     "archive.empty_text": "—",
     "archive.media_unavailable": "⚠️ Не вдалося відновити файл",
-    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Було</b>',
-    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало</b>',
+    "archive.caption_before": '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Було:</b>',
+    "archive.caption_after": '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало:</b>',
     "archive.detail_venue": "📍 Місце",
     "archive.detail_location": "📍 Геолокація",
     "archive.detail_contact": "👤 Контакт",
     "archive.detail_poll": "📊 Опитування",
     "archive.detail_dice": "Випало",
-    "archive.detail_gift": "🎁 Подарунок",
-    "archive.detail_unique_gift": "🎁 Унікальний подарунок",
+    "archive.detail_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Подарунок',
+    "archive.detail_unique_gift": '<tg-emoji emoji-id="5963213811597970978">🎁</tg-emoji> Унікальний подарунок',
     "archive.detail_story": "📖 Історія",
     "archive.detail_checklist": "✅ Чек-лист",
     "archive.detail_paid_media": "⭐ Платне медіа",
@@ -176,4 +212,22 @@ UK = {
     "archive.btn_deleted": "Повідомлення видалено!",
     "archive.btn_forwarded": "Переслано від {name}",
     "archive.toast_deleted": "Співрозмовник видалив це повідомлення",
+    "archive.btn_sender": "Співрозмовник: {name}",
+    "archive.dice_hit": "Влучив!",
+    "archive.dice_goal": "Гол!",
+    "archive.dice_miss": "Повз",
+    "archive.dice_strike": "Страйк!",
+    "archive.dice_bullseye": "Яблучко!",
+    "archive.dice_jackpot": "Джекпот!",
+    "archive.dice_triple": "Три в ряд!",
+    "archive.dice_of": "{value} з {max}",
+    "archive.dice_rolled": "Випало",
+    "archive.history_earlier": "Ранні версії: {count}",
+    "archive.edits_count": "Змін: {count}",
+    "archive.edited_text_header": (
+        '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Повідомлення змінено!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
+    ),
+    "archive.collapsed_media": "Вкладення: {count}",
+    "archive.transcript": "Розшифровка",
 }

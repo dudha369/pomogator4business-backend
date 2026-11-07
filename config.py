@@ -27,6 +27,12 @@ class Settings(BaseSettings):
 
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
+    # Какие типы файлов показывать в Rich. Голосовые по умолчанию обычные: на iPhone
+    # Rich показывает их как аудио «Unknown track». Уберите тип из списка, если в Rich
+    # он выглядит слишком крупным: он уйдёт обычным сообщением с подписью.
+    ARCHIVE_RICH_KINDS: str = "photo,video,animation,audio,document"
+    # Как показывать альбом в Rich: slideshow (листается) или collage (плитка).
+    ARCHIVE_ALBUM_STYLE: str = "slideshow"
     MEDIA_RETENTION_DAYS: int = 14
     ARCHIVE_MEDIA_RETENTION_DAYS: int = 90
     HISTORY_RETENTION_DAYS: int = 90
@@ -97,6 +103,7 @@ TORTOISE_ORM = {
                 "db.models.reminders",
                 "db.models.message_history",
                 "db.models.archive_log",
+                "db.models.archive_prefs",
                 "db.models.profile_backup",
                 "db.models.mirror_bot",
                 "db.models.clock",

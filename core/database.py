@@ -1,5 +1,10 @@
+from db.models.archive_prefs import (
+    get_archive_prefs_data,
+    save_archive_prefs_data,
+)
 from db.models.archive_log import (
     get_archive_page,
+    get_edit_history,
     get_recent_archive,
     count_archive_events_since,
     expire_archive_media,
@@ -99,6 +104,8 @@ from db.models.message_history import (
     get_recent_history,
     has_other_messages,
     last_owner_message_at,
+    list_album,
+    set_history_transcript,
     list_chat_history,
     list_history_rows_since,
     list_last_incoming_by_chat,
@@ -143,6 +150,9 @@ from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
 __all__ = [
+    "set_history_transcript",
+    "get_archive_prefs_data",
+    "save_archive_prefs_data",
     "get_reminder_settings",
     "last_autoreply_ref",
     "list_reminder_owner_ids",

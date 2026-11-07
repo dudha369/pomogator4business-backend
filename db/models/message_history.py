@@ -29,6 +29,8 @@ class MessageHistory(Model):
     raw_json = fields.JSONField(null=True)
     bot_id = fields.BigIntField(null=True)
     media_group_id = fields.CharField(max_length=64, null=True)
+    # распознанный текст голосового (если владелец включил в настройках)
+    transcript = fields.TextField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:
@@ -117,6 +119,25 @@ async def get_history_entry(connection_id, chat_id, message_id):
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
     ).values()
     return rows[0] if rows else None
+
+
+async def set_history_transcript(connection_id, chat_id, message_id, text):
+    await MessageHistory.filter(
+        connection_id=connection_id, chat_id=chat_id, message_id=message_id
+    ).update(transcript=text)
+
+
+async def list_album(connection_id, chat_id, media_group_id):
+    """Сообщения одного альбома, которые ещё лежат в истории (старые первыми)."""
+    return await (
+        MessageHistory.filter(
+            connection_id=connection_id,
+            chat_id=chat_id,
+            media_group_id=media_group_id,
+        )
+        .order_by("message_id")
+        .values()
+    )
 
 
 async def delete_history(connection_id, chat_id, message_id):

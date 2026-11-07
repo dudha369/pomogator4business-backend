@@ -58,6 +58,7 @@ SNAPSHOT_COLUMNS = (
     "raw_json",
     "bot_id",
     "media_group_id",
+    "transcript",
 )
 
 # файлы, которые Bot API отдаёт через getFile (лимит 20 МБ)
@@ -145,6 +146,28 @@ def _file_payload(kind, obj):
     return {k: v for k, v in payload.items() if v not in (None, "")} or None
 
 
+def gift_sticker(payload):
+    """Стикер подарка из payload (обычный — gift.sticker, уникальный — gift.model.sticker)."""
+    gift = (payload or {}).get("gift") or {}
+    return gift.get("sticker") or (gift.get("model") or {}).get("sticker") or None
+
+
+def _attach_gift_sticker(snap):
+    """Подарок отправляется и показывается как его стикер: кладём его file_id в снимок,
+    как у обычного файла — тогда веб-интерфейс скачивает его тем же способом."""
+    sticker = gift_sticker(snap["payload"])
+    if not sticker:
+        return
+    snap["file_id"] = sticker.get("file_id")
+    snap["file_unique_id"] = sticker.get("file_unique_id")
+    snap["file_size"] = sticker.get("file_size")
+    snap["payload"]["sticker"] = {
+        k: sticker.get(k)
+        for k in ("emoji", "set_name", "is_animated", "is_video")
+        if sticker.get(k) is not None
+    }
+
+
 def _raw(message):
     if not hasattr(message, "model_dump"):
         return None
@@ -197,6 +220,8 @@ def build_snapshot(message, bot_id=None):
         value = getattr(message, attr, None)
         if value:
             snap.update(kind=kind, payload=_dump(value))
+            if kind in ("gift", "unique_gift"):
+                _attach_gift_sticker(snap)
             return snap
 
     if text is not None:
@@ -239,6 +264,7 @@ def public_view(snap):
         "payload": snap.get("payload"),
         "forward": snap.get("forward"),
         "media_group_id": snap.get("media_group_id"),
+        "transcript": snap.get("transcript"),
     }
 
 
