@@ -1,4 +1,5 @@
 from .archive_log import ArchiveLog
+from .archive_prefs import ArchivePrefs
 from .checkers import ChkGame
 from .city import CityGame
 from .clock import ClockEmoji, ClockPack
@@ -23,6 +24,7 @@ from .voice_effect import VoiceEffect
 from .wordle import WordleGame
 
 __all__ = [
+    "ArchivePrefs",
     "ArchiveLog",
     "ChkGame",
     "CityGame",
