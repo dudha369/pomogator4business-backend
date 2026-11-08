@@ -284,3 +284,18 @@ async def test_gift_sticker_is_downloadable_by_the_web(rich, bot, client):
         f"/api/archive/{entry['log_id']}/media", headers=client.owner
     )
     assert media.status_code == 200 and media.content == b"bytes:files/gift-st"
+
+
+async def test_simultaneous_settings_updates_do_not_overwrite_each_other(connection):
+    """Два быстрых переключателя подряд: оба изменения должны сохраниться."""
+    from core.archive_prefs import load_prefs, update_prefs
+
+    await asyncio.gather(
+        update_prefs(CONNECTION_ID, {"collapse_media": True}),
+        update_prefs(CONNECTION_ID, {"location_map": True}),
+        update_prefs(CONNECTION_ID, {"album_style": "collage"}),
+        update_prefs(CONNECTION_ID, {"voice_transcript": True}),
+    )
+    prefs = await load_prefs(CONNECTION_ID)
+    assert prefs.collapse_media and prefs.location_map and prefs.voice_transcript
+    assert prefs.album_style == "collage"

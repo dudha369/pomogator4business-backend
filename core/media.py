@@ -1,6 +1,8 @@
 import logging
 from dataclasses import dataclass
 
+from aiogram.exceptions import TelegramAPIError
+
 logger = logging.getLogger("bot.media_rescue")
 
 _MAX_MEDIA_BYTES = 20 * 1024 * 1024
@@ -16,7 +18,13 @@ async def download_message_photo(bot, message):
 
 
 async def download_user_avatar(bot, user_id):
-    photos = await bot.get_user_profile_photos(user_id, limit=1)
+    """Байты аватарки или None. «user not found» — обычное дело для собеседников
+    бизнес-чата, которые не запускали бота: для бота их просто нет, это не сбой."""
+    try:
+        photos = await bot.get_user_profile_photos(user_id, limit=1)
+    except TelegramAPIError:
+        logger.info("Аватарка недоступна для %s", user_id, exc_info=True)
+        return None
     if not photos.photos:
         return None
     photo = photos.photos[0][-1]

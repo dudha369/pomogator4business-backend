@@ -4,6 +4,7 @@
 настройки бот ведёт себя как раньше. Настройки хранятся как JSON по подключению;
 неизвестные ключи и неверные значения при чтении игнорируются, при записи — ошибка."""
 
+import asyncio
 from dataclasses import asdict, dataclass
 
 from config import settings
@@ -94,11 +95,17 @@ async def load_prefs(connection_id) -> ArchivePrefs:
     return parse(await db.get_archive_prefs_data(connection_id))
 
 
+# «прочитать, изменить, записать» — не атомарная операция: два быстрых переключателя
+# подряд иначе затёрли бы друг друга. Бот работает одним процессом, замка достаточно.
+_update_lock = asyncio.Lock()
+
+
 async def update_prefs(connection_id, patch: dict) -> ArchivePrefs:
     cleaned = validate_patch(patch)
-    stored = dict(await db.get_archive_prefs_data(connection_id))
-    stored.update(
-        {k: list(v) if isinstance(v, tuple) else v for k, v in cleaned.items()}
-    )
-    await db.save_archive_prefs_data(connection_id, stored)
+    async with _update_lock:
+        stored = dict(await db.get_archive_prefs_data(connection_id))
+        stored.update(
+            {k: list(v) if isinstance(v, tuple) else v for k, v in cleaned.items()}
+        )
+        await db.save_archive_prefs_data(connection_id, stored)
     return parse(stored)
