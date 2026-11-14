@@ -14,6 +14,7 @@ from core.context import CommandContext
 from core.media import extract_history_media, extract_media_from_reply
 from core.registry import registry
 from core.snapshot import build_snapshot
+from core.tasks import spawn
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
 from modules.type_ import TYPE_TRIGGERS, handle_type_trigger
@@ -61,7 +62,6 @@ def _media_fields(media):
 
 
 _VOICE_MAX_SECONDS = 120
-_background: set = set()  # ссылки на фоновые задачи, чтобы их не собрал сборщик мусора
 
 
 async def _transcribe_into_history(bot, connection_id, chat_id, message_id, voice):
@@ -120,13 +120,11 @@ async def step_history(inc: Incoming) -> bool:
         and (getattr(voice, "duration", 0) or 0) <= _VOICE_MAX_SECONDS
         and (await load_prefs(connection_id)).voice_transcript
     ):
-        task = asyncio.create_task(
+        spawn(
             _transcribe_into_history(
                 inc.bot, connection_id, inc.chat_id, message.message_id, voice
             )
         )
-        _background.add(task)
-        task.add_done_callback(_background.discard)
     return False
 
 

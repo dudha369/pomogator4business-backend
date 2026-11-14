@@ -23,4 +23,4 @@ async def cmd_tr(ctx: CommandContext):
         await ctx.edit_command_message(ctx.t("tr.failed"))
         return
 
-    await ctx.edit_command_message(translated)
+    await ctx.edit_command_message(translated, parse_mode=None)

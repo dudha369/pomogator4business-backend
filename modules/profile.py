@@ -35,17 +35,21 @@ async def cmd_profile(ctx: CommandContext):
 
     owner_id = ctx.connection["owner_id"]
 
-    current_bio = await _get_bio(ctx.bot, owner_id)
-    current_photo = await download_user_avatar(ctx.bot, owner_id)
-    owner = ctx.message.from_user  # команду пишет владелец — это его текущее имя
-    await db.save_profile_backup(
-        ctx.connection_id,
-        current_bio,
-        current_photo,
-        int(time.time()),
-        first_name=owner.first_name if owner else None,
-        last_name=owner.last_name if owner else None,
-    )
+    # Бэкап — это СВОЙ профиль владельца. Пока он не восстановлен (.restore),
+    # повторный .profile его не трогает: иначе в бэкап попал бы уже скопированный
+    # чужой профиль и оригинал был бы потерян.
+    if not await db.get_profile_backup(ctx.connection_id):
+        current_bio = await _get_bio(ctx.bot, owner_id)
+        current_photo = await download_user_avatar(ctx.bot, owner_id)
+        owner = ctx.message.from_user  # команду пишет владелец — это его имя
+        await db.save_profile_backup(
+            ctx.connection_id,
+            current_bio,
+            current_photo,
+            int(time.time()),
+            first_name=owner.first_name if owner else None,
+            last_name=owner.last_name if owner else None,
+        )
 
     target_user_id = target.from_user.id
     target_bio = await _get_bio(ctx.bot, target_user_id)
@@ -106,6 +110,7 @@ async def cmd_restore(ctx: CommandContext):
         return
 
     restored = []
+    failed = False
 
     if backup.get("first_name"):
         try:
@@ -117,6 +122,7 @@ async def cmd_restore(ctx: CommandContext):
             restored.append(ctx.t("profile.item_name"))
         except Exception:
             logger.warning("Не удалось восстановить имя", exc_info=True)
+            failed = True
 
     if backup["bio"] is not None:
         try:
@@ -126,6 +132,7 @@ async def cmd_restore(ctx: CommandContext):
             restored.append(ctx.t("profile.item_bio"))
         except Exception:
             logger.warning("Не удалось восстановить био", exc_info=True)
+            failed = True
 
     if backup["photo_data"]:
         try:
@@ -138,6 +145,11 @@ async def cmd_restore(ctx: CommandContext):
             restored.append(ctx.t("profile.item_avatar"))
         except Exception:
             logger.warning("Не удалось восстановить аватар", exc_info=True)
+            failed = True
+
+    # бэкап стираем только если восстановилось всё: иначе .restore можно повторить
+    if restored and not failed:
+        await db.delete_profile_backup(ctx.connection_id)
 
     if restored:
         await ctx.edit_command_message(

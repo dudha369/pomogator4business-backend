@@ -41,6 +41,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
             business_connection_id=connection["connection_id"],
             chat_id=chat_id,
             text=cursor,
+            parse_mode=None,
         )
         message_id = sent.message_id
         await db.log_message(connection["connection_id"], chat_id, message_id)
@@ -51,6 +52,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
                 chat_id=chat_id,
                 message_id=message_id,
                 text=cursor,
+                parse_mode=None,
             )
         except Exception:
             log_suppressed("modules/type_.py:54", benign=True)
@@ -63,6 +65,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
                 chat_id=chat_id,
                 message_id=message_id,
                 text=step_text + cursor,
+                parse_mode=None,
             )
         except Exception:
             log_suppressed("modules/type_.py:66", benign=True)
@@ -73,6 +76,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
             chat_id=chat_id,
             message_id=message_id,
             text=text,
+            parse_mode=None,
         )
     except Exception:
         log_suppressed("modules/type_.py:76", benign=True)

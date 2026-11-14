@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 import qrcode
@@ -21,7 +22,7 @@ async def cmd_qr(ctx: CommandContext):
         await ctx.usage_error(ctx.t("qr.usage"))
         return
 
-    result = render_qr(text)
+    result = await asyncio.to_thread(render_qr, text)
     await ctx.delete_command_message()
     await ctx.bot.send_photo(
         business_connection_id=ctx.connection_id,

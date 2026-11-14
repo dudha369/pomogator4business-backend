@@ -4,6 +4,7 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -210,6 +211,7 @@ async def cmd_ms(ctx):
 
 
 @router.callback_query(F.data.startswith("ms:"))
+@serialized_game
 async def on_ms_callback(call: CallbackQuery):
     parts = call.data.split(":")
     action = parts[1]

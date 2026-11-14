@@ -19,18 +19,21 @@ async def log_message(connection_id, chat_id, message_id):
     )
 
 
-async def pop_recent_message_ids(connection_id, chat_id, count):
+async def recent_message_log(connection_id, chat_id, count):
+    """Последние `count` записей журнала как [(log_id, message_id)], БЕЗ удаления:
+    стирать журнал можно только после того, как сообщения реально удалены."""
     rows = (
         await MessageLog.filter(connection_id=connection_id, chat_id=chat_id)
         .order_by("-log_id")
         .limit(count)
-        .values("log_id", "message_id")
+        .values_list("log_id", "message_id")
     )
-    log_ids = [row["log_id"] for row in rows]
-    message_ids = [row["message_id"] for row in rows]
+    return [tuple(row) for row in rows]
+
+
+async def forget_message_log(log_ids):
     if log_ids:
-        await MessageLog.filter(log_id__in=log_ids).delete()
-    return message_ids
+        await MessageLog.filter(log_id__in=list(log_ids)).delete()
 
 
 async def trim_message_log(keep):

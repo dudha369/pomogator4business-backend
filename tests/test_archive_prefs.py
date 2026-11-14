@@ -2,6 +2,8 @@
 история правок, расшифровка голосовых."""
 
 import asyncio
+
+from core import tasks
 import types
 
 import pytest
@@ -181,8 +183,8 @@ async def test_location_as_map_is_optional(rich, bot):
 
 
 async def wait_background():
-    if business_messages._background:
-        await asyncio.gather(*list(business_messages._background))
+    if tasks._tasks:
+        await asyncio.gather(*list(tasks._tasks))
 
 
 @pytest.fixture

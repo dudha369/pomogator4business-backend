@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 from PIL import Image, ImageDraw
@@ -70,10 +71,10 @@ async def cmd_pet(ctx: CommandContext):
         avatar_bytes = await download_user_avatar(ctx.bot, ctx.connection["owner_id"])
 
     if not avatar_bytes:
-        await ctx.answer(ctx.t("pet.no_avatar"))
+        await ctx.reply(ctx.t("pet.no_avatar"))
         return
 
-    gif_bytes = render_pet(avatar_bytes)
+    gif_bytes = await asyncio.to_thread(render_pet, avatar_bytes)
 
     await ctx.delete_command_message()
     await ctx.bot.send_animation(

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from api.deps import Owner, current_owner
 from core import database as db
 from core.registry import registry
+from core.utils import is_valid_prefix
 
 router = APIRouter()
 
@@ -34,9 +35,10 @@ class PrefixUpdate(BaseModel):
 
 @router.post("/settings/prefix")
 async def update_prefix(payload: PrefixUpdate, owner: Owner = Depends(current_owner)):
-    if len(payload.prefix) != 1:
+    if not is_valid_prefix(payload.prefix):
         raise HTTPException(
-            status_code=400, detail="Prefix must be exactly one character"
+            status_code=400,
+            detail="Prefix must be exactly one character: not a letter, digit or space",
         )
 
     connection = owner.connection

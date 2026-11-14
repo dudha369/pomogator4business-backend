@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 from PIL import Image, ImageDraw
@@ -69,7 +70,7 @@ async def cmd_quote(ctx: CommandContext):
     if target.from_user:
         avatar_bytes = await download_user_avatar(ctx.bot, target.from_user.id)
 
-    result = render_quote(avatar_bytes, name, text)
+    result = await asyncio.to_thread(render_quote, avatar_bytes, name, text)
 
     await ctx.delete_command_message()
     await ctx.bot.send_photo(

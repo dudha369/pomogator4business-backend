@@ -55,6 +55,7 @@ async def cmd_spam(ctx: CommandContext):
                     business_connection_id=ctx.connection_id,
                     chat_id=ctx.chat_id,
                     text=text,
+                    parse_mode=None,
                 )
             except TelegramForbiddenError:
                 break

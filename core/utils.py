@@ -18,6 +18,13 @@ def parse_duration_loose(raw: str):
     return parse_duration(raw)
 
 
+def is_valid_prefix(prefix: str) -> bool:
+    """Префикс команд — ровно один символ, не пробельный и не буква/цифра.
+
+    Буква или пробел сделали бы «командой» обычные сообщения владельца."""
+    return len(prefix) == 1 and not prefix.isspace() and not prefix.isalnum()
+
+
 def log_suppressed(where: str, benign: bool = False) -> None:
     """Вызывается из `except Exception:` вместо молчаливого `pass`.
 

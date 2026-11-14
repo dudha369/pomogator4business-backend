@@ -2,6 +2,7 @@ import asyncio
 
 from core.context import CommandContext
 from core.registry import command
+from core.tasks import spawn
 from core.utils import parse_duration
 from core.utils import log_suppressed
 
@@ -15,6 +16,7 @@ async def _fire(bot, connection_id, chat_id, seconds, text):
             business_connection_id=connection_id,
             chat_id=chat_id,
             text=text,
+            parse_mode=None,
         )
     except Exception:
         log_suppressed("modules/timer.py:18", benign=True)
@@ -38,4 +40,4 @@ async def cmd_timer(ctx: CommandContext):
 
     await ctx.edit_command_message(ctx.t("timer.set", time=raw_time))
 
-    asyncio.create_task(_fire(ctx.bot, ctx.connection_id, ctx.chat_id, seconds, text))
+    spawn(_fire(ctx.bot, ctx.connection_id, ctx.chat_id, seconds, text))

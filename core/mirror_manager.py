@@ -28,6 +28,14 @@ def _mirror_webhook_url(owner_id: int) -> str:
     return f"{settings.WEBHOOK_BASE_URL}{settings.MIRROR_WEBHOOK_PATH}/{owner_id}"
 
 
+class MirrorStartError(Exception):
+    """Зеркало не запустилось. code: "no_webhook_url" | "webhook_failed"."""
+
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
+
+
 class MirrorManager:
     """Один лёгкий Bot (HTTP-клиент на aiohttp, без фонового long-polling
     цикла) на каждого владельца с активным зеркалом. Апдейты приходят через
@@ -56,29 +64,32 @@ class MirrorManager:
             and hmac.compare_digest(secret_token, expected)
         )
 
-    async def start_mirror(self, owner_id, token):
-        if owner_id in self._bots:
-            return
+    async def start_mirror(self, owner_id, token, *, drop_pending=False):
+        """Запускает зеркало; при неудаче бросает MirrorStartError (никакого
+        молчаливого return). Новый токен заменяет старый, но только после того,
+        как вебхук нового бота успешно установлен — иначе остаётся рабочий старый.
+
+        drop_pending=True — только для свежего подключения: на деплое очередь
+        трогать нельзя, там лежат ещё не обработанные сообщения."""
+        secret = _derive_mirror_secret(token)
+        if self._secrets.get(owner_id) == secret:
+            return  # то же зеркало уже запущено — идемпотентно
 
         if not settings.WEBHOOK_BASE_URL:
             logger.warning(
-                "WEBHOOK_BASE_URL не задан — зеркало owner_id=%s не может "
-                "быть запущено",
-                owner_id,
+                "WEBHOOK_BASE_URL не задан — зеркало owner_id=%s не запущено", owner_id
             )
-            return
+            raise MirrorStartError("no_webhook_url")
 
         bot = Bot(token=token)
-        secret = _derive_mirror_secret(token)
-
         try:
             await bot.set_webhook(
                 url=_mirror_webhook_url(owner_id),
                 secret_token=secret,
-                drop_pending_updates=True,
+                drop_pending_updates=drop_pending,
                 allowed_updates=["message", "my_chat_member"],
             )
-        except Exception:
+        except Exception as exc:
             logger.exception(
                 "Не удалось установить вебхук зеркала owner_id=%s", owner_id
             )
@@ -86,25 +97,31 @@ class MirrorManager:
                 await bot.session.close()
             except Exception:
                 log_suppressed("core/mirror_manager.py:86", benign=True)
-            return
+            raise MirrorStartError("webhook_failed") from exc
 
+        previous = self._bots.get(owner_id)
         self._bots[owner_id] = bot
         self._secrets[owner_id] = secret
+        if previous:  # старый токен больше не должен принимать апдейты
+            await self._shutdown_bot(previous, delete_webhook=True)
 
-    async def stop_mirror(self, owner_id):
-        bot = self._bots.pop(owner_id, None)
-        self._secrets.pop(owner_id, None)
-        if not bot:
-            return
-
-        try:
-            await bot.delete_webhook()
-        except Exception:
-            log_suppressed("core/mirror_manager.py:101", benign=True)
+    @staticmethod
+    async def _shutdown_bot(bot, *, delete_webhook):
+        if delete_webhook:
+            try:
+                await bot.delete_webhook()
+            except Exception:
+                log_suppressed("core/mirror_manager.py:101", benign=True)
         try:
             await bot.session.close()
         except Exception:
             log_suppressed("core/mirror_manager.py:105", benign=True)
+
+    async def stop_mirror(self, owner_id):
+        bot = self._bots.pop(owner_id, None)
+        self._secrets.pop(owner_id, None)
+        if bot:
+            await self._shutdown_bot(bot, delete_webhook=True)
 
     async def start_all(self):
         mirrors = await db.get_all_active_mirrors()

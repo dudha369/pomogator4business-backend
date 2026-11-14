@@ -68,4 +68,4 @@ async def cmd_calc(ctx: CommandContext):
     if isinstance(result, float) and result.is_integer():
         result = int(result)
 
-    await ctx.reply(f"{expression} = {result}")
+    await ctx.reply(f"{expression} = {result}", parse_mode=None)

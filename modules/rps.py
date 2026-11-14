@@ -3,6 +3,7 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -33,6 +34,7 @@ async def cmd_rps(ctx):
 
 
 @router.callback_query(F.data.startswith("rps:"))
+@serialized_game
 async def on_rps_callback(call: CallbackQuery):
     choice = call.data.split(":", 1)[1]
     if choice not in _CHOICES:

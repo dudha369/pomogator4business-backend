@@ -3,6 +3,7 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.context import CommandContext
 from core.i18n import t
@@ -68,6 +69,7 @@ async def cmd_quiz(ctx: CommandContext):
 
 
 @router.callback_query(F.data.startswith("quiz:"))
+@serialized_game
 async def on_quiz_callback(call: CallbackQuery):
     _, q_index_raw, choice_raw = call.data.split(":")
     q_index, choice = int(q_index_raw), int(choice_raw)

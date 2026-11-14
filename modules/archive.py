@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from difflib import SequenceMatcher
@@ -88,6 +89,12 @@ def highlight_changes(old_text: str, new_text: str) -> str:
                 result.append(f"<b>{escape(new_part)}</b>")
 
     return "".join(result)
+
+
+async def highlight_changes_async(old_text: str, new_text: str) -> str:
+    """SequenceMatcher квадратичен: на патологичных строках до секунд — в поток,
+    иначе встаёт весь event loop (WEB_CONCURRENCY=1)."""
+    return await asyncio.to_thread(highlight_changes, old_text, new_text)
 
 
 def _message_link(username, message_id):
@@ -430,10 +437,12 @@ def _clip(text):
     return text if len(text) <= _CLIP else text[:_CLIP].rstrip() + "…"
 
 
-def _before_after(locale, old_text, new_text):
+async def _before_after(locale, old_text, new_text):
     old_html = escape(_clip(old_text)) or EMPTY
     new_html = (
-        highlight_changes(_clip(old_text), _clip(new_text)) if new_text else EMPTY
+        await highlight_changes_async(_clip(old_text), _clip(new_text))
+        if new_text
+        else EMPTY
     )
     return (
         f"\n\n{t('archive.caption_before', locale)}\n"
@@ -519,7 +528,9 @@ async def _notify_edit_history(
         mention,
         versions,
         times,
-        current_html=highlight_changes(_clip(versions[-2]), _clip(versions[-1]))
+        current_html=await highlight_changes_async(
+            _clip(versions[-2]), _clip(versions[-1])
+        )
         or EMPTY,
         header_key=header_key,
         media_snaps=media,
@@ -593,8 +604,11 @@ async def _notify_edited(
             "archive.edited_notice",
             locale,
             mention=mention,
-            old_text=html.quote(old["text"] or ""),
-            new_text=highlight_changes(old["text"] or "", new["text"] or ""),
+            # обрезаем: без этого два текста по 4096 дают >4096 и Telegram отклоняет
+            old_text=html.quote(_clip(old["text"])),
+            new_text=await highlight_changes_async(
+                _clip(old["text"]), _clip(new["text"])
+            ),
         )
         sent = await bot.send_message(
             chat_id=chat_id,
@@ -606,7 +620,7 @@ async def _notify_edited(
 
     if change in ("caption", "caption_removed"):
         header = t("archive.edited_caption_header", locale, mention=mention)
-        text = header + _before_after(locale, old["text"], new["text"])
+        text = header + await _before_after(locale, old["text"], new["text"])
         sent = await bot.send_message(
             chat_id=chat_id,
             text=text,
@@ -637,7 +651,7 @@ async def _notify_edited(
 
     text = t("archive.edited_media_header", locale, mention=mention)
     if change == "media_caption":
-        text += _before_after(locale, old["text"], new["text"])
+        text += await _before_after(locale, old["text"], new["text"])
     notice = await bot.send_message(
         chat_id=chat_id,
         text=text,

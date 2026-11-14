@@ -1,3 +1,4 @@
+import html
 import random
 
 from core.context import CommandContext
@@ -18,7 +19,7 @@ async def cmd_8ball(ctx: CommandContext):
     index = random.randint(1, _ANSWER_COUNT)
     await ctx.edit_command_message(
         f"""
-<blockquote>{args}</blockquote>
+<blockquote>{html.escape(args, quote=False)}</blockquote>
 ────────────────────
 🎱 Шар говорит: <b>{ctx.t(f"eightball.answer_{index}")}</b>
 ────────────────────""",

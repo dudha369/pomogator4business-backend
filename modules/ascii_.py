@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 from PIL import Image, ImageFilter
@@ -71,6 +72,8 @@ async def cmd_ascii(ctx: CommandContext):
         await ctx.usage_error(ctx.t("ascii.usage"))
         return
 
-    art = image_to_braille(image_bytes, invert=invert, edge=edge)
+    art = await asyncio.to_thread(
+        image_to_braille, image_bytes, invert=invert, edge=edge
+    )
 
     await ctx.edit_command_message(f"<code>{art}</code>")

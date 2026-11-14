@@ -8,6 +8,7 @@ from aiogram.types import (
     LinkPreviewOptions,
 )
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.i18n import t
 from core.mentions import format_mention, mention, remember
@@ -287,6 +288,7 @@ class _Ctx:
 
 
 @router.callback_query(F.data.startswith("ttt:"))
+@serialized_game
 async def on_ttt_callback(call: CallbackQuery, bot: Bot):
     action, idx = _parse_action(call.data.split(":", 1)[1])
     conn_id = call.message.business_connection_id

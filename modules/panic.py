@@ -30,6 +30,11 @@ async def cmd_panic(ctx: CommandContext):
     if count <= 0:
         return
 
-    ids = await db.pop_recent_message_ids(ctx.connection_id, ctx.chat_id, count)
-    for chunk in _chunks(ids, _CHUNK_SIZE):
-        await delete_own_messages(ctx.bot, ctx.connection_id, ctx.chat_id, chunk)
+    rows = await db.recent_message_log(ctx.connection_id, ctx.chat_id, count)
+    for chunk in _chunks(rows, _CHUNK_SIZE):
+        deleted = await delete_own_messages(
+            ctx.bot, ctx.connection_id, ctx.chat_id, [mid for _, mid in chunk]
+        )
+        # журнал стираем только для удалённого: неудавшийся чанк можно повторить
+        if deleted:
+            await db.forget_message_log([log_id for log_id, _ in chunk])

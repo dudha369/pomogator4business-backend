@@ -5,6 +5,22 @@ from core.i18n import t
 from core.registry import command
 
 _DEFAULT_MAX = 100
+# потолок в пределах INT Postgres (2**31 - 1), иначе save_game падает
+_MAX_LIMIT = 1_000_000_000
+# защита от int() на строках из тысяч цифр (лимит Python — 4300)
+_MAX_DIGITS = 12
+
+
+def _parse_int(raw: str) -> int | None:
+    """Целое из аргумента команды или None. Только ASCII-цифры.
+
+    Слишком длинное число не отвергаем, а зажимаем сверху: для активной игры это
+    честное «меньше», а новая игра всё равно обрежется по _MAX_LIMIT."""
+    body = raw.lstrip("-")
+    if not (body.isascii() and body.isdigit()):
+        return None
+    value = int(body) if len(body) <= _MAX_DIGITS else _MAX_LIMIT * 10
+    return -value if raw.startswith("-") else value
 
 
 @command(name="guess", module="guess", owner_only=False)
@@ -12,8 +28,8 @@ async def cmd_guess(ctx):
     raw = ctx.args.strip()
     game = await db.get_guess_game(ctx.connection_id, ctx.chat_id)
 
-    if game and game["status"] == "active" and raw.lstrip("-").isdigit():
-        number = int(raw)
+    number = _parse_int(raw)
+    if game and game["status"] == "active" and number is not None:
         attempts = game["attempts"] + 1
         secret = game["secret"]
 
@@ -21,7 +37,7 @@ async def cmd_guess(ctx):
             await db.save_guess_game(
                 ctx.connection_id, ctx.chat_id, status="finished", attempts=attempts
             )
-            await ctx.answer(
+            await ctx.reply(
                 t("guess.correct", ctx.locale, secret=secret, attempts=attempts)
             )
             return
@@ -32,10 +48,12 @@ async def cmd_guess(ctx):
             if number < secret
             else t("guess.lower", ctx.locale)
         )
-        await ctx.answer(hint)
+        await ctx.reply(hint)
         return
 
-    max_value = int(raw) if raw.isdigit() and int(raw) >= 2 else _DEFAULT_MAX
+    max_value = (
+        min(number, _MAX_LIMIT) if number is not None and number >= 2 else _DEFAULT_MAX
+    )
     secret = random.randint(1, max_value)
 
     await db.save_guess_game(
@@ -46,4 +64,4 @@ async def cmd_guess(ctx):
         attempts=0,
         status="active",
     )
-    await ctx.answer(t("guess.started", ctx.locale, max=max_value))
+    await ctx.reply(t("guess.started", ctx.locale, max=max_value))

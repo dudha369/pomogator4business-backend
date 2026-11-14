@@ -28,15 +28,17 @@ def consume_self_delete(connection_id: str, chat_id: int, message_id: int) -> bo
 
 async def delete_own_messages(
     bot, connection_id: str, chat_id: int, message_ids
-) -> None:
+) -> bool:
     """Единая точка удаления сообщений ботом через Business API.
 
     Помечает message_id как "самоудаление" до вызова API, чтобы archive.py
     не отреагировал на прилетевший следом deleted_business_messages.
+    Возвращает True, если Telegram принял удаление (вызывающий решает, что
+    делать с данными при неудаче — например, не стирать журнал).
     """
     message_ids = list(message_ids)
     if not message_ids:
-        return
+        return True
 
     for message_id in message_ids:
         _mark(connection_id, chat_id, message_id)
@@ -48,3 +50,9 @@ async def delete_own_messages(
         )
     except Exception:
         log_suppressed("core/self_actions.py:48", benign=True)
+        # удаления не было — метка не нужна, иначе настоящее удаление
+        # этого сообщения в ближайшие 30 с не попадёт в архив
+        for message_id in message_ids:
+            _pending.pop((connection_id, chat_id, message_id), None)
+        return False
+    return True

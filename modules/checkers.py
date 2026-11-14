@@ -1,6 +1,7 @@
 from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.i18n import t
 from core.mentions import format_mention, mention, remember
@@ -305,6 +306,7 @@ async def cmd_chk(ctx):
 
 
 @router.callback_query(F.data.startswith("chk:"))
+@serialized_game
 async def on_chk_callback(call: CallbackQuery, bot: Bot):
     action = call.data.split(":", 1)[1]
     if action == "noop":

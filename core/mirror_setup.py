@@ -5,14 +5,14 @@ from aiogram import Bot as AiogramBot
 
 from core import database as db
 from core.crypto import encrypt_token
-from core.mirror_manager import mirror_manager
+from core.mirror_manager import MirrorStartError, mirror_manager
 
 _TOKEN_PATTERN = re.compile(r"^\d+:[A-Za-z0-9_-]{30,50}$")
 
 
 class MirrorSetupError(Exception):
     def __init__(self, code: str):
-        self.code = code  # "invalid_format" | "connection_failed"
+        self.code = code  # "invalid_format" | "connection_failed" | "start_failed"
         super().__init__(code)
 
 
@@ -32,8 +32,13 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     finally:
         await test_bot.session.close()
 
+    # сначала запуск, потом запись в БД: при неудаче в БД не остаётся «подключённого»
+    # зеркала, которого на деле нет, а прежнее рабочее зеркало не затрагивается
+    try:
+        await mirror_manager.start_mirror(owner_id, token, drop_pending=True)
+    except MirrorStartError:
+        raise MirrorSetupError("start_failed")
     await db.save_mirror(
         owner_id, encrypt_token(token), me.id, me.username, int(time.time())
     )
-    await mirror_manager.start_mirror(owner_id, token)
     return me.username

@@ -29,6 +29,10 @@ async def save_profile_backup(
     )
 
 
+async def delete_profile_backup(connection_id):
+    await ProfileBackup.filter(connection_id=connection_id).delete()
+
+
 async def get_profile_backup(connection_id):
     rows = await ProfileBackup.filter(connection_id=connection_id).values()
     return rows[0] if rows else None

@@ -1,3 +1,4 @@
+import asyncio
 import io
 import math
 import random
@@ -130,7 +131,7 @@ async def cmd_wanted(ctx: CommandContext):
         await ctx.usage_error(ctx.t("wanted.usage"))
         return
 
-    result = render_wanted(image_bytes, name, charge.upper())
+    result = await asyncio.to_thread(render_wanted, image_bytes, name, charge.upper())
 
     await ctx.delete_command_message()
     await ctx.bot.send_photo(

@@ -33,6 +33,23 @@ _WEBHOOK_ALLOWED_UPDATES = [
 ]
 
 
+async def _set_webhook() -> None:
+    if not settings.WEBHOOK_URL:
+        logger.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
+        return
+    try:
+        # drop_pending_updates НЕ ставим: на деплое в очереди лежат
+        # deleted_business_messages — суть архива. Повторный set_webhook с тем же
+        # URL очередь не трогает, зато обновляет secret и allowed_updates.
+        await bot.set_webhook(
+            url=settings.WEBHOOK_URL,
+            secret_token=settings.WEBHOOK_SECRET,
+            allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
+        )
+    except Exception:
+        logger.exception("Не удалось установить вебхук %s", settings.WEBHOOK_URL)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
@@ -40,18 +57,7 @@ async def lifespan(app: FastAPI):
     load_modules()
     await Tortoise.init(config=TORTOISE_ORM)
 
-    if settings.WEBHOOK_URL:
-        try:
-            await bot.set_webhook(
-                url=settings.WEBHOOK_URL,
-                secret_token=settings.WEBHOOK_SECRET,
-                drop_pending_updates=True,
-                allowed_updates=_WEBHOOK_ALLOWED_UPDATES,
-            )
-        except Exception:
-            logger.exception("Не удалось установить вебхук %s", settings.WEBHOOK_URL)
-    else:
-        logger.warning("WEBHOOK_BASE_URL не задан — вебхук не установлен")
+    await _set_webhook()
 
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
     _background_tasks.append(asyncio.create_task(run_retention_loop()))

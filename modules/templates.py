@@ -31,4 +31,4 @@ async def cmd_template(ctx: CommandContext):
         return
 
     # владелец пишет в чат с собеседником: message.chat — это собеседник
-    await ctx.edit_command_message(render(text, ctx.message.chat))
+    await ctx.edit_command_message(render(text, ctx.message.chat), parse_mode=None)

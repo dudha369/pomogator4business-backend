@@ -122,7 +122,7 @@ async def cmd_story(ctx: CommandContext):
     photo = target.photo[-1]
     file = await ctx.bot.get_file(photo.file_id)
     buffer = await ctx.bot.download_file(file.file_path)
-    tiles = split_image(buffer.read(), parts)
+    tiles = await asyncio.to_thread(split_image, buffer.read(), parts)
 
     await ctx.delete_command_message()
 

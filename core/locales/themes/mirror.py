@@ -8,6 +8,7 @@ RU = {
     "mirror.cancelled": "Отменено.",
     "mirror.invalid_token_format": "Это не похоже на токен бота. Пришлите токен из BotFather ещё раз, либо /cancel.",
     "mirror.connection_failed": "Не удалось подключиться с этим токеном. Проверьте и пришлите снова.",
+    "mirror.start_failed": "Токен верный, но зеркало запустить не удалось. Попробуйте ещё раз чуть позже.",
     "mirror.connected_success": "Готово! Зеркало @{username} подключено и запущено.",
 }
 
@@ -19,6 +20,7 @@ EN = {
     "mirror.cancelled": "Cancelled.",
     "mirror.invalid_token_format": "That doesn't look like a bot token. Send the token from BotFather again, or /cancel.",
     "mirror.connection_failed": "Couldn't connect with this token. Check it and send again.",
+    "mirror.start_failed": "The token is valid, but the mirror couldn't be started. Please try again a bit later.",
     "mirror.connected_success": "Done! Mirror @{username} is connected and running.",
 }
 
@@ -30,5 +32,6 @@ UK = {
     "mirror.cancelled": "Скасовано.",
     "mirror.invalid_token_format": "Це не схоже на токен бота. Надішліть токен з BotFather ще раз, або /cancel.",
     "mirror.connection_failed": "Не вдалося підключитися з цим токеном. Перевірте і надішліть знову.",
+    "mirror.start_failed": "Токен вірний, але дзеркало запустити не вдалося. Спробуйте ще раз трохи пізніше.",
     "mirror.connected_success": "Готово! Дзеркало @{username} підключено і запущено.",
 }

@@ -8,8 +8,24 @@ from core import database as db
 from core.i18n import t
 from core.mirror_manager import mirror_manager
 from core.mirror_setup import MirrorSetupError, connect_mirror
+from core.utils import log_suppressed
 
 router = Router(name="mirror_setup")
+
+
+_ERROR_KEYS = {
+    "invalid_format": "mirror.invalid_token_format",
+    "connection_failed": "mirror.connection_failed",
+    "start_failed": "mirror.start_failed",
+}
+
+
+async def _erase_token_message(message: Message) -> None:
+    """Токен — секрет: не оставляем его в истории чата."""
+    try:
+        await message.delete()
+    except Exception:
+        log_suppressed("handlers/mirror.py:erase_token", benign=True)
 
 
 class MirrorState(StatesGroup):
@@ -58,13 +74,12 @@ async def on_token_received(message: Message, state: FSMContext):
     try:
         username = await connect_mirror(message.from_user.id, token)
     except MirrorSetupError as exc:
-        key = (
-            "mirror.invalid_token_format"
-            if exc.code == "invalid_format"
-            else "mirror.connection_failed"
-        )
+        if exc.code != "invalid_format":
+            await _erase_token_message(message)
+        key = _ERROR_KEYS.get(exc.code, "mirror.connection_failed")
         await message.answer(t(key, locale))
         return
 
+    await _erase_token_message(message)
     await state.clear()
     await message.answer(t("mirror.connected_success", locale, username=username))

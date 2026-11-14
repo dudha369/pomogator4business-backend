@@ -8,8 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
+
+# слой зависимостей кэшируется: пересобирается только при смене pyproject/uv.lock
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project && uv cache prune --ci
+
 COPY . .
 
-RUN uv sync --frozen && uv cache prune --ci
-
-CMD ["uv", "run", "__main__.py"]
+CMD ["uv", "run", "--no-dev", "__main__.py"]

@@ -17,6 +17,8 @@ async def get_mirror_status(user: dict = Depends(require_user)):
     return {
         "connected": bool(mirror and mirror["is_active"]),
         "username": mirror["bot_username"] if mirror else None,
+        # подключено в БД, но вебхук мог не подняться (деплой, нет WEBHOOK_BASE_URL)
+        "running": mirror_manager.is_running(user["id"]),
     }
 
 
@@ -31,6 +33,8 @@ async def api_connect_mirror(
     try:
         username = await connect_mirror(user["id"], payload.token)
     except MirrorSetupError as exc:
+        if exc.code == "start_failed":
+            raise HTTPException(status_code=503, detail="start_failed")
         detail = (
             "invalid_format" if exc.code == "invalid_format" else "connection_failed"
         )

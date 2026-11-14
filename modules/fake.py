@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 from PIL import Image, ImageDraw
@@ -87,7 +88,9 @@ async def cmd_fake(ctx: CommandContext):
         await ctx.usage_error(ctx.t("fake.usage_reply"))
         return
 
-    result = render_fake_card(avatar_bytes, name, handle, text, ctx.t("fake.watermark"))
+    result = await asyncio.to_thread(
+        render_fake_card, avatar_bytes, name, handle, text, ctx.t("fake.watermark")
+    )
 
     await ctx.delete_command_message()
     await ctx.bot.send_photo(

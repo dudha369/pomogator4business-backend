@@ -48,10 +48,7 @@ async def handle_voice_message(bot, connection, message) -> bool:
     if processed is None:
         return False
 
-    await delete_own_messages(
-        bot, connection["connection_id"], message.chat.id, [message.message_id]
-    )
-
+    # сначала отправляем обработанное: при сбое оригинал остаётся на месте
     try:
         await bot.send_voice(
             business_connection_id=connection["connection_id"],
@@ -60,5 +57,9 @@ async def handle_voice_message(bot, connection, message) -> bool:
         )
     except Exception:
         log_suppressed("modules/voice_effects.py:60")
+        return False
 
+    await delete_own_messages(
+        bot, connection["connection_id"], message.chat.id, [message.message_id]
+    )
     return True

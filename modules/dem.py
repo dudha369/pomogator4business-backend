@@ -1,3 +1,4 @@
+import asyncio
 import io
 
 from PIL import Image, ImageDraw
@@ -102,7 +103,7 @@ async def cmd_dem(ctx: CommandContext):
         return
 
     image_bytes = await download_message_photo(ctx.bot, photo_source)
-    result = render_demotivator(image_bytes, title, subtitle)
+    result = await asyncio.to_thread(render_demotivator, image_bytes, title, subtitle)
 
     await ctx.delete_command_message()
     await ctx.bot.send_photo(

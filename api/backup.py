@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from api.deps import require_connection, require_user
 from core import database as db
 from core.registry import registry
+from core.utils import is_valid_prefix
 
 router = APIRouter()
 
@@ -68,7 +69,7 @@ async def export_backup(user: dict = Depends(require_user)):
 
 class BackupImport(BaseModel):
     version: int
-    prefix: str | None = Field(default=None, min_length=1, max_length=8)
+    prefix: str | None = Field(default=None, max_length=8)
     timezone_offset_minutes: int | None = Field(default=None, ge=-14 * 60, le=14 * 60)
     disabled_modules: list[str] | None = Field(default=None, max_length=_MAX_ITEMS)
     autoresponder: dict | None = None
@@ -97,9 +98,12 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
     connection = await require_connection(owner_id)
     applied, skipped = 0, 0
 
-    if payload.prefix:
-        await db.set_prefix(connection["connection_id"], payload.prefix)
-        applied += 1
+    if payload.prefix is not None:
+        if is_valid_prefix(payload.prefix):
+            await db.set_prefix(connection["connection_id"], payload.prefix)
+            applied += 1
+        else:
+            skipped += 1
     if payload.timezone_offset_minutes is not None:
         await db.set_timezone_offset(owner_id, payload.timezone_offset_minutes)
         applied += 1

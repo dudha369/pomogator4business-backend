@@ -3,6 +3,7 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
+from core.game_lock import serialized_game
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -214,6 +215,7 @@ async def cmd_2048(ctx):
 
 
 @router.callback_query(F.data.startswith("g2048:"))
+@serialized_game
 async def on_2048_callback(call: CallbackQuery):
     action = call.data.split(":", 1)[1]
     if action == "noop":

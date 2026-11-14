@@ -2,6 +2,7 @@ import asyncio
 
 from core.context import CommandContext
 from core.registry import command
+from core.tasks import spawn
 from core.self_actions import delete_own_messages
 from core.utils import parse_duration_loose
 
@@ -29,7 +30,7 @@ async def cmd_bomb(ctx: CommandContext):
             return
 
         await ctx.delete_command_message()
-        asyncio.create_task(
+        spawn(
             _explode(
                 ctx.bot, ctx.connection_id, ctx.chat_id, target.message_id, seconds
             )
@@ -47,9 +48,9 @@ async def cmd_bomb(ctx: CommandContext):
         await ctx.reply(ctx.t("bomb.invalid_time"))
         return
 
-    await ctx.edit_command_message(text)
+    await ctx.edit_command_message(text, parse_mode=None)
 
-    asyncio.create_task(
+    spawn(
         _explode(
             ctx.bot, ctx.connection_id, ctx.chat_id, ctx.message.message_id, seconds
         )

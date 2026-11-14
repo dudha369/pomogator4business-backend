@@ -1,3 +1,5 @@
+import html
+
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -12,6 +14,7 @@ from aiogram.types import (
 from core import database as db
 from core.i18n import LANGUAGE_NAMES, t
 from core.registry import registry
+from core.utils import is_valid_prefix
 from core.webapp import webapp_keyboard
 
 router = Router(name="settings")
@@ -124,7 +127,9 @@ async def cmd_archive_view(message: Message):
     lines = []
     for entry in entries:
         icon = "🗑" if entry["event"] == "deleted" else "✏️"
-        lines.append(f"{icon} chat {entry['chat_id']}: {entry['old_text']!r}")
+        lines.append(
+            f"{icon} chat {entry['chat_id']}: {html.escape(repr(entry['old_text']), quote=False)}"
+        )
 
     await message.answer(t("settings.archive_header", locale) + "\n".join(lines))
 
@@ -166,11 +171,11 @@ async def cb_prefix(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@router.message(StateFilter(PrefixState.waiting_for_prefix))
+@router.message(StateFilter(PrefixState.waiting_for_prefix), F.text)
 async def on_new_prefix(message: Message, state: FSMContext):
     locale = await db.get_locale(message.from_user.id)
     new_prefix = message.text.strip()
-    if len(new_prefix) != 1:
+    if not is_valid_prefix(new_prefix):
         await message.answer(t("settings.prefix_single_char", locale))
         return
 

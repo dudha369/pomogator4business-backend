@@ -144,7 +144,7 @@ async def migrate_known_chats(conn, connection_owner: dict):
 async def main():
     db_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_DB_PATH
 
-    await Tortoise.init(config=TORTOISE_ORM, _enable_global_fallback=True)
+    await Tortoise.init(config=TORTOISE_ORM)
 
     async with aiosqlite.connect(db_path) as conn:
         await migrate_connections(conn)

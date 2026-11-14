@@ -2,6 +2,7 @@ import asyncio
 
 from core.context import CommandContext
 from core.registry import command
+from core.tasks import spawn
 from core.utils import parse_duration
 
 _MAX_SECONDS = 5 * 60
@@ -53,6 +54,4 @@ async def cmd_typing(ctx: CommandContext):
         return
 
     await ctx.delete_command_message()
-    asyncio.create_task(
-        _keep_action(ctx.bot, ctx.connection_id, ctx.chat_id, action, seconds)
-    )
+    spawn(_keep_action(ctx.bot, ctx.connection_id, ctx.chat_id, action, seconds))

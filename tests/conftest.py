@@ -32,7 +32,7 @@ NOW = 1_800_000_000
 @pytest_asyncio.fixture
 async def database():
     on_postgres = not os.environ["DB_URL"].startswith("sqlite")
-    await Tortoise.init(config=TORTOISE_ORM, _enable_global_fallback=True)
+    await Tortoise.init(config=TORTOISE_ORM)
     if on_postgres:
         # чистая схема для каждого теста (БД для тестов должна существовать заранее)
         await Tortoise.get_connection("default").execute_script(

@@ -114,7 +114,12 @@ from db.models.message_history import (
     purge_history,
     save_history,
 )
-from db.models.message_log import log_message, pop_recent_message_ids, trim_message_log
+from db.models.message_log import (
+    forget_message_log,
+    log_message,
+    recent_message_log,
+    trim_message_log,
+)
 from db.models.minesweeper import get_ms_game, save_ms_game
 from db.models.mirror_bot import (
     delete_mirror,
@@ -135,7 +140,11 @@ from db.models.mute import (
     set_timed_mute,
     set_warn_mute,
 )
-from db.models.profile_backup import get_profile_backup, save_profile_backup
+from db.models.profile_backup import (
+    delete_profile_backup,
+    get_profile_backup,
+    save_profile_backup,
+)
 from db.models.story import is_autopost_enabled, toggle_autopost
 from db.models.ttt import get_ttt_game, save_ttt_game
 from db.models.user_locale import (
@@ -239,6 +248,7 @@ __all__ = [
     "get_mirror",
     "get_ms_game",
     "get_mute",
+    "delete_profile_backup",
     "get_profile_backup",
     "get_archive_page",
     "get_recent_archive",
@@ -258,7 +268,8 @@ __all__ = [
     "log_archive_event",
     "log_message",
     "mark_known_chat",
-    "pop_recent_message_ids",
+    "recent_message_log",
+    "forget_message_log",
     "save_chk_game",
     "save_city_game",
     "save_clock_emoji",
