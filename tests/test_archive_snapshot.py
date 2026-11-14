@@ -133,7 +133,7 @@ async def test_deleted_voice_is_one_message_with_caption_and_button(ready, bot):
     assert bot.sent == []  # отдельного текстового уведомления больше нет
     ((kind, kw),) = bot.media_sent
     assert kind == "voice" and kw["voice"] == "vo"
-    assert "Сообщение удалено" in kw["caption"] and "Собеседник" in kw["caption"]
+    assert "Удалено сообщение собеседника" in kw["caption"] and "Чат:" in kw["caption"]
     assert "Удалить у себя" in str(kw["reply_markup"])
     assert "[медиа-сообщение]" not in kw["caption"]
 
@@ -154,7 +154,9 @@ async def test_deleted_sticker_is_one_message_with_buttons(ready, bot):
     ((kind, kw),) = bot.media_sent
     assert kind == "sticker" and kw["sticker"] == "st" and "reply_parameters" not in kw
     rows = kw["reply_markup"].inline_keyboard
-    assert rows[0][0].callback_data == "archive:info"  # «Сообщение удалено!»
+    assert (
+        rows[0][0].callback_data == "archive:info"
+    )  # «Сообщение собеседника удалено!»
     assert rows[1][0].url == "tg://user?id=7"  # профиль собеседника
     assert rows[-1][0].callback_data == "archive:delete_notice"
 
@@ -211,7 +213,7 @@ async def test_info_button_answers_with_toast(ready, bot):
 
     call = Call()
     await on_info(call)
-    assert "удалил" in call.answers[0]
+    assert "удалено" in call.answers[0] and "собеседник" not in call.answers[0].lower()
 
 
 async def test_deleted_text_unchanged(ready, bot):
@@ -411,7 +413,8 @@ async def test_rich_photo_caption_stays_below_by_default(rich, bot):
     message = call["rich_message"]
     types_ = kinds(message)
     assert types_.index("photo") < types_.index("blockquote")  # подпись под фото
-    assert "Сообщение удалено" in texts(message) and "Мой чек" in texts(message)
+    assert "Удалено сообщение собеседника" in texts(message)
+    assert "Мой чек" in texts(message)
     assert media_of(message.blocks[types_.index("photo")]) == "p"
     assert "Удалить у себя" in str(call["reply_markup"])
 
@@ -525,7 +528,8 @@ async def test_regular_album_fallback_starts_with_header_then_files(ready, bot):
     await on_business_deleted(deleted_event(CHAT, ids), bot)
 
     (header,) = bot.sent
-    assert "Сообщение удалено" in header["text"] and "Поездка" in header["text"]
+    assert "Удалено сообщение собеседника" in header["text"]
+    assert "Поездка" in header["text"]
     assert "Удалить у себя" in str(header["reply_markup"])
     (album,) = bot.album_sent
     assert [m.media for m in album["media"]] == ["p0", "p1", "p2"]
@@ -695,7 +699,7 @@ async def test_button_roles_and_colors(ready, bot):
     stub, profile, forward, delete = (r[0] for r in rows)
     assert stub.callback_data == "archive:info" and stub.style is None
     assert stub.icon_custom_emoji_id == "5258389041006518073"  # коробка, не мусорка
-    assert profile.text.startswith("Собеседник:") and profile.style == "primary"
+    assert profile.text.startswith("Чат:") and profile.style == "primary"
     assert forward.style == "primary"
     assert (
         delete.style == "danger"
@@ -779,3 +783,73 @@ def test_html_to_rich_converts_our_markup():
     ]
     assert result[4].text == "Аня & Ко" and result[4].url == "tg://user?id=7"
     assert html_to_rich("просто") == "просто" and html_to_rich("") == ""
+
+
+# ------------------- автор удалённого сообщения (is_owner) -------------------
+
+
+async def send_own(bot, text=None, **kwargs):
+    """Сообщение, написанное самим владельцем (from_id == owner_id)."""
+    msg = make_message(text, chat_id=CHAT, from_id=42, **kwargs)
+    await on_business_message(msg, bot)
+    return msg
+
+
+async def test_deleted_own_message_has_own_header_and_flag(ready, api_bot):
+    msg = await send_own(api_bot, "мой текст")
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), api_bot)
+
+    text = api_bot.sent[-1]["text"]
+    assert "Удалено ваше сообщение!" in text and "Чат:" in text
+    assert "собеседника" not in text
+    log = (await db.get_recent_archive(CONNECTION_ID, 5))[0]
+    assert log["event"] == "deleted" and log["is_owner"] is True
+
+
+async def test_deleted_peer_message_has_peer_header_and_flag(ready, api_bot):
+    msg = await receive(api_bot, "чужой текст")
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), api_bot)
+
+    assert "Удалено сообщение собеседника!" in api_bot.sent[-1]["text"]
+    log = (await db.get_recent_archive(CONNECTION_ID, 5))[0]
+    assert log["is_owner"] is False
+
+
+async def test_own_sticker_stub_button_is_own(ready, api_bot):
+    msg = await send_own(api_bot, sticker=tg_file("st"))
+    await on_business_deleted(deleted_event(CHAT, [msg.message_id]), api_bot)
+
+    kind, kwargs = api_bot.media_sent[-1]
+    assert kind == "sticker"
+    stub = kwargs["reply_markup"].inline_keyboard[0][0]
+    assert stub.text == "Ваше сообщение удалено!"
+
+
+async def test_own_album_uses_own_header_in_rich(rich, api_bot):
+    first = await send_own(api_bot, "Поездка", photo=[tg_file("a")])
+    second = await send_own(api_bot, photo=[tg_file("b")])
+    first.media_group_id = second.media_group_id = "g1"
+    await db.save_history(
+        CONNECTION_ID,
+        CHAT,
+        first.message_id,
+        True,
+        "Поездка",
+        1,
+        snapshot=build_snapshot(first),
+    )
+    await db.save_history(
+        CONNECTION_ID,
+        CHAT,
+        second.message_id,
+        True,
+        None,
+        1,
+        snapshot=build_snapshot(second),
+    )
+    await on_business_deleted(
+        deleted_event(CHAT, [first.message_id, second.message_id]), api_bot
+    )
+    rich_msg = api_bot.rich_sent[-1]["rich_message"]
+    first_paragraph = rich_msg.blocks[0].text
+    assert "ваше" in str(first_paragraph)

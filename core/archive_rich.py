@@ -181,10 +181,15 @@ def _message(blocks) -> InputRichMessage:
 
 
 def build_deleted(
-    locale, mention, snaps, forward=None, prefs: ArchivePrefs | None = None
+    locale,
+    mention,
+    snaps,
+    forward=None,
+    prefs: ArchivePrefs | None = None,
+    header_key="archive.deleted_header",
 ) -> InputRichMessage:
     """Удалённое сообщение (или целый альбом) одним Rich Message."""
-    blocks = header_blocks(locale, mention, forward)
+    blocks = header_blocks(locale, mention, forward, header_key)
     text_snap = next((s for s in snaps if s.get("text")), None)
     caption = (
         [quote_block(text_snap["text"], text_snap.get("entities"))] if text_snap else []
@@ -201,12 +206,17 @@ def build_deleted(
 
 
 def build_location(
-    locale, mention, snap, forward=None, prefs: ArchivePrefs | None = None
+    locale,
+    mention,
+    snap,
+    forward=None,
+    prefs: ArchivePrefs | None = None,
+    header_key="archive.deleted_header",
 ) -> InputRichMessage:
     """Геолокация/место картой прямо в сообщении."""
     payload = snap.get("payload") or {}
     point = payload.get("location") or payload
-    blocks = header_blocks(locale, mention, forward)
+    blocks = header_blocks(locale, mention, forward, header_key)
     if snap["kind"] == "venue":
         blocks += paragraphs(
             "\n".join(

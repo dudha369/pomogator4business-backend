@@ -16,6 +16,9 @@ class ArchiveLog(Model):
     media_status = fields.CharField(max_length=16, null=True)
     media_data = fields.BinaryField(null=True)
     kind = fields.CharField(max_length=24, null=True)
+    # автор сообщения: True — владелец, False — собеседник (Telegram не сообщает,
+    # кто именно удалил, поэтому в уведомлении называем автора)
+    is_owner = fields.BooleanField(default=False)
     edit_kind = fields.CharField(max_length=24, null=True)
     old_snapshot = fields.JSONField(null=True)
     new_snapshot = fields.JSONField(null=True)
@@ -41,6 +44,7 @@ LIST_COLUMNS = (
     "media_name",
     "media_status",
     "kind",
+    "is_owner",
     "edit_kind",
     "old_snapshot",
     "new_snapshot",
@@ -66,6 +70,7 @@ async def log_archive_event(
     old_snapshot=None,
     new_snapshot=None,
     notice_message_id=None,
+    is_owner=False,
 ):
     if media_type is not None and media_status is None:
         media_status = "saved" if media_data is not None else "failed"
@@ -82,6 +87,7 @@ async def log_archive_event(
         media_name=media_name,
         media_status=media_status,
         kind=kind,
+        is_owner=is_owner,
         edit_kind=edit_kind,
         old_snapshot=old_snapshot,
         new_snapshot=new_snapshot,

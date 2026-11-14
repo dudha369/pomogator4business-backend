@@ -17,6 +17,7 @@ from .mirror_bot import MirrorBot
 from .module_settings import DisabledModule
 from .mute import Mute
 from .profile_backup import ProfileBackup
+from .scheduled_task import ScheduledTask
 from .story import StoryAutopost
 from .ttt import TttGame
 from .user_locale import UserLocale
@@ -44,6 +45,7 @@ __all__ = [
     "MsGame",
     "Mute",
     "ProfileBackup",
+    "ScheduledTask",
     "StoryAutopost",
     "TttGame",
     "UserLocale",

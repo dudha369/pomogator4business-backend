@@ -1,25 +1,9 @@
-import asyncio
-
 from core.context import CommandContext
 from core.registry import command
-from core.tasks import spawn
+from core.scheduled import schedule
 from core.utils import parse_duration
-from core.utils import log_suppressed
 
 _MAX_SECONDS = 24 * 3600
-
-
-async def _fire(bot, connection_id, chat_id, seconds, text):
-    await asyncio.sleep(seconds)
-    try:
-        await bot.send_message(
-            business_connection_id=connection_id,
-            chat_id=chat_id,
-            text=text,
-            parse_mode=None,
-        )
-    except Exception:
-        log_suppressed("modules/timer.py:18", benign=True)
 
 
 @command(
@@ -38,6 +22,6 @@ async def cmd_timer(ctx: CommandContext):
         await ctx.reply(ctx.t("timer.invalid_time"))
         return
 
+    # сначала запись в БД: если она не удалась, «таймер установлен» не показываем
+    await schedule("timer", ctx.connection_id, ctx.chat_id, seconds, text=text)
     await ctx.edit_command_message(ctx.t("timer.set", time=raw_time))
-
-    spawn(_fire(ctx.bot, ctx.connection_id, ctx.chat_id, seconds, text))

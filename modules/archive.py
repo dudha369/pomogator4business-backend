@@ -228,14 +228,21 @@ _ICON_USER = "5260399854500191689"
 _ICON_FORWARD = "5260450573768990626"
 
 
-def _sender_keyboard(locale, sender, snap, *, profile=True):
+def _deleted_header_key(own):
+    """Telegram не говорит, кто удалил, поэтому заголовок называет только автора."""
+    return "archive.deleted_header_own" if own else "archive.deleted_header"
+
+
+def _sender_keyboard(locale, sender, snap, *, profile=True, own=False):
     """Кнопки под содержимым, к которому нельзя дописать подпись (стикер, кружок,
     геолокация, контакт, подарок). Сверху серая «заглушка» со статусом, ниже цветные
     рабочие кнопки: профиль и «переслано от» (синие), «Удалить у себя» (красная)."""
     rows = [
         [
             InlineKeyboardButton(
-                text=t("archive.btn_deleted", locale),
+                text=t(
+                    "archive.btn_deleted_own" if own else "archive.btn_deleted", locale
+                ),
                 icon_custom_emoji_id=_ICON_DELETED,
                 callback_data="archive:info",
             )
@@ -313,17 +320,24 @@ async def _try_rich(bot, chat_id, rich_message, markup):
     return await _send_rich(bot, chat_id, rich_message, markup) is not None
 
 
-async def _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, prefs):
+async def _notify_deleted(
+    bot, chat_id, locale, mention, sender, snap, entry, prefs, own=False
+):
     kind = snap["kind"]
+    header_key = _deleted_header_key(own)
     is_file = kind in FILE_KINDS
     delete_one = _delete_button_keyboard(locale)
 
     if can_use_rich([(snap, entry)], prefs):
-        rich = build_deleted(locale, mention, [snap], snap.get("forward"), prefs)
+        rich = build_deleted(
+            locale, mention, [snap], snap.get("forward"), prefs, header_key
+        )
         if await _try_rich(bot, chat_id, rich, delete_one):
             return
     if prefs.rich and prefs.location_map and kind in ("location", "venue"):
-        rich = build_location(locale, mention, snap, snap.get("forward"), prefs)
+        rich = build_location(
+            locale, mention, snap, snap.get("forward"), prefs, header_key
+        )
         if await _try_rich(bot, chat_id, rich, delete_one):
             return
 
@@ -331,7 +345,9 @@ async def _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, pr
     send_failed = False
 
     if kind in _CAPTIONABLE and file:
-        caption = build_notice(locale, mention, snap, limit=CAPTION_LIMIT)
+        caption = build_notice(
+            locale, mention, snap, limit=CAPTION_LIMIT, header_key=header_key
+        )
         try:
             await _send_media(
                 bot, chat_id, snap, file, caption=caption, markup=delete_one
@@ -354,7 +370,9 @@ async def _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, pr
                     chat_id,
                     snap,
                     file,
-                    markup=_sender_keyboard(locale, sender, snap, profile=profile),
+                    markup=_sender_keyboard(
+                        locale, sender, snap, profile=profile, own=own
+                    ),
                 )
                 return
             except Exception:
@@ -364,7 +382,14 @@ async def _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, pr
         send_failed = True
 
     detail = kind != "text" and not is_file
-    text = build_notice(locale, mention, snap, limit=MESSAGE_LIMIT - 100, detail=detail)
+    text = build_notice(
+        locale,
+        mention,
+        snap,
+        limit=MESSAGE_LIMIT - 100,
+        header_key=header_key,
+        detail=detail,
+    )
     if is_file and (not file or send_failed):
         text += "\n\n" + t("archive.media_unavailable", locale)
     await bot.send_message(
@@ -375,14 +400,15 @@ async def _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, pr
     )
 
 
-async def _notify_album(bot, chat_id, locale, mention, sender, items, prefs):
+async def _notify_album(bot, chat_id, locale, mention, sender, items, prefs, own=False):
     """Весь удалённый альбом одним уведомлением (items — [(снимок, запись)])."""
     snaps = [snap for snap, _ in items]
     forward = next((s["forward"] for s in snaps if s.get("forward")), None)
     delete_one = _delete_button_keyboard(locale)
+    header_key = _deleted_header_key(own)
 
     if can_use_rich(items, prefs):
-        rich = build_deleted(locale, mention, snaps, forward, prefs)
+        rich = build_deleted(locale, mention, snaps, forward, prefs, header_key)
         if await _try_rich(bot, chat_id, rich, delete_one):
             return
 
@@ -394,6 +420,7 @@ async def _notify_album(bot, chat_id, locale, mention, sender, items, prefs):
         mention,
         {**caption_snap, "forward": forward},
         limit=MESSAGE_LIMIT - 100,
+        header_key=header_key,
     )
     await bot.send_message(
         chat_id=chat_id,
@@ -429,7 +456,9 @@ async def _notify_album(bot, chat_id, locale, mention, sender, items, prefs):
             media = [classes[snap["kind"]](media=file) for snap, file in chunk]
             await bot.send_media_group(chat_id=chat_id, media=media)
     for snap, entry in leftovers:
-        await _notify_deleted(bot, chat_id, locale, mention, sender, snap, entry, prefs)
+        await _notify_deleted(
+            bot, chat_id, locale, mention, sender, snap, entry, prefs, own
+        )
 
 
 def _clip(text):
@@ -832,6 +861,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
             found.append((message_id, entry, entry_snapshot(entry)))
 
     for unit in _group_albums(found):
+        own = bool(unit[0][1]["is_owner"])  # альбом — всегда одного автора
         try:
             if len(unit) == 1:
                 _, entry, snap = unit[0]
@@ -844,6 +874,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                     snap,
                     entry,
                     prefs,
+                    own,
                 )
             else:
                 await _notify_album(
@@ -854,6 +885,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                     sender,
                     [(snap, entry) for _, entry, snap in unit],
                     prefs,
+                    own,
                 )
         except Exception:
             log_suppressed("modules/archive.py:notify_deleted")
@@ -869,6 +901,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                 int(time.time()),
                 kind=snap["kind"],
                 old_snapshot=snap,
+                is_owner=own,
                 media_type=entry.get("media_type"),
                 media_data=entry.get("media_data"),
                 media_mime=entry.get("media_mime"),

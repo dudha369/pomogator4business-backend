@@ -15,6 +15,7 @@ from core.logging_config import configure_logging
 from core.mirror_manager import mirror_dispatcher, mirror_manager
 from core.reminders import run_reminders_loop
 from core.retention import run_retention_loop
+from core.scheduled import run_scheduled_loop
 from core.scheduler import run_emoji_clock
 
 logger = logging.getLogger("bot.webhook")
@@ -62,6 +63,7 @@ async def lifespan(app: FastAPI):
     _background_tasks.append(asyncio.create_task(run_emoji_clock(bot)))
     _background_tasks.append(asyncio.create_task(run_retention_loop()))
     _background_tasks.append(asyncio.create_task(run_reminders_loop(bot)))
+    _background_tasks.append(asyncio.create_task(run_scheduled_loop(bot)))
 
     await mirror_manager.start_all()
 

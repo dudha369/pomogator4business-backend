@@ -22,6 +22,12 @@ from db.models.ai import (
     set_draft_status_force,
     upsert_ai_settings,
 )
+from db.models.scheduled_task import (
+    add_scheduled_task,
+    claim_scheduled_task,
+    list_due_scheduled_tasks,
+    next_scheduled_run_at,
+)
 from db.models.reminders import (
     get_reminder_settings,
     list_reminder_owner_ids,
@@ -159,6 +165,10 @@ from db.models.voice_effect import get_voice_effect, set_voice_effect
 from db.models.wordle import get_wordle_game, save_wordle_game
 
 __all__ = [
+    "add_scheduled_task",
+    "claim_scheduled_task",
+    "list_due_scheduled_tasks",
+    "next_scheduled_run_at",
     "set_history_transcript",
     "get_archive_prefs_data",
     "save_archive_prefs_data",

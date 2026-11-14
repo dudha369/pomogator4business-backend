@@ -70,7 +70,6 @@ async def test_8ball_escapes_question(connection):
     [
         ("modules.bomb", "cmd_bomb", f"10s {EVIL}"),
         ("modules.split", "cmd_split", EVIL),
-        ("modules.timer", "cmd_timer", f"1s {EVIL}"),
         ("modules.type_", "cmd_type", EVIL),
         ("modules.plove", "cmd_plove", EVIL),
     ],

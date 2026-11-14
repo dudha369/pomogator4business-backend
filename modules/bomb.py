@@ -1,17 +1,9 @@
-import asyncio
-
 from core.context import CommandContext
 from core.registry import command
-from core.tasks import spawn
-from core.self_actions import delete_own_messages
+from core.scheduled import schedule
 from core.utils import parse_duration_loose
 
 _MAX_SECONDS = 24 * 3600
-
-
-async def _explode(bot, connection_id, chat_id, message_id, seconds):
-    await asyncio.sleep(seconds)
-    await delete_own_messages(bot, connection_id, chat_id, [message_id])
 
 
 @command(
@@ -29,12 +21,14 @@ async def cmd_bomb(ctx: CommandContext):
             await ctx.usage_error(ctx.t("bomb.usage_reply"))
             return
 
-        await ctx.delete_command_message()
-        spawn(
-            _explode(
-                ctx.bot, ctx.connection_id, ctx.chat_id, target.message_id, seconds
-            )
+        await schedule(
+            "bomb",
+            ctx.connection_id,
+            ctx.chat_id,
+            seconds,
+            message_id=target.message_id,
         )
+        await ctx.delete_command_message()
         return
 
     parts = ctx.args.split(maxsplit=1)
@@ -48,10 +42,11 @@ async def cmd_bomb(ctx: CommandContext):
         await ctx.reply(ctx.t("bomb.invalid_time"))
         return
 
-    await ctx.edit_command_message(text, parse_mode=None)
-
-    spawn(
-        _explode(
-            ctx.bot, ctx.connection_id, ctx.chat_id, ctx.message.message_id, seconds
-        )
+    await schedule(
+        "bomb",
+        ctx.connection_id,
+        ctx.chat_id,
+        seconds,
+        message_id=ctx.message.message_id,
     )
+    await ctx.edit_command_message(text, parse_mode=None)

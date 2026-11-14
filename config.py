@@ -118,6 +118,7 @@ TORTOISE_ORM = {
                 "db.models.city",
                 "db.models.hangman",
                 "db.models.g2048",
+                "db.models.scheduled_task",
                 "aerich.models",
             ],
             "default_connection": "default",

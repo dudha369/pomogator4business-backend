@@ -5,7 +5,7 @@ RU = {
     "archive.media_document": "📄 Файл сохранён",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Сообщение изменено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}\n\n'
         '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Было:</b>\n'
         "<blockquote expandable>{old_text}</blockquote>\n\n"
         '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало:</b>\n'
@@ -13,7 +13,7 @@ RU = {
     ),
     "archive.deleted_notice": (
         '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Сообщение удалено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}\n\n'
         "<blockquote expandable>{old_text}</blockquote>"
     ),
     "archive.open_message_button": "Перейти к сообщению",
@@ -25,16 +25,20 @@ RU = {
     "archive.media_video_note": "⭕ Видео-кружок сохранён",
     "archive.delete_notice_button": "Удалить у себя",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Сообщение удалено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Удалено сообщение собеседника!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
+    ),
+    "archive.deleted_header_own": (
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Удалено ваше сообщение!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.edited_caption_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Подпись изменена!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.edited_media_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Медиа заменено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано от:</b> {source}',
     "archive.empty_text": "—",
@@ -53,10 +57,11 @@ RU = {
     "archive.detail_paid_media": "⭐ Платное медиа",
     "archive.detail_live_photo": "📸 Живое фото",
     "archive.detail_other": "📎 Сообщение неподдерживаемого типа",
-    "archive.btn_deleted": "Сообщение удалено!",
+    "archive.btn_deleted": "Сообщение собеседника удалено!",
+    "archive.btn_deleted_own": "Ваше сообщение удалено!",
     "archive.btn_forwarded": "Переслано от {name}",
-    "archive.toast_deleted": "Собеседник удалил это сообщение",
-    "archive.btn_sender": "Собеседник: {name}",
+    "archive.toast_deleted": "Это сообщение удалено",
+    "archive.btn_sender": "Чат: {name}",
     "archive.dice_hit": "Попал!",
     "archive.dice_goal": "Гол!",
     "archive.dice_miss": "Мимо",
@@ -70,7 +75,7 @@ RU = {
     "archive.edits_count": "Изменений: {count}",
     "archive.edited_text_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Сообщение изменено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Собеседник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.collapsed_media": "Вложения: {count}",
     "archive.transcript": "Расшифровка",
@@ -83,7 +88,7 @@ EN = {
     "archive.media_document": "📄 File saved",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Message edited!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}\n\n'
         '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Before:</b>\n'
         "<blockquote expandable>{old_text}</blockquote>\n\n"
         '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>After:</b>\n'
@@ -91,7 +96,7 @@ EN = {
     ),
     "archive.deleted_notice": (
         '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Message deleted!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}\n\n'
         "<blockquote expandable>{old_text}</blockquote>"
     ),
     "archive.open_message_button": "Go to message",
@@ -103,16 +108,20 @@ EN = {
     "archive.media_video_note": "⭕ Video note saved",
     "archive.delete_notice_button": "Delete for me",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Message deleted!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>The contact\'s message was deleted!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}'
+    ),
+    "archive.deleted_header_own": (
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Your message was deleted!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}'
     ),
     "archive.edited_caption_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Caption edited!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}'
     ),
     "archive.edited_media_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Media replaced!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}'
     ),
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Forwarded from:</b> {source}',
     "archive.empty_text": "—",
@@ -131,10 +140,11 @@ EN = {
     "archive.detail_paid_media": "⭐ Paid media",
     "archive.detail_live_photo": "📸 Live photo",
     "archive.detail_other": "📎 Unsupported message type",
-    "archive.btn_deleted": "Message deleted!",
+    "archive.btn_deleted": "Contact's message deleted!",
+    "archive.btn_deleted_own": "Your message deleted!",
     "archive.btn_forwarded": "Forwarded from {name}",
-    "archive.toast_deleted": "The contact deleted this message",
-    "archive.btn_sender": "Contact: {name}",
+    "archive.toast_deleted": "This message was deleted",
+    "archive.btn_sender": "Chat: {name}",
     "archive.dice_hit": "Scored!",
     "archive.dice_goal": "Goal!",
     "archive.dice_miss": "Miss",
@@ -148,7 +158,7 @@ EN = {
     "archive.edits_count": "Edits: {count}",
     "archive.edited_text_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Message edited!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Contact:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Chat:</b> {mention}'
     ),
     "archive.collapsed_media": "Attachments: {count}",
     "archive.transcript": "Transcript",
@@ -161,7 +171,7 @@ UK = {
     "archive.media_document": "📄 Файл збережено",
     "archive.edited_notice": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Повідомлення змінено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}\n\n'
         '<tg-emoji emoji-id="5258419835922030550">⏲️</tg-emoji> <b>Було:</b>\n'
         "<blockquote expandable>{old_text}</blockquote>\n\n"
         '<tg-emoji emoji-id="5258258882022612173">⏱️</tg-emoji> <b>Стало:</b>\n'
@@ -169,7 +179,7 @@ UK = {
     ),
     "archive.deleted_notice": (
         '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Повідомлення видалено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}\n\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}\n\n'
         "<blockquote expandable>{old_text}</blockquote>"
     ),
     "archive.open_message_button": "Перейти до повідомлення",
@@ -181,16 +191,20 @@ UK = {
     "archive.media_video_note": "⭕ Відео-гурток збережено",
     "archive.delete_notice_button": "Видалити у себе",
     "archive.deleted_header": (
-        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Повідомлення видалено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Видалено повідомлення співрозмовника!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
+    ),
+    "archive.deleted_header_own": (
+        '<tg-emoji emoji-id="5258389041006518073">📦</tg-emoji> <b>Видалено ваше повідомлення!</b>\n'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.edited_caption_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Підпис змінено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.edited_media_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Медіа замінено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.forwarded_from": '<tg-emoji emoji-id="5260450573768990626">↪️</tg-emoji> <b>Переслано від:</b> {source}',
     "archive.empty_text": "—",
@@ -209,10 +223,11 @@ UK = {
     "archive.detail_paid_media": "⭐ Платне медіа",
     "archive.detail_live_photo": "📸 Жива фотографія",
     "archive.detail_other": "📎 Непідтримуваний тип повідомлення",
-    "archive.btn_deleted": "Повідомлення видалено!",
+    "archive.btn_deleted": "Повідомлення співрозмовника видалено!",
+    "archive.btn_deleted_own": "Ваше повідомлення видалено!",
     "archive.btn_forwarded": "Переслано від {name}",
-    "archive.toast_deleted": "Співрозмовник видалив це повідомлення",
-    "archive.btn_sender": "Співрозмовник: {name}",
+    "archive.toast_deleted": "Це повідомлення видалено",
+    "archive.btn_sender": "Чат: {name}",
     "archive.dice_hit": "Влучив!",
     "archive.dice_goal": "Гол!",
     "archive.dice_miss": "Повз",
@@ -226,7 +241,7 @@ UK = {
     "archive.edits_count": "Змін: {count}",
     "archive.edited_text_header": (
         '<tg-emoji emoji-id="5258215635996908355">✏️</tg-emoji> <b>Повідомлення змінено!</b>\n'
-        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Співрозмовник:</b> {mention}'
+        '<tg-emoji emoji-id="5260399854500191689">👤</tg-emoji> <b>Чат:</b> {mention}'
     ),
     "archive.collapsed_media": "Вкладення: {count}",
     "archive.transcript": "Розшифровка",

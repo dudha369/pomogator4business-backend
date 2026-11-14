@@ -199,6 +199,16 @@ async def test_archive_sort_pagination_media_and_filters(client):
     assert (await client.get("/api/archive/999/media", headers=h)).status_code == 404
 
 
+async def test_archive_entries_expose_author_flag(client):
+    h = client.owner
+    await db.log_archive_event(
+        CONNECTION_ID, 7, 1, "deleted", "мой", None, NOW, is_owner=True
+    )
+    await db.log_archive_event(CONNECTION_ID, 7, 2, "deleted", "чужой", None, NOW)
+    entries = (await client.get("/api/archive?sort=asc", headers=h)).json()["entries"]
+    assert [e["is_owner"] for e in entries] == [True, False]
+
+
 async def test_archive_media_is_private_to_owner(client, database):
     await db.upsert_connection("other", 777, 777, True)
     await db.save_history(
