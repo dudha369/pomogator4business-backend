@@ -1,4 +1,4 @@
-from app import app
+from app.main import app
 from bot_instance import setup_routes
 from config import settings
 

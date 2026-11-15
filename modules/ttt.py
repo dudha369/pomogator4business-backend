@@ -8,11 +8,13 @@ from aiogram.types import (
     LinkPreviewOptions,
 )
 
-from core.game_lock import serialized_game
-from core import database as db
-from core.i18n import t
+from app.features.games.lock import serialized_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
+from app.platform.i18n import t
 from core.mentions import format_mention, mention, remember
-from core.registry import command
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 router = Router(name="ttt")
 
@@ -150,7 +152,8 @@ async def cmd_ttt(ctx):
     starter = ctx.message.from_user
     remember(starter)
 
-    await db.save_ttt_game(
+    await save_game(
+        "ttt",
         ctx.connection_id,
         ctx.chat_id,
         board=".........",
@@ -171,7 +174,7 @@ async def cmd_ttt(ctx):
         reply_markup=_challenge_keyboard(ctx.locale),
         parse_mode="html",
     )
-    await db.save_ttt_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("ttt", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def _show(call, bot, locale, game, winner=None, winning_line=None):
@@ -185,7 +188,7 @@ async def _show(call, bot, locale, game, winner=None, winning_line=None):
 
 
 async def _on_decline(call, ctx):
-    await db.save_ttt_game(ctx.conn_id, ctx.chat_id, status="finished")
+    await save_game("ttt", ctx.conn_id, ctx.chat_id, status="finished")
     await call.message.edit_text(t("ttt.declined", ctx.locale), parse_mode="html")
 
 
@@ -195,14 +198,16 @@ async def _on_accept(call, bot, ctx):
         await call.answer(t("ttt.cant_accept_own", ctx.locale), show_alert=True)
         return True
     remember(call.from_user)
-    await db.save_ttt_game(
+    await save_game(
+        "ttt",
         ctx.conn_id, ctx.chat_id, player_o_id=call.from_user.id, status="active"
     )
-    game = await db.get_ttt_game(ctx.conn_id, ctx.chat_id)
+    game = await get_game("ttt", ctx.conn_id, ctx.chat_id)
     try:
         await _show(call, bot, ctx.locale, game)
     except Exception:
-        await db.save_ttt_game(
+        await save_game(
+            "ttt",
             ctx.conn_id, ctx.chat_id, player_o_id=None, status="pending"
         )
         raise
@@ -211,7 +216,8 @@ async def _on_accept(call, bot, ctx):
 async def _on_restart(call, ctx):
     starter = call.from_user
     remember(starter)
-    await db.save_ttt_game(
+    await save_game(
+        "ttt",
         ctx.conn_id,
         ctx.chat_id,
         board=".........",
@@ -258,14 +264,15 @@ async def _on_move(call, bot, ctx, idx):
     board_str = "".join(board)
     winner, winning_line = _check_winner(board_str)
 
-    await db.save_ttt_game(
+    await save_game(
+        "ttt",
         ctx.conn_id,
         ctx.chat_id,
         board=board_str,
         turn="O" if symbol == "X" else "X",
         status="finished" if winner else "active",
     )
-    game = await db.get_ttt_game(ctx.conn_id, ctx.chat_id)
+    game = await get_game("ttt", ctx.conn_id, ctx.chat_id)
     remember(call.from_user)
     await _show(call, bot, ctx.locale, game, winner, winning_line)
 
@@ -292,14 +299,14 @@ async def on_ttt_callback(call: CallbackQuery, bot: Bot):
     conn_id = call.message.business_connection_id
     chat_id = call.message.chat.id
 
-    game = await db.get_ttt_game(conn_id, chat_id)
+    game = await get_game("ttt", conn_id, chat_id)
     stale = game and game["message_id"] not in (None, call.message.message_id)
     if not game or stale:
         await call.answer()
         return
 
-    connection = await db.get_connection(conn_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    connection = await get_connection(conn_id)
+    locale = await get_locale(connection["owner_id"]) if connection else "ru"
     ctx = _Ctx(conn_id, chat_id, locale, game)
     status = game["status"]
 

@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter
 
-from core.i18n import t
-from core.registry import registry
+from app.platform.i18n import t
+from app.platform.telegram.registry import registry
 
 router = APIRouter()
 

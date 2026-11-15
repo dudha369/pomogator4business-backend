@@ -6,7 +6,7 @@ import html as _html
 import re
 from html import escape
 
-from core.i18n import t
+from app.platform.i18n import t
 
 CAPTION_LIMIT = 1024  # подпись к медиа
 MESSAGE_LIMIT = 4096  # обычное сообщение

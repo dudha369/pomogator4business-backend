@@ -8,7 +8,19 @@ from pydantic import BaseModel
 
 from api.deps import require_user
 from api.emoji_status import build_styles_payload
-from core import database as db
+from db.models.connection import get_connection_by_owner
+from db.models.emoji_status import (
+    get_emoji_status_style,
+    is_emoji_status_enabled,
+    is_emoji_status_granted,
+)
+from db.models.mirror_bot import get_mirror
+from db.models.user_locale import (
+    get_timezone_name,
+    get_timezone_offset,
+    set_timezone_name,
+    set_timezone_offset,
+)
 from db.models.user_locale import is_valid_timezone
 
 router = APIRouter()
@@ -17,7 +29,7 @@ router = APIRouter()
 @router.get("/account")
 async def get_account(user: dict = Depends(require_user)):
     owner_id = user["id"]
-    connection = await db.get_connection_by_owner(owner_id)
+    connection = await get_connection_by_owner(owner_id)
 
     connection_info = None
     if connection:
@@ -37,7 +49,7 @@ async def get_account(user: dict = Depends(require_user)):
             "rights": rights,
         }
 
-    mirror = await db.get_mirror(owner_id)
+    mirror = await get_mirror(owner_id)
     mirror_info = {
         "connected": bool(mirror and mirror["is_active"]),
         "username": mirror["bot_username"] if mirror else None,
@@ -47,13 +59,13 @@ async def get_account(user: dict = Depends(require_user)):
         "connection": connection_info,
         "mirror": mirror_info,
         "emoji_status": {
-            "granted": await db.is_emoji_status_granted(owner_id),
-            "enabled": await db.is_emoji_status_enabled(owner_id),
-            "style": await db.get_emoji_status_style(owner_id),
+            "granted": await is_emoji_status_granted(owner_id),
+            "enabled": await is_emoji_status_enabled(owner_id),
+            "style": await get_emoji_status_style(owner_id),
             "styles": await build_styles_payload(),
         },
-        "timezone_offset_minutes": await db.get_timezone_offset(owner_id),
-        "timezone": await db.get_timezone_name(owner_id),
+        "timezone_offset_minutes": await get_timezone_offset(owner_id),
+        "timezone": await get_timezone_name(owner_id),
     }
 
 
@@ -70,16 +82,16 @@ async def update_timezone(payload: TimezoneUpdate, user: dict = Depends(require_
     if payload.timezone is not None:
         if not is_valid_timezone(payload.timezone):
             raise HTTPException(status_code=400, detail="Invalid timezone")
-        await db.set_timezone_name(owner_id, payload.timezone)
+        await set_timezone_name(owner_id, payload.timezone)
     elif payload.offset_minutes is not None:
         if not -720 <= payload.offset_minutes <= 840:
             raise HTTPException(status_code=400, detail="Invalid timezone offset")
-        await db.set_timezone_offset(owner_id, payload.offset_minutes)
+        await set_timezone_offset(owner_id, payload.offset_minutes)
     else:
         raise HTTPException(
             status_code=422, detail="timezone or offset_minutes required"
         )
     return {
-        "offset_minutes": await db.get_timezone_offset(owner_id),
-        "timezone": await db.get_timezone_name(owner_id),
+        "offset_minutes": await get_timezone_offset(owner_id),
+        "timezone": await get_timezone_name(owner_id),
     }

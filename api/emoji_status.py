@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_user
-from core import database as db
+from db.models import emoji_status as status_db
+from db.models.clock import get_clock_pack_counts
 from emoji_clock import STYLES, is_valid_style_id
 from core.utils import log_suppressed
 
@@ -15,7 +16,7 @@ router = APIRouter()
 
 async def build_styles_payload():
     """Список стилей для выбора. available=False — паки стиля ещё не загружены."""
-    ready = await db.get_clock_pack_counts()
+    ready = await get_clock_pack_counts()
     return [
         {
             "id": style.id,
@@ -29,9 +30,9 @@ async def build_styles_payload():
 @router.get("/emoji-status")
 async def get_emoji_status(user: dict = Depends(require_user)):
     return {
-        "granted": await db.is_emoji_status_granted(user["id"]),
-        "enabled": await db.is_emoji_status_enabled(user["id"]),
-        "style": await db.get_emoji_status_style(user["id"]),
+        "granted": await status_db.is_emoji_status_granted(user["id"]),
+        "enabled": await status_db.is_emoji_status_enabled(user["id"]),
+        "style": await status_db.get_emoji_status_style(user["id"]),
         "styles": await build_styles_payload(),
     }
 
@@ -45,14 +46,14 @@ async def grant_emoji_status(
     payload: EmojiStatusGrant, user: dict = Depends(require_user)
 ):
     owner_id = user["id"]
-    await db.set_emoji_status_granted(owner_id, payload.granted)
+    await status_db.set_emoji_status_granted(owner_id, payload.granted)
     if payload.granted:
-        await db.set_emoji_status_enabled(owner_id, True)
+        await status_db.set_emoji_status_enabled(owner_id, True)
 
     return {
-        "granted": await db.is_emoji_status_granted(owner_id),
-        "enabled": await db.is_emoji_status_enabled(owner_id),
-        "style": await db.get_emoji_status_style(owner_id),
+        "granted": await status_db.is_emoji_status_granted(owner_id),
+        "enabled": await status_db.is_emoji_status_enabled(owner_id),
+        "style": await status_db.get_emoji_status_style(owner_id),
     }
 
 
@@ -64,10 +65,10 @@ class EmojiStatusToggle(BaseModel):
 async def toggle_emoji_status(
     payload: EmojiStatusToggle, user: dict = Depends(require_user)
 ):
-    if not await db.is_emoji_status_granted(user["id"]):
+    if not await status_db.is_emoji_status_granted(user["id"]):
         raise HTTPException(status_code=400, detail="Access not granted yet")
 
-    await db.set_emoji_status_enabled(user["id"], payload.enabled)
+    await status_db.set_emoji_status_enabled(user["id"], payload.enabled)
 
     if not payload.enabled:
         from bot_instance import bot
@@ -101,11 +102,11 @@ async def set_emoji_status_style(
     if payload.style not in available:
         raise HTTPException(status_code=400, detail="Clock style is not available yet")
 
-    await db.set_emoji_status_style(owner_id, payload.style)
+    await status_db.set_emoji_status_style(owner_id, payload.style)
 
-    if await db.is_emoji_status_enabled(owner_id) and await db.is_emoji_status_granted(
+    if await status_db.is_emoji_status_enabled(
         owner_id
-    ):
+    ) and await status_db.is_emoji_status_granted(owner_id):
         from bot_instance import bot
         from core.scheduler import refresh_emoji_status
 

@@ -4,12 +4,12 @@ import types
 
 import pytest
 
-from core import database as db
 from core import mentions
 from modules.checkers import cmd_chk, on_chk_callback
 from modules.ttt import cmd_ttt, on_ttt_callback
 
 from .conftest import CONNECTION_ID, FakeBot, make_message
+from app.features.games.service import get_game
 
 CHAT = 7
 ANYA, BORIS = 7, 8
@@ -55,7 +55,7 @@ class Call:
 
 
 def command_ctx(bot, connection, user_id, name, username=None):
-    from core.context import CommandContext
+    from app.platform.telegram.context import CommandContext
 
     msg = make_message("." + "x", chat_id=CHAT, from_id=user_id)
     msg.from_user = types.SimpleNamespace(
@@ -87,7 +87,7 @@ async def test_ttt_full_game_with_mentions(connection, bot):
         sent["parse_mode"] == "html"
         and '<a href="https://t.me/anya">Аня</a>' in sent["text"]
     )
-    game = await db.get_ttt_game(CONNECTION_ID, CHAT)
+    game = await get_game("ttt", CONNECTION_ID, CHAT)
     assert (
         game["player_x_id"] == ANYA
         and "player_x_name" not in game
@@ -113,7 +113,7 @@ async def test_ttt_full_game_with_mentions(connection, bot):
         move = Call(f"ttt:{cell}", user, name)
         await on_ttt_callback(move, bot)
     assert "Победа" in move.edits[-1]["text"] and "Аня" in move.edits[-1]["text"]
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "finished"
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "finished"
 
 
 async def test_ttt_rules_are_enforced(connection, bot):
@@ -122,7 +122,7 @@ async def test_ttt_rules_are_enforced(connection, bot):
     await on_ttt_callback(own, bot)
     assert (
         own.answers
-        and (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "pending"
+        and (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "pending"
     )
 
     await on_ttt_callback(Call("ttt:accept", BORIS, "Боря"), bot)
@@ -169,7 +169,7 @@ async def test_ttt_restart_uses_same_placeholder_in_every_locale(connection, bot
         "{mention}" not in restart.edits[-1]["text"]
         and "Боря" in restart.edits[-1]["text"]
     )
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["player_x_id"] == BORIS
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["player_x_id"] == BORIS
 
 
 @pytest.mark.parametrize("locale", ["ru", "en", "uk"])
@@ -178,7 +178,7 @@ async def test_ttt_texts_render_in_every_locale(connection, bot, locale):
 
     await start_ttt(bot, connection)
     await on_ttt_callback(Call("ttt:accept", BORIS, "Боря"), bot)
-    game = await db.get_ttt_game(CONNECTION_ID, CHAT)
+    game = await get_game("ttt", CONNECTION_ID, CHAT)
     players = await _players(bot, game, locale)
     for winner in (None, "X", "O", "draw"):
         text = _build_text(locale, game, winner, players)
@@ -192,7 +192,7 @@ async def test_checkers_accept_and_text_use_mentions(connection, bot):
         bot.edited[-1]["parse_mode"] == "html"
         and 'href="https://t.me/anya"' in bot.edited[-1]["text"]
     )
-    game = await db.get_chk_game(CONNECTION_ID, CHAT)
+    game = await get_game("chk", CONNECTION_ID, CHAT)
     assert game["player_w_id"] == ANYA and "player_w_name" not in game
 
     accept = Call("chk:accept", BORIS, "Боря")
@@ -205,7 +205,7 @@ async def test_minesweeper_start_without_name_column(connection, bot):
     from modules.minesweeper import cmd_ms
 
     await cmd_ms(command_ctx(bot, connection, ANYA, "Аня"))
-    game = await db.get_ms_game(CONNECTION_ID, CHAT)
+    game = await get_game("ms", CONNECTION_ID, CHAT)
     assert game["starter_id"] == ANYA and "starter_name" not in game
 
 
@@ -240,7 +240,7 @@ async def test_ttt_stray_actions_do_not_crash(connection, bot):
         call = Call(data, BORIS, "Боря")
         await on_ttt_callback(call, bot)
         assert call.answers and not call.edits
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "active"
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "active"
 
 
 async def test_ttt_failed_message_edit_does_not_leave_game_active(connection, bot):
@@ -253,12 +253,12 @@ async def test_ttt_failed_message_edit_does_not_leave_game_active(connection, bo
     accept.message.edit_text = boom
     with pytest.raises(RuntimeError):
         await on_ttt_callback(accept, bot)
-    game = await db.get_ttt_game(CONNECTION_ID, CHAT)
+    game = await get_game("ttt", CONNECTION_ID, CHAT)
     assert game["status"] == "pending" and game["player_o_id"] is None
     # и повторное нажатие работает
     retry = Call("ttt:accept", BORIS, "Боря")
     await on_ttt_callback(retry, bot)
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "active"
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "active"
 
 
 async def test_ttt_buttons_of_old_message_do_not_touch_new_game(connection, bot):
@@ -266,7 +266,7 @@ async def test_ttt_buttons_of_old_message_do_not_touch_new_game(connection, bot)
     old = Call("ttt:accept", BORIS, "Боря", message_id=1)  # другое сообщение
     await on_ttt_callback(old, bot)
     assert not old.edits
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "pending"
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "pending"
 
 
 async def test_ttt_decline_and_restart_after_finish(connection, bot):
@@ -274,4 +274,4 @@ async def test_ttt_decline_and_restart_after_finish(connection, bot):
     decline = Call("ttt:decline", BORIS, "Боря")
     await on_ttt_callback(decline, bot)
     assert "отклонён" in decline.edits[-1]["text"]
-    assert (await db.get_ttt_game(CONNECTION_ID, CHAT))["status"] == "finished"
+    assert (await get_game("ttt", CONNECTION_ID, CHAT))["status"] == "finished"

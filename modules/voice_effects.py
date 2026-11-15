@@ -1,10 +1,10 @@
 from aiogram.types import BufferedInputFile
 
-from core.context import CommandContext
+from app.platform.telegram.context import CommandContext
 from core.ffmpeg import apply_audio_filter
-from core.registry import command
+from app.platform.telegram.registry import command
 from core.self_actions import delete_own_messages
-from core import database as db
+from db.models.voice_effect import get_voice_effect, set_voice_effect
 from core.utils import log_suppressed
 
 _FILTERS = {
@@ -19,7 +19,7 @@ async def cmd_voice(ctx: CommandContext):
     effect = ctx.args.strip().lower()
 
     if effect in ("off", ""):
-        await db.set_voice_effect(ctx.connection_id, ctx.chat_id, None)
+        await set_voice_effect(ctx.connection_id, ctx.chat_id, None)
         await ctx.edit_command_message(ctx.t("voice.disabled"))
         return
 
@@ -27,12 +27,12 @@ async def cmd_voice(ctx: CommandContext):
         await ctx.usage_error(ctx.t("voice.usage"))
         return
 
-    await db.set_voice_effect(ctx.connection_id, ctx.chat_id, effect)
+    await set_voice_effect(ctx.connection_id, ctx.chat_id, effect)
     await ctx.edit_command_message(ctx.t("voice.enabled", effect=effect))
 
 
 async def handle_voice_message(bot, connection, message) -> bool:
-    effect = await db.get_voice_effect(connection["connection_id"], message.chat.id)
+    effect = await get_voice_effect(connection["connection_id"], message.chat.id)
     if not effect:
         return False
 

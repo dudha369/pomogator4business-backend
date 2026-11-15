@@ -3,10 +3,14 @@ import time
 
 from aiogram.types import BufferedInputFile, InputProfilePhotoStatic
 
-from core.context import CommandContext
-from core.media import download_user_avatar
-from core.registry import command
-from core import database as db
+from app.platform.telegram.context import CommandContext
+from app.platform.media import download_user_avatar
+from app.platform.telegram.registry import command
+from db.models.profile_backup import (
+    delete_profile_backup,
+    get_profile_backup,
+    save_profile_backup,
+)
 
 logger = logging.getLogger("bot.profile")
 
@@ -38,11 +42,11 @@ async def cmd_profile(ctx: CommandContext):
     # Бэкап — это СВОЙ профиль владельца. Пока он не восстановлен (.restore),
     # повторный .profile его не трогает: иначе в бэкап попал бы уже скопированный
     # чужой профиль и оригинал был бы потерян.
-    if not await db.get_profile_backup(ctx.connection_id):
+    if not await get_profile_backup(ctx.connection_id):
         current_bio = await _get_bio(ctx.bot, owner_id)
         current_photo = await download_user_avatar(ctx.bot, owner_id)
         owner = ctx.message.from_user  # команду пишет владелец — это его имя
-        await db.save_profile_backup(
+        await save_profile_backup(
             ctx.connection_id,
             current_bio,
             current_photo,
@@ -104,7 +108,7 @@ async def cmd_profile(ctx: CommandContext):
     module="profile",
 )
 async def cmd_restore(ctx: CommandContext):
-    backup = await db.get_profile_backup(ctx.connection_id)
+    backup = await get_profile_backup(ctx.connection_id)
     if not backup:
         await ctx.reply(ctx.t("profile.no_backup"))
         return
@@ -149,7 +153,7 @@ async def cmd_restore(ctx: CommandContext):
 
     # бэкап стираем только если восстановилось всё: иначе .restore можно повторить
     if restored and not failed:
-        await db.delete_profile_backup(ctx.connection_id)
+        await delete_profile_backup(ctx.connection_id)
 
     if restored:
         await ctx.edit_command_message(

@@ -1,5 +1,5 @@
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 from core.scheduled import schedule
 from core.utils import parse_duration_loose
 

@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner, require_user
 from core import ai
-from core import database as db
+from db.models.ai import get_ai_settings, upsert_ai_settings
+from db.models.autoresponder import log_autoreply
 
 router = APIRouter()
 
@@ -19,7 +20,7 @@ TEST_LIMIT_PER_DAY = 20
 
 
 async def _state(owner_id: int):
-    stored = await db.get_ai_settings(owner_id) or {}
+    stored = await get_ai_settings(owner_id) or {}
     now = int(time.time())
     return {
         "configured": ai.is_configured(),  # задан ли ключ провайдера на сервере
@@ -61,7 +62,7 @@ async def update_ai(payload: AiUpdate, user: dict = Depends(require_user)):
             status_code=409, detail="AI is not configured on the server"
         )
 
-    await db.upsert_ai_settings(user["id"], **fields)
+    await upsert_ai_settings(user["id"], **fields)
     return await _state(user["id"])
 
 
@@ -82,12 +83,12 @@ async def test_ai(payload: AiTest, owner: Owner = Depends(current_owner)):
     if await ai.used_today(user["id"], "ai_test", now) >= TEST_LIMIT_PER_DAY:
         raise HTTPException(status_code=429, detail="Daily test limit reached")
 
-    stored = await db.get_ai_settings(user["id"]) or {}
+    stored = await get_ai_settings(user["id"]) or {}
     system = ai.build_system_prompt(
         stored.get("instructions"), connection.get("owner_name")
     )
     reply = await ai.complete(system, ai.build_messages([], payload.text))
-    await db.log_autoreply(user["id"], 0, "ai_test", None, now)
+    await log_autoreply(user["id"], 0, "ai_test", None, now)
     if reply is None:
         raise HTTPException(status_code=502, detail="AI provider request failed")
     return {"reply": reply}

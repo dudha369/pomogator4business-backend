@@ -9,8 +9,8 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from api.deps import require_user
-from core import database as db
-from core.media import download_user_avatar
+from db.models.known_chat import is_known_chat
+from app.platform.media import download_user_avatar
 
 router = APIRouter()
 
@@ -38,7 +38,7 @@ def _remember(user_id, data):
 
 @router.get("/avatar/{target_user_id}")
 async def get_avatar(target_user_id: int, user: dict = Depends(require_user)):
-    is_known = await db.is_known_chat(user["id"], target_user_id)
+    is_known = await is_known_chat(user["id"], target_user_id)
     if not is_known:
         raise HTTPException(status_code=404, detail="Unknown chat")
 

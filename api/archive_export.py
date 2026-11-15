@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field
 from api.deps import Owner, current_owner
 from core import archive_export as export
 from core.archive_media import attach_media_info, load_media
-from core import database as db
+from db.models.archive_log import get_archive_page
+from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.archive_export")
 router = APIRouter()
@@ -46,7 +47,7 @@ class ExportRequest(BaseModel):
 async def _collect_entries(connection_id, req: ExportRequest):
     entries, cursor = [], None
     while len(entries) < req.max_entries:
-        page, has_more = await db.get_archive_page(
+        page, has_more = await get_archive_page(
             connection_id,
             cursor,
             min(_PAGE, req.max_entries - len(entries)),
@@ -114,8 +115,8 @@ async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owne
             photos = await _collect_photos(connection["connection_id"], entries)
 
         names = await _chat_names(bot, [e["chat_id"] for e in entries])
-        offset = await db.get_timezone_offset(owner_id)
-        locale = await db.get_locale(owner_id)
+        offset = await get_timezone_offset(owner_id)
+        locale = await get_locale(owner_id)
         now = int(time.time())
 
         if req.format == "html":

@@ -7,8 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import Owner, current_owner
-from core import database as db
-from core.registry import registry
+from db.models.connection import set_prefix
+from db.models.module_settings import (
+    disable_module,
+    enable_module,
+    list_disabled_modules,
+)
+from app.platform.telegram.registry import registry
 from core.utils import is_valid_prefix
 
 router = APIRouter()
@@ -17,7 +22,7 @@ router = APIRouter()
 @router.get("/settings")
 async def get_settings(owner: Owner = Depends(current_owner)):
     connection = owner.connection
-    disabled = await db.list_disabled_modules(connection["connection_id"])
+    disabled = await list_disabled_modules(connection["connection_id"])
 
     modules = sorted(registry.modules().keys())
     return {
@@ -42,7 +47,7 @@ async def update_prefix(payload: PrefixUpdate, owner: Owner = Depends(current_ow
         )
 
     connection = owner.connection
-    await db.set_prefix(connection["connection_id"], payload.prefix)
+    await set_prefix(connection["connection_id"], payload.prefix)
     return {"prefix": payload.prefix}
 
 
@@ -58,8 +63,8 @@ async def toggle_module(payload: ModuleToggle, owner: Owner = Depends(current_ow
 
     connection = owner.connection
     if payload.enabled:
-        await db.enable_module(connection["connection_id"], payload.module)
+        await enable_module(connection["connection_id"], payload.module)
     else:
-        await db.disable_module(connection["connection_id"], payload.module)
+        await disable_module(connection["connection_id"], payload.module)
 
     return {"module": payload.module, "enabled": payload.enabled}

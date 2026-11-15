@@ -5,7 +5,11 @@ import pytest
 from config import settings
 from core import ai
 from core import autoresponder as ar
-from core import database as db
+from db.models.ai import create_draft, get_draft, upsert_ai_settings
+from db.models.autoresponder import add_keyword_reply
+from db.models.chat_flags import set_chat_flags
+from db.models.message_history import save_history
+from db.models.user_locale import set_timezone_offset
 from handlers.ai_drafts import on_draft_button
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
@@ -28,12 +32,12 @@ def ai_on(monkeypatch):
 
 
 async def enable_ai(mode="draft", **extra):
-    await db.upsert_ai_settings(OWNER_ID, enabled=True, mode=mode, **extra)
+    await upsert_ai_settings(OWNER_ID, enabled=True, mode=mode, **extra)
 
 
 async def deliver(connection, bot, text, chat=7, now=NOON, **kw):
     msg = make_message(text, chat_id=chat, from_id=chat, **kw)
-    await db.save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
+    await save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
     reply = await ar.handle_incoming(bot, connection, msg, now=now)
     return reply.kind if reply else None
 
@@ -117,13 +121,13 @@ async def test_auto_mode_replies_to_contact(connection, bot, ai_on):
 
 async def test_rules_take_priority_over_ai(connection, bot, ai_on):
     await enable_ai("auto")
-    await db.add_keyword_reply(OWNER_ID, "цена", "Прайс: 100")
+    await add_keyword_reply(OWNER_ID, "цена", "Прайс: 100")
     assert await deliver(connection, bot, "какая цена?") == "keyword"
     assert ai_on == []
 
 
 async def test_daily_limit_and_chat_cooldown(connection, bot, ai_on):
-    await db.set_timezone_offset(OWNER_ID, 0)
+    await set_timezone_offset(OWNER_ID, 0)
     await enable_ai("auto", daily_limit=2)
     assert await deliver(connection, bot, "a", chat=7) == "ai"
     assert (
@@ -137,9 +141,9 @@ async def test_daily_limit_and_chat_cooldown(connection, bot, ai_on):
 
 async def test_flags_disable_ai(connection, bot, ai_on):
     await enable_ai("auto")
-    await db.set_chat_flags(OWNER_ID, 7, no_ai=True)
+    await set_chat_flags(OWNER_ID, 7, no_ai=True)
     assert await deliver(connection, bot, "привет", chat=7) is None
-    await db.set_chat_flags(OWNER_ID, 8, no_autoreply=True)
+    await set_chat_flags(OWNER_ID, 8, no_autoreply=True)
     assert await deliver(connection, bot, "привет", chat=8) is None
     assert await deliver(connection, bot, "привет", chat=9) == "ai"
 
@@ -158,7 +162,7 @@ async def test_provider_failure_is_silent(connection, bot, monkeypatch):
 async def test_commands_and_owner_activity_skip_ai(connection, bot, ai_on):
     await enable_ai("auto")
     assert await deliver(connection, bot, ".ping") is None
-    await db.save_history(CONNECTION_ID, 12, 900, True, "я тут", NOON - 60)
+    await save_history(CONNECTION_ID, 12, 900, True, "я тут", NOON - 60)
     assert await deliver(connection, bot, "алло", chat=12) is None
 
 
@@ -182,7 +186,7 @@ class FakeCallback:
 async def make_draft(created_at=None):
     import time
 
-    return await db.create_draft(
+    return await create_draft(
         OWNER_ID, 7, 5, "Готовый ответ", created_at or int(time.time())
     )
 
@@ -217,7 +221,7 @@ async def test_expired_draft_is_not_sent(connection, bot):
     draft_id = await make_draft(created_at=1)
     cb = FakeCallback(f"aid:send:{draft_id}")
     await on_draft_button(cb, bot)
-    assert bot.sent == [] and (await db.get_draft(draft_id))["status"] == "dismissed"
+    assert bot.sent == [] and (await get_draft(draft_id))["status"] == "dismissed"
 
 
 async def test_failed_send_keeps_draft_pending(connection, bot, monkeypatch):
@@ -227,7 +231,7 @@ async def test_failed_send_keeps_draft_pending(connection, bot, monkeypatch):
     monkeypatch.setattr(bot, "send_message", boom)
     draft_id = await make_draft()
     await on_draft_button(FakeCallback(f"aid:send:{draft_id}"), bot)
-    assert (await db.get_draft(draft_id))["status"] == "pending"
+    assert (await get_draft(draft_id))["status"] == "pending"
 
 
 # --------------------------------- API --------------------------------------

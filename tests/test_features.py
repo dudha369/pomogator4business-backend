@@ -2,7 +2,15 @@
 
 import types
 
-from core import database as db
+from db.models.archive_log import log_archive_event
+from db.models.chat_flags import get_chat_flags
+from db.models.message_history import save_history
+from db.models.module_settings import (
+    disable_module,
+    enable_module,
+    list_disabled_modules,
+)
+from db.models.quick_template import save_template
 from core import stats
 from handlers.bot_commands import on_dm_command, split_command
 from modules.readall import cmd_readall
@@ -15,8 +23,8 @@ from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 
 
 async def test_template_command_replaces_message_and_hides_list(connection, bot):
-    await db.save_template(OWNER_ID, "hello", "Здравствуйте, {name}!")
-    await db.disable_module(CONNECTION_ID, "scam")
+    await save_template(OWNER_ID, "hello", "Здравствуйте, {name}!")
+    await disable_module(CONNECTION_ID, "scam")
 
     await on_business_message(
         make_message(".t hello", chat_id=7, from_id=OWNER_ID, first_name="Аня"), bot
@@ -60,13 +68,13 @@ async def test_template_api(client):
 
 
 async def test_noauto_command_toggles_and_confirms_privately(connection, bot):
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     msg = lambda: make_message(".noauto", chat_id=7, from_id=OWNER_ID)  # noqa: E731
     await on_business_message(msg(), bot)
-    assert (await db.get_chat_flags(OWNER_ID, 7))["no_autoreply"] is True
+    assert (await get_chat_flags(OWNER_ID, 7))["no_autoreply"] is True
     assert bot.sent[-1]["chat_id"] == OWNER_ID
     await on_business_message(msg(), bot)
-    assert (await db.get_chat_flags(OWNER_ID, 7)) == {
+    assert (await get_chat_flags(OWNER_ID, 7)) == {
         "no_autoreply": False,
         "no_ai": False,
         "no_remind": False,
@@ -142,9 +150,9 @@ async def test_overview_endpoint(client):
     import time
 
     now = int(time.time())
-    await db.save_history(CONNECTION_ID, 7, 1, False, "a", now - 120)
-    await db.save_history(CONNECTION_ID, 7, 2, True, "b", now - 60)
-    await db.log_archive_event(CONNECTION_ID, 7, 1, "deleted", "a", None, now - 30)
+    await save_history(CONNECTION_ID, 7, 1, False, "a", now - 120)
+    await save_history(CONNECTION_ID, 7, 2, True, "b", now - 60)
+    await log_archive_event(CONNECTION_ID, 7, 1, "deleted", "a", None, now - 30)
     body = (await client.get("/api/stats/overview?days=7", headers=client.owner)).json()
     assert len(body["days"]) == 7 and body["top_chats"][0]["chat_id"] == 7
     assert body["archive"] == {"deleted": 1, "edited": 0}
@@ -179,7 +187,7 @@ async def test_backup_roundtrip_and_hardening(client):
     await client.post(
         "/api/favorites", headers=h, json={"chat_id": 7, "favorite": True}
     )
-    await db.disable_module(CONNECTION_ID, "echo")
+    await disable_module(CONNECTION_ID, "echo")
     backup = (await client.get("/api/backup/export", headers=h)).json()
     assert backup["version"] == 1 and "token" not in str(backup).lower()
 
@@ -190,7 +198,7 @@ async def test_backup_roundtrip_and_hardening(client):
     await client.post(
         "/api/favorites", headers=h, json={"chat_id": 7, "favorite": False}
     )
-    await db.enable_module(CONNECTION_ID, "echo")
+    await enable_module(CONNECTION_ID, "echo")
 
     r = await client.post("/api/backup/import", headers=h, json=backup)
     assert r.status_code == 200 and r.json()["skipped"] == 0
@@ -198,7 +206,7 @@ async def test_backup_roundtrip_and_hardening(client):
         "keyword"
     ] == "цена"
     assert (await client.get("/api/favorites", headers=h)).json() == {"chat_ids": [7]}
-    assert await db.list_disabled_modules(CONNECTION_ID) == {"echo"}
+    assert await list_disabled_modules(CONNECTION_ID) == {"echo"}
     assert (await client.get("/api/aliases", headers=h)).json()["aliases"][0][
         "alias"
     ] == "пп"
@@ -283,7 +291,7 @@ def dm(text, user_id=OWNER_ID):
 
 
 async def test_dm_readall_and_ping(connection, bot):
-    await db.save_history(CONNECTION_ID, 7, 71, False, "a", NOW - 100)
+    await save_history(CONNECTION_ID, 7, 71, False, "a", NOW - 100)
     msg, answers = dm("/readall")
     await on_dm_command(msg, bot)
     assert bot.reads[0]["chat_id"] == 7
@@ -301,7 +309,7 @@ async def test_dm_guards(connection, bot):
     msg, answers = dm("/ping", user_id=999)  # нет подключения
     await on_dm_command(msg, bot)
     assert len(answers) == 1 and bot.sent == []
-    await db.disable_module(CONNECTION_ID, "ping")  # модуль выключен
+    await disable_module(CONNECTION_ID, "ping")  # модуль выключен
     msg, answers = dm("/ping")
     await on_dm_command(msg, bot)
     assert len(answers) == 1 and bot.sent == []

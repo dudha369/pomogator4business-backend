@@ -7,7 +7,16 @@ from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from aiogram.methods import GetStickerSet
 from PIL import Image, ImageChops
 
-from core import database as db
+from db.models.clock import (
+    count_clock_emojis,
+    get_clock_emoji,
+    get_clock_pack_counts,
+    get_clock_packs,
+    save_clock_emoji,
+    swap_clock_style,
+    upsert_clock_pack,
+)
+from db.models import clock as clock_db
 from emoji_clock import STYLES, ClockStyle, all_time_keys, get_style, pack_revision
 from emoji_clock.sync import runner
 from emoji_clock.sync.builder import emoji_rows
@@ -104,20 +113,20 @@ def test_digits_are_centered_horizontally(style_id):
 
 
 async def test_swap_replaces_a_style_atomically(database):
-    await db.upsert_clock_pack(0, "clock0_by_old", 180, True, "t")
-    await db.upsert_clock_pack(1, "clock1_by_old", 180, True, "t")
-    await db.save_clock_emoji("00:00", 0, "old-id", "t")
-    assert await db.get_clock_pack_counts() == {"t": 2}
+    await upsert_clock_pack(0, "clock0_by_old", 180, True, "t")
+    await upsert_clock_pack(1, "clock1_by_old", 180, True, "t")
+    await save_clock_emoji("00:00", 0, "old-id", "t")
+    assert await get_clock_pack_counts() == {"t": 2}
 
     emoji = [(tk, 0, f"new-{tk}") for tk in all_time_keys()]
-    await db.swap_clock_style("t", [(0, "clock_t_v1_0_by_bot", 180)], emoji)
+    await swap_clock_style("t", [(0, "clock_t_v1_0_by_bot", 180)], emoji)
 
-    assert [r["pack_name"] for r in await db.get_clock_packs("t")] == [
+    assert [r["pack_name"] for r in await get_clock_packs("t")] == [
         "clock_t_v1_0_by_bot"
     ]
-    assert await db.get_clock_emoji("00:00", "t") == "new-00:00"
-    assert await db.count_clock_emojis("t") == 1440
-    assert await db.get_clock_emoji("00:00", "other") is None  # другие стили не тронуты
+    assert await get_clock_emoji("00:00", "t") == "new-00:00"
+    assert await count_clock_emojis("t") == 1440
+    assert await get_clock_emoji("00:00", "other") is None  # другие стили не тронуты
 
 
 # -------------------------- синхронизация с Telegram -------------------------
@@ -203,7 +212,7 @@ def tiny_style(style_id, hours, revision=1):
 async def sync(bot, styles, **kwargs):
     options = dict(delete_delay=0, retry_padding=0.0, log=lambda *_: None)
     options.update(kwargs)
-    return await runner.run(bot, db, styles, **options)
+    return await runner.run(bot, clock_db, styles, **options)
 
 
 async def seed_legacy(bot, style_id, count, owner="oldbot"):
@@ -216,8 +225,8 @@ async def seed_legacy(bot, style_id, count, owner="oldbot"):
             )
             for j in range(180)
         ]
-        await db.upsert_clock_pack(i, name, 180, True, style_id)
-        await db.save_clock_emoji("00:00", i, f"legacy{i}", style_id)
+        await upsert_clock_pack(i, name, 180, True, style_id)
+        await save_clock_emoji("00:00", i, f"legacy{i}", style_id)
 
 
 async def test_sync_replaces_legacy_packs_and_deletes_old(database):
@@ -232,10 +241,10 @@ async def test_sync_replaces_legacy_packs_and_deletes_old(database):
     assert [len(bot.sets[n]) for n in sorted(new_names)] == [180, 60]
     # каждая минута указывает на эмодзи ИМЕННО своего слота
     for time_key in all_time_keys():
-        emoji_id = await db.get_clock_emoji(time_key, "t4")
+        emoji_id = await get_clock_emoji(time_key, "t4")
         assert emoji_id.endswith("|" + style.slot_for(time_key)), time_key
-    assert await db.count_clock_emojis("t4") == 1440
-    assert await db.get_clock_pack_counts() == {"t4": 2}
+    assert await count_clock_emojis("t4") == 1440
+    assert await get_clock_pack_counts() == {"t4": 2}
 
 
 async def test_sync_is_idempotent_when_up_to_date(database):
@@ -251,7 +260,7 @@ async def test_changing_revision_rebuilds_and_drops_previous(database):
     await sync(bot, [tiny_style("t2", 2, revision=1)])
     await sync(bot, [tiny_style("t2", 2, revision=2)])
     assert set(bot.sets) == {"clock_t2_v2_0_by_testbot"}
-    assert [r["pack_name"] for r in await db.get_clock_packs("t2")] == [
+    assert [r["pack_name"] for r in await get_clock_packs("t2")] == [
         "clock_t2_v2_0_by_testbot"
     ]
 
@@ -262,10 +271,10 @@ async def test_analog_style_shares_emoji_between_am_and_pm(database):
         FakeStickerBot(),
     )  # 60 слотов: любой час -> 00:MM
     await sync(bot, [style])
-    assert await db.get_clock_emoji("05:07", "t1") == await db.get_clock_emoji(
+    assert await get_clock_emoji("05:07", "t1") == await get_clock_emoji(
         "17:07", "t1"
     )
-    assert (await db.get_clock_emoji("05:07", "t1")).endswith("|00:07")
+    assert (await get_clock_emoji("05:07", "t1")).endswith("|00:07")
     assert sum(len(v) for v in bot.sets.values()) == 60  # загружено 60, а не 1440
 
 
@@ -294,11 +303,11 @@ async def test_failed_style_is_not_switched_and_can_be_resumed(database):
     await seed_legacy(bot, "b2", 2)
 
     assert await sync(bot, [good, bad]) is False
-    assert await db.get_clock_pack_counts() == {
+    assert await get_clock_pack_counts() == {
         "b2": 2,
         "g1": 1,
     }  # g1 готов, b2 остался на старых
-    assert (await db.get_clock_emoji("00:00", "b2")).startswith(
+    assert (await get_clock_emoji("00:00", "b2")).startswith(
         "legacy"
     )  # БД не тронута
     assert "clock_b21_by_oldbot" in bot.sets  # старые паки не удалены
@@ -306,14 +315,14 @@ async def test_failed_style_is_not_switched_and_can_be_resumed(database):
     bot.fail_set_prefix = None
     assert await sync(bot, [good, bad]) is True
     assert "clock_b21_by_oldbot" not in bot.sets
-    assert (await db.get_clock_emoji("00:00", "b2")).endswith("|00:00")
+    assert (await get_clock_emoji("00:00", "b2")).endswith("|00:00")
 
 
 async def test_flood_limit_pauses_and_recovers(database):
     style, bot = tiny_style("t2", 2), FakeStickerBot(flood_once=True)
     assert await sync(bot, [style]) is True
     assert bot.flood_once is False  # flood-limit реально случился и был пережит
-    assert await db.count_clock_emojis("t2") == 1440
+    assert await count_clock_emojis("t2") == 1440
 
 
 async def test_dry_run_and_keep_old(database):
@@ -355,7 +364,7 @@ async def test_style_picker_api(client):
 
     analog = get_style("analog")
     for i in range(analog.pack_count):
-        await db.upsert_clock_pack(i, analog.pack_name(i, "bot"), 180, True, "analog")
+        await upsert_clock_pack(i, analog.pack_name(i, "bot"), 180, True, "analog")
 
     info = (await client.get("/api/emoji-status", headers=h)).json()
     assert [s["id"] for s in info["styles"] if s["available"]] == [

@@ -5,9 +5,13 @@ import time
 
 import pytest
 
-from core import database as db
+from db.models.scheduled_task import (
+    add_scheduled_task,
+    claim_scheduled_task,
+    list_due_scheduled_tasks,
+)
 from core import scheduled
-from core.context import CommandContext
+from app.platform.telegram.context import CommandContext
 from modules.bomb import cmd_bomb
 from modules.timer import cmd_timer
 
@@ -24,9 +28,9 @@ def make_ctx(bot, connection, args="", reply_to=None):
 async def test_timer_is_stored_and_fires_once(connection):
     bot = FakeBot()
     await cmd_timer(make_ctx(bot, connection, "1m привет <b>"))
-    rows = await db.list_due_scheduled_tasks(int(time.time()) + 61)
+    rows = await list_due_scheduled_tasks(int(time.time()) + 61)
     assert len(rows) == 1 and rows[0]["kind"] == "timer"
-    assert await db.list_due_scheduled_tasks(int(time.time())) == []  # ещё рано
+    assert await list_due_scheduled_tasks(int(time.time())) == []  # ещё рано
 
     now = int(time.time()) + 61
     assert await scheduled.process_due(bot, now) == 1
@@ -38,7 +42,7 @@ async def test_timer_is_stored_and_fires_once(connection):
 
 async def test_overdue_after_downtime_is_executed(connection):
     """Рестарт/сон Render: задача просрочена — выполняется при старте."""
-    await db.add_scheduled_task("timer", CONNECTION_ID, 7, 1000, text="поздно")
+    await add_scheduled_task("timer", CONNECTION_ID, 7, 1000, text="поздно")
     bot = FakeBot()
     assert await scheduled.process_due(bot) == 1
     assert bot.sent[-1]["text"] == "поздно"
@@ -62,14 +66,14 @@ async def test_bomb_with_text_edits_then_deletes_itself(connection):
 
 
 async def test_claim_is_exclusive(connection):
-    row = await db.add_scheduled_task("timer", CONNECTION_ID, 7, 1, text="x")
-    assert await db.claim_scheduled_task(row.id) is True
-    assert await db.claim_scheduled_task(row.id) is False
+    row = await add_scheduled_task("timer", CONNECTION_ID, 7, 1, text="x")
+    assert await claim_scheduled_task(row.id) is True
+    assert await claim_scheduled_task(row.id) is False
 
 
 async def test_failed_executor_does_not_block_others(connection):
-    await db.add_scheduled_task("bomb", CONNECTION_ID, 7, 1, message_id=1)
-    await db.add_scheduled_task("timer", CONNECTION_ID, 7, 2, text="ok")
+    await add_scheduled_task("bomb", CONNECTION_ID, 7, 1, message_id=1)
+    await add_scheduled_task("timer", CONNECTION_ID, 7, 2, text="ok")
 
     class Boom(FakeBot):
         async def delete_business_messages(self, **kw):
@@ -78,13 +82,13 @@ async def test_failed_executor_does_not_block_others(connection):
     bot = Boom()
     await scheduled.process_due(bot, 10)
     assert bot.sent[-1]["text"] == "ok"
-    assert await db.list_due_scheduled_tasks(10) == []  # ничего не зависло
+    assert await list_due_scheduled_tasks(10) == []  # ничего не зависло
 
 
 async def test_unknown_kind_is_dropped(connection):
-    await db.add_scheduled_task("???", CONNECTION_ID, 7, 1)
+    await add_scheduled_task("???", CONNECTION_ID, 7, 1)
     assert await scheduled.process_due(FakeBot(), 10) == 0
-    assert await db.list_due_scheduled_tasks(10) == []
+    assert await list_due_scheduled_tasks(10) == []
 
 
 async def test_loop_wakes_up_for_new_earlier_task(connection):

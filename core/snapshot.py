@@ -14,7 +14,7 @@
 Снимок — обычный словарь, ключи совпадают с колонками таблицы message_history.
 """
 
-from core.media import describe_media
+from app.platform.media import describe_media
 
 FILE_KINDS = (
     "photo",

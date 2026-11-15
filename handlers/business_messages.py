@@ -7,15 +7,26 @@ from aiogram import Bot, Router
 from aiogram.types import Message
 
 from config import settings
-from core import database as db
+from db.models.command_alias import get_command_alias
+from db.models.connection import get_connection
+from db.models.echo import is_echo_enabled
+from db.models.known_chat import mark_known_chat
+from db.models.message_history import (
+    get_history_entry,
+    save_history,
+    set_history_transcript,
+)
+from db.models.message_log import log_message
+from db.models.module_settings import list_disabled_modules
+from db.models.user_locale import get_locale
 from core.archive_prefs import load_prefs
 from core.autoresponder import handle_incoming as handle_autoresponder
-from core.context import CommandContext
-from core.i18n import t
-from core.media import extract_history_media, extract_media_from_reply
-from core.registry import registry
+from app.platform.telegram.context import CommandContext
+from app.platform.i18n import t
+from app.platform.media import extract_history_media, extract_media_from_reply
+from app.platform.telegram.registry import registry
 from core.snapshot import build_snapshot
-from core.tasks import spawn
+from app.platform.tasks import spawn
 from core.utils import log_suppressed
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
@@ -72,8 +83,8 @@ async def _transcribe_into_history(bot, connection_id, chat_id, message_id, voic
     try:
         from core.stt import transcribe_audio
 
-        connection = await db.get_connection(connection_id)
-        locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+        connection = await get_connection(connection_id)
+        locale = await get_locale(connection["owner_id"]) if connection else "ru"
         file = await bot.get_file(voice.file_id)
         data = (await bot.download_file(file.file_path)).read()
         text = await transcribe_audio(data, locale)
@@ -81,7 +92,7 @@ async def _transcribe_into_history(bot, connection_id, chat_id, message_id, voic
         logger.warning("Не удалось распознать голосовое %s", message_id, exc_info=True)
         return
     if text:
-        await db.set_history_transcript(connection_id, chat_id, message_id, text)
+        await set_history_transcript(connection_id, chat_id, message_id, text)
 
 
 async def step_history(inc: Incoming) -> bool:
@@ -103,7 +114,7 @@ async def step_history(inc: Incoming) -> bool:
         await _rescue_replied_media(inc)
 
     if inc.text is not None or snapshot is not None:
-        await db.save_history(
+        await save_history(
             connection_id,
             inc.chat_id,
             message.message_id,
@@ -136,7 +147,7 @@ async def _rescue_replied_media(inc: Incoming) -> None:
     пока Telegram его туда вкладывает, и сохраняем БАЙТАМИ: file_id такого медиа может
     перестать работать, поэтому полагаться на него нельзя."""
     message, replied = inc.message, inc.message.reply_to_message
-    existing = await db.get_history_entry(
+    existing = await get_history_entry(
         inc.connection_id, inc.chat_id, replied.message_id
     )
     if existing is not None:
@@ -158,7 +169,7 @@ async def _rescue_replied_media(inc: Incoming) -> None:
         rescued.kind if rescued else None,
     )
     if rescued is not None:
-        await db.save_history(
+        await save_history(
             inc.connection_id,
             inc.chat_id,
             replied.message_id,
@@ -182,7 +193,7 @@ async def step_new_contact(inc: Incoming) -> bool:
     if inc.enabled("scam"):
         await handle_new_contact(inc.bot, inc.connection, inc.message)
     else:
-        await db.mark_known_chat(inc.connection["owner_id"], inc.chat_id)
+        await mark_known_chat(inc.connection["owner_id"], inc.chat_id)
     return False
 
 
@@ -205,7 +216,7 @@ async def step_autoresponder(inc: Incoming) -> bool:
 async def step_echo(inc: Incoming) -> bool:
     if inc.is_owner or not inc.enabled("echo"):
         return False
-    if not await db.is_echo_enabled(inc.connection_id, inc.chat_id):
+    if not await is_echo_enabled(inc.connection_id, inc.chat_id):
         return False
     if inc.text:
         sent = await inc.bot.send_message(
@@ -213,7 +224,7 @@ async def step_echo(inc: Incoming) -> bool:
             chat_id=inc.chat_id,
             text=inc.text,
         )
-        await db.log_message(inc.connection_id, inc.chat_id, sent.message_id)
+        await log_message(inc.connection_id, inc.chat_id, sent.message_id)
     return True
 
 
@@ -243,12 +254,12 @@ async def step_command(inc: Incoming) -> bool:
 
     cmd = registry.find(alias)
     if not cmd:
-        custom_target = await db.get_command_alias(inc.connection["owner_id"], alias)
+        custom_target = await get_command_alias(inc.connection["owner_id"], alias)
         if custom_target:
             cmd = registry.find(custom_target)
     if not cmd:
         if inc.enabled("wordle"):
-            locale = await db.get_locale(inc.connection["owner_id"])
+            locale = await get_locale(inc.connection["owner_id"])
             await handle_wordle_guess(
                 inc.bot, inc.connection, inc.message, locale, alias
             )
@@ -262,7 +273,7 @@ async def step_command(inc: Incoming) -> bool:
         message=inc.message,
         connection=inc.connection,
         args=args,
-        locale=await db.get_locale(inc.connection["owner_id"]),
+        locale=await get_locale(inc.connection["owner_id"]),
     )
     try:
         await cmd.handler(ctx)
@@ -316,14 +327,14 @@ async def run_pipeline(inc: Incoming, steps=PIPELINE) -> None:
 
 @router.business_message()
 async def on_business_message(message: Message, bot: Bot):
-    connection = await db.get_connection(message.business_connection_id)
+    connection = await get_connection(message.business_connection_id)
     if not connection or not connection["is_enabled"]:
         return
 
     is_owner = message.from_user.id == connection["owner_id"]
     if is_owner:
         # журнал нужен только для .del/.panic — они трогают сообщения владельца
-        await db.log_message(
+        await log_message(
             connection["connection_id"], message.chat.id, message.message_id
         )
 
@@ -332,7 +343,7 @@ async def on_business_message(message: Message, bot: Bot):
             bot=bot,
             message=message,
             connection=connection,
-            disabled=await db.list_disabled_modules(connection["connection_id"]),
+            disabled=await list_disabled_modules(connection["connection_id"]),
             is_owner=is_owner,
         )
     )

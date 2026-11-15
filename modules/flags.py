@@ -1,13 +1,13 @@
 """Режим «не беспокоить» для конкретного чата: .noauto, .noai и .noremind."""
 
-from core import database as db
-from core.context import CommandContext
-from core.registry import command
+from db.models.chat_flags import get_chat_flags, set_chat_flags
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 
 async def _toggle(ctx: CommandContext, flag: str, on_key: str, off_key: str):
-    current = await db.get_chat_flags(ctx.connection["owner_id"], ctx.chat_id)
-    updated = await db.set_chat_flags(
+    current = await get_chat_flags(ctx.connection["owner_id"], ctx.chat_id)
+    updated = await set_chat_flags(
         ctx.connection["owner_id"], ctx.chat_id, **{flag: not current[flag]}
     )
     # подтверждение — только владельцу в личку, чтобы собеседник не видел

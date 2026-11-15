@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from api.deps import Owner, current_owner
-from core import database as db
+from db.models.archive_log import get_archive_page
 from core.archive_media import attach_media_info, content_type, load_media
 from core.archive_prefs import ALBUM_STYLES, RICH_KINDS, load_prefs, update_prefs
 
@@ -24,7 +24,7 @@ async def get_archive(
     owner: Owner = Depends(current_owner),
 ):
     connection = owner.connection
-    entries, has_more = await db.get_archive_page(
+    entries, has_more = await get_archive_page(
         connection["connection_id"],
         before_id,
         limit,

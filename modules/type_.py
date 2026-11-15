@@ -1,8 +1,8 @@
 import asyncio
 
-from core.context import CommandContext
-from core.registry import command
-from core import database as db
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
+from db.models.message_log import log_message
 from core.utils import log_suppressed
 
 TYPE_TRIGGERS = ["_type", "=type", "-type", "#type", ">type", "|type"]
@@ -44,7 +44,7 @@ async def typewriter(bot, connection, chat_id, text, cursor, message_id=None):
             parse_mode=None,
         )
         message_id = sent.message_id
-        await db.log_message(connection["connection_id"], chat_id, message_id)
+        await log_message(connection["connection_id"], chat_id, message_id)
     else:
         try:
             await bot.edit_message_text(

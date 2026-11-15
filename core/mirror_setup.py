@@ -3,8 +3,8 @@ import time
 
 from aiogram import Bot as AiogramBot
 
-from core import database as db
-from core.crypto import encrypt_token
+from db.models.mirror_bot import save_mirror
+from app.platform.crypto import encrypt_token
 from core.mirror_manager import MirrorStartError, mirror_manager
 
 _TOKEN_PATTERN = re.compile(r"^\d+:[A-Za-z0-9_-]{30,50}$")
@@ -38,7 +38,7 @@ async def connect_mirror(owner_id: int, token: str) -> str:
         await mirror_manager.start_mirror(owner_id, token, drop_pending=True)
     except MirrorStartError:
         raise MirrorSetupError("start_failed")
-    await db.save_mirror(
+    await save_mirror(
         owner_id, encrypt_token(token), me.id, me.username, int(time.time())
     )
     return me.username

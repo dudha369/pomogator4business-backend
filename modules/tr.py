@@ -2,8 +2,8 @@ import asyncio
 
 from deep_translator import GoogleTranslator
 
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 
 @command(name="tr", module="tr")

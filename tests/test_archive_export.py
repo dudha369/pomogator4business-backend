@@ -4,7 +4,8 @@ import json
 import re
 
 from core import archive_export as ex
-from core import database as db
+from db.models.archive_log import log_archive_event
+from db.models.message_history import save_history
 
 from .conftest import CONNECTION_ID
 
@@ -64,7 +65,7 @@ def test_timezone_formatting():
 
 
 async def seed():
-    await db.save_history(
+    await save_history(
         CONNECTION_ID,
         7,
         70,
@@ -74,10 +75,10 @@ async def seed():
         media_type="photo",
         media_data=b"\xff\xd8J",
     )
-    await db.log_archive_event(
+    await log_archive_event(
         CONNECTION_ID, 7, 70, "deleted", "<b>hi</b>", None, NOW - 300
     )
-    await db.log_archive_event(CONNECTION_ID, 8, 80, "edited", "a", "b", NOW - 200)
+    await log_archive_event(CONNECTION_ID, 8, 80, "edited", "a", "b", NOW - 200)
 
 
 async def test_export_endpoint_sends_document(client, api_bot):

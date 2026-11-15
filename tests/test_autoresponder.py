@@ -3,7 +3,15 @@ import types
 import pytest
 
 from core import autoresponder as ar
-from core import database as db
+from db.models.autoresponder import (
+    add_keyword_reply,
+    last_autoreply_at,
+    log_autoreply,
+    upsert_autoresponder_settings,
+)
+from db.models.favorite_chat import set_favorite_chat
+from db.models.message_history import save_history
+from db.models.user_locale import set_timezone_offset
 from core.retention import run_retention_once
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
@@ -56,8 +64,8 @@ def test_render_keeps_unknown_braces():
 
 @pytest.fixture
 async def configured(connection):
-    await db.set_timezone_offset(OWNER_ID, 0)  # тесты считают время в UTC
-    await db.upsert_autoresponder_settings(
+    await set_timezone_offset(OWNER_ID, 0)  # тесты считают время в UTC
+    await upsert_autoresponder_settings(
         OWNER_ID,
         greeting_enabled=True,
         greeting_text="Привет, {name}!",
@@ -66,13 +74,13 @@ async def configured(connection):
         away_start_minutes=22 * 60,
         away_end_minutes=8 * 60,
     )
-    await db.add_keyword_reply(OWNER_ID, "цена", "Прайс: 100")
+    await add_keyword_reply(OWNER_ID, "цена", "Прайс: 100")
     return connection
 
 
 async def deliver(connection, bot, text, chat=7, now=NOON, **kw):
     msg = make_message(text, chat_id=chat, from_id=kw.pop("from_id", chat), **kw)
-    await db.save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
+    await save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
     reply = await ar.handle_incoming(bot, connection, msg, now=now)
     return reply.kind if reply else None
 
@@ -104,7 +112,7 @@ async def test_away_wins_over_greeting_and_has_cooldown(configured, bot):
     night = at(23)
     assert await deliver(configured, bot, "здрасте", chat=9, now=night) == "away"
     assert await deliver(configured, bot, "?", chat=9, now=night + 60) is None
-    assert await db.last_autoreply_at(OWNER_ID, 9, "greeting") is not None
+    assert await last_autoreply_at(OWNER_ID, 9, "greeting") is not None
     assert (
         await deliver(configured, bot, "?", chat=9, now=night + 6 * 3600 + 1) == "away"
     )
@@ -112,7 +120,7 @@ async def test_away_wins_over_greeting_and_has_cooldown(configured, bot):
 
 async def test_away_silent_when_owner_recently_wrote(configured, bot):
     night = at(23)
-    await db.save_history(CONNECTION_ID, 10, 900, True, "я тут", night - 60)
+    await save_history(CONNECTION_ID, 10, 900, True, "я тут", night - 60)
     assert await deliver(configured, bot, "алло", chat=10, now=night) is None
 
 
@@ -136,22 +144,22 @@ async def test_failed_send_is_not_logged(configured, bot, monkeypatch):
 
     monkeypatch.setattr(bot, "send_message", boom)
     assert await deliver(configured, bot, "hi", chat=14) is None
-    assert await db.last_autoreply_at(OWNER_ID, 14, "greeting") is None
+    assert await last_autoreply_at(OWNER_ID, 14, "greeting") is None
 
 
 async def test_auto_read_skips_favorites(configured, bot):
-    await db.upsert_autoresponder_settings(
+    await upsert_autoresponder_settings(
         OWNER_ID, auto_read_enabled=True, greeting_enabled=False, away_enabled=False
     )
-    await db.set_favorite_chat(OWNER_ID, 16, True)
+    await set_favorite_chat(OWNER_ID, 16, True)
     await deliver(configured, bot, "x", chat=15)
     await deliver(configured, bot, "x", chat=16)
     assert [r["chat_id"] for r in bot.reads] == [15]
 
 
 async def test_retention_keeps_greeting_ledger(configured):
-    await db.log_autoreply(OWNER_ID, 99, "keyword", "k", NOW - 40 * 86400)
-    await db.log_autoreply(OWNER_ID, 99, "greeting", None, NOW - 400 * 86400)
+    await log_autoreply(OWNER_ID, 99, "keyword", "k", NOW - 40 * 86400)
+    await log_autoreply(OWNER_ID, 99, "greeting", None, NOW - 400 * 86400)
     stats = await run_retention_once(NOW)
     assert stats["autoresponder_log_purged"] == 1
-    assert await db.last_autoreply_at(OWNER_ID, 99, "greeting") is not None
+    assert await last_autoreply_at(OWNER_ID, 99, "greeting") is not None

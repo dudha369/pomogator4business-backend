@@ -8,7 +8,7 @@ import asyncio
 from dataclasses import asdict, dataclass
 
 from config import settings
-from core import database as db
+from db.models.archive_prefs import get_archive_prefs_data, save_archive_prefs_data
 
 ALBUM_STYLES = ("slideshow", "collage", "list")
 RICH_KINDS = ("photo", "video", "animation", "audio", "voice", "document")
@@ -94,7 +94,7 @@ def validate_patch(patch: dict) -> dict:
 
 
 async def load_prefs(connection_id) -> ArchivePrefs:
-    return parse(await db.get_archive_prefs_data(connection_id))
+    return parse(await get_archive_prefs_data(connection_id))
 
 
 # «прочитать, изменить, записать» — не атомарная операция: два быстрых переключателя
@@ -105,9 +105,9 @@ _update_lock = asyncio.Lock()
 async def update_prefs(connection_id, patch: dict) -> ArchivePrefs:
     cleaned = validate_patch(patch)
     async with _update_lock:
-        stored = dict(await db.get_archive_prefs_data(connection_id))
+        stored = dict(await get_archive_prefs_data(connection_id))
         stored.update(
             {k: list(v) if isinstance(v, tuple) else v for k, v in cleaned.items()}
         )
-        await db.save_archive_prefs_data(connection_id, stored)
+        await save_archive_prefs_data(connection_id, stored)
     return parse(stored)

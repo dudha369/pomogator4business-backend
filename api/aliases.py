@@ -9,8 +9,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import Owner, current_owner, require_user
-from core import database as db
-from core.registry import registry
+from db.models.command_alias import (
+    add_command_alias,
+    count_command_aliases,
+    delete_command_alias,
+    get_command_alias,
+    list_command_aliases,
+)
+from app.platform.telegram.registry import registry
 
 router = APIRouter()
 
@@ -28,7 +34,7 @@ def normalize_alias(raw: str, prefix: str) -> str:
 
 @router.get("/aliases")
 async def list_aliases(user: dict = Depends(require_user)):
-    return {"aliases": await db.list_command_aliases(user["id"])}
+    return {"aliases": await list_command_aliases(user["id"])}
 
 
 class AliasCreate(BaseModel):
@@ -53,17 +59,17 @@ async def create_alias(payload: AliasCreate, owner: Owner = Depends(current_owne
         )
     if registry.find(alias) is not None:
         raise HTTPException(status_code=409, detail="Alias is already a command name")
-    if await db.get_command_alias(owner_id, alias) is not None:
+    if await get_command_alias(owner_id, alias) is not None:
         raise HTTPException(status_code=409, detail="Alias already exists")
-    if await db.count_command_aliases(owner_id) >= MAX_ALIASES_PER_OWNER:
+    if await count_command_aliases(owner_id) >= MAX_ALIASES_PER_OWNER:
         raise HTTPException(status_code=400, detail="Too many aliases")
 
-    await db.add_command_alias(owner_id, alias, cmd.name)
+    await add_command_alias(owner_id, alias, cmd.name)
     return {"alias": alias, "command": cmd.name}
 
 
 @router.delete("/aliases/{alias}")
 async def delete_alias(alias: str, user: dict = Depends(require_user)):
-    if not await db.delete_command_alias(user["id"], alias.strip().lower()):
+    if not await delete_command_alias(user["id"], alias.strip().lower()):
         raise HTTPException(status_code=404, detail="Alias not found")
     return {"deleted": True}

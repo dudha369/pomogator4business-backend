@@ -1,8 +1,8 @@
 import json
 
-from core.game_lock import serialized_command
-from core import database as db
-from core.registry import command
+from app.features.games.lock import serialized_command
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 _SKIP_LETTERS = "ЬЪЫЙ"
 
@@ -26,7 +26,7 @@ async def cmd_city(ctx):
     raw = ctx.args.strip()
 
     if raw.lower() == "stop":
-        await db.save_city_game(ctx.connection_id, ctx.chat_id, status="finished")
+        await save_game("city", ctx.connection_id, ctx.chat_id, status="finished")
         await ctx.reply(ctx.t("city.stopped"))
         return
 
@@ -35,10 +35,11 @@ async def cmd_city(ctx):
         return
 
     city = raw.upper()
-    game = await db.get_city_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("city", ctx.connection_id, ctx.chat_id)
 
     if not game or game["status"] != "active":
-        await db.save_city_game(
+        await save_game(
+            "city",
             ctx.connection_id,
             ctx.chat_id,
             used_words=json.dumps([city], ensure_ascii=False),
@@ -60,7 +61,8 @@ async def cmd_city(ctx):
 
     used.append(city)
     new_next = next_letter(city)
-    await db.save_city_game(
+    await save_game(
+        "city",
         ctx.connection_id,
         ctx.chat_id,
         used_words=json.dumps(used, ensure_ascii=False),

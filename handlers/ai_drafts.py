@@ -6,9 +6,12 @@ import time
 from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery
 
-from core import database as db
+from db.models.ai import get_draft, set_draft_status, set_draft_status_force
+from db.models.connection import get_connection_by_owner
+from db.models.message_log import log_message
+from db.models.user_locale import get_locale
 from core.ai import DRAFT_TTL_SECONDS
-from core.i18n import t
+from app.platform.i18n import t
 
 logger = logging.getLogger("bot.ai_drafts")
 router = Router(name="ai_drafts")
@@ -33,14 +36,14 @@ async def on_draft_button(callback: CallbackQuery, bot: Bot):
         await callback.answer()
         return
 
-    draft = await db.get_draft(draft_id)
-    locale = await db.get_locale(callback.from_user.id)
+    draft = await get_draft(draft_id)
+    locale = await get_locale(callback.from_user.id)
     if draft is None or draft["owner_id"] != callback.from_user.id:
         await callback.answer(t("ai.not_yours", locale), show_alert=True)
         return
 
     if action == "no":
-        if await db.set_draft_status(draft_id, "dismissed"):
+        if await set_draft_status(draft_id, "dismissed"):
             await _finish(callback, t("ai.dismissed", locale))
             await callback.answer()
         else:
@@ -52,18 +55,18 @@ async def on_draft_button(callback: CallbackQuery, bot: Bot):
         return
 
     if time.time() - draft["created_at"] > DRAFT_TTL_SECONDS:
-        await db.set_draft_status(draft_id, "dismissed")
+        await set_draft_status(draft_id, "dismissed")
         await _finish(callback, t("ai.expired", locale))
         await callback.answer(t("ai.expired", locale), show_alert=True)
         return
 
-    connection = await db.get_connection_by_owner(draft["owner_id"])
+    connection = await get_connection_by_owner(draft["owner_id"])
     if connection is None:
         await callback.answer(t("ai.not_connected", locale), show_alert=True)
         return
 
     # pending → sent атомарно: двойное нажатие не отправит ответ дважды
-    if not await db.set_draft_status(draft_id, "sent"):
+    if not await set_draft_status(draft_id, "sent"):
         await callback.answer(t("ai.already", locale), show_alert=True)
         return
 
@@ -75,10 +78,10 @@ async def on_draft_button(callback: CallbackQuery, bot: Bot):
         )
     except Exception:
         logger.warning("Не удалось отправить черновик %s", draft_id, exc_info=True)
-        await db.set_draft_status_force(draft_id, "pending")
+        await set_draft_status_force(draft_id, "pending")
         await callback.answer(t("ai.send_failed", locale), show_alert=True)
         return
 
-    await db.log_message(connection["connection_id"], draft["chat_id"], sent.message_id)
+    await log_message(connection["connection_id"], draft["chat_id"], sent.message_id)
     await _finish(callback, t("ai.sent", locale))
     await callback.answer()

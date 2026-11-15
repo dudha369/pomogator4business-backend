@@ -8,7 +8,8 @@
 
 import logging
 
-from core import database as db
+from db.models.archive_log import get_log_media, list_log_media_availability
+from db.models.message_history import get_history_media, list_media_flags
 from core.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES, public_view
 
 logger = logging.getLogger("bot.archive_media")
@@ -44,7 +45,7 @@ async def attach_media_info(connection_id, entries):
     """Дописывает в каждую запись поля old / new (описание содержимого для
     отрисовки) и media_type, media_mime, media_name, media_status,
     media_available (байты не загружаются)."""
-    own_available = await db.list_log_media_availability(
+    own_available = await list_log_media_availability(
         connection_id, [e["log_id"] for e in entries if e.get("media_type")]
     )
     # записи без снимков и без собственного медиа — смотрим в истории (старый формат)
@@ -55,7 +56,7 @@ async def attach_media_info(connection_id, entries):
         and not e.get("old_snapshot")
         and not e.get("new_snapshot")
     ]
-    from_history = await db.list_media_flags(
+    from_history = await list_media_flags(
         connection_id, [(e["chat_id"], e["message_id"]) for e in need_history]
     )
 
@@ -131,7 +132,7 @@ async def load_media(connection_id, log_id, which="auto"):
     """(media_type, mime, name, bytes) для записи архива или None.
 
     which: old | new | auto (у правки — «новое», у удаления — «старое»)."""
-    row = await db.get_log_media(connection_id, log_id)
+    row = await get_log_media(connection_id, log_id)
     if row is None:
         return None
     if which == "auto":
@@ -153,7 +154,7 @@ async def load_media(connection_id, log_id, which="auto"):
             return kind, snap.get("media_mime"), snap.get("media_name"), data
 
     if which == "old" or snap is None:
-        history = await db.get_history_media(
+        history = await get_history_media(
             connection_id, row["chat_id"], row["message_id"]
         )
         if history and history["media_data"]:

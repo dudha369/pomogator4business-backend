@@ -10,7 +10,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from api.deps import require_user
-from core import database as db
+from db.models.autoresponder import (
+    add_keyword_reply,
+    delete_keyword_reply,
+    get_autoresponder_settings,
+    list_keyword_replies,
+    upsert_autoresponder_settings,
+)
+from db.models.user_locale import get_timezone_offset
 from core.autoresponder import in_away_window
 
 router = APIRouter()
@@ -21,11 +28,11 @@ MAX_KEYWORDS = 100
 
 @router.get("/autoresponder")
 async def get_settings(user: dict = Depends(require_user)):
-    settings = await db.get_autoresponder_settings(user["id"])
-    keywords = await db.list_keyword_replies(user["id"])
+    settings = await get_autoresponder_settings(user["id"])
+    keywords = await list_keyword_replies(user["id"])
     away_start = settings["away_start_minutes"] if settings else None
     away_end = settings["away_end_minutes"] if settings else None
-    offset = await db.get_timezone_offset(user["id"])
+    offset = await get_timezone_offset(user["id"])
     return {
         "greeting_enabled": settings["greeting_enabled"] if settings else False,
         "greeting_text": settings["greeting_text"] if settings else None,
@@ -67,7 +74,7 @@ async def update_settings(
 
     # Нельзя включить режим, у которого нет текста: движок молча ничего бы не
     # отправлял, и владелец думал бы, что автоответчик работает.
-    current = await db.get_autoresponder_settings(user["id"]) or {}
+    current = await get_autoresponder_settings(user["id"]) or {}
     merged = {**current, **fields}
     for flag, text_key in (
         ("greeting_enabled", "greeting_text"),
@@ -78,7 +85,7 @@ async def update_settings(
                 status_code=422, detail=f"{text_key} is required to enable this mode"
             )
 
-    await db.upsert_autoresponder_settings(user["id"], **fields)
+    await upsert_autoresponder_settings(user["id"], **fields)
     return await get_settings(user=user)
 
 
@@ -97,15 +104,15 @@ async def create_keyword(
             status_code=422, detail="Keyword and reply must not be blank"
         )
 
-    existing = {k["keyword"] for k in await db.list_keyword_replies(user["id"])}
+    existing = {k["keyword"] for k in await list_keyword_replies(user["id"])}
     if keyword not in existing and len(existing) >= MAX_KEYWORDS:
         raise HTTPException(status_code=400, detail="Too many keywords")
 
-    await db.add_keyword_reply(user["id"], keyword, payload.reply_text)
+    await add_keyword_reply(user["id"], keyword, payload.reply_text)
     return {"keyword": keyword, "reply_text": payload.reply_text}
 
 
 @router.delete("/autoresponder/keywords/{keyword}")
 async def remove_keyword(keyword: str, user: dict = Depends(require_user)):
-    await db.delete_keyword_reply(user["id"], keyword.strip())
+    await delete_keyword_reply(user["id"], keyword.strip())
     return {"deleted": keyword.strip().lower()}

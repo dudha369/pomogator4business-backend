@@ -11,10 +11,13 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.types import Message
 
-from core import database as db
-from core.context import CommandContext
-from core.i18n import t
-from core.registry import registry
+from db.models.command_alias import get_command_alias
+from db.models.connection import get_connection_by_owner
+from db.models.module_settings import list_disabled_modules
+from db.models.user_locale import get_locale
+from app.platform.telegram.context import CommandContext
+from app.platform.i18n import t
+from app.platform.telegram.registry import registry
 
 logger = logging.getLogger("bot.dm_commands")
 router = Router(name="bot_commands")
@@ -48,7 +51,7 @@ async def on_dm_command(message: Message, bot: Bot):
     if user is None:
         return
 
-    connection = await db.get_connection_by_owner(user.id)
+    connection = await get_connection_by_owner(user.id)
     prefix = connection["prefix"] if connection else "."
     parsed = split_command(message.text, prefix)
     if parsed is None:
@@ -57,13 +60,13 @@ async def on_dm_command(message: Message, bot: Bot):
 
     cmd = registry.find(alias)
     if cmd is None and connection:
-        target = await db.get_command_alias(user.id, alias)
+        target = await get_command_alias(user.id, alias)
         if target:
             cmd = registry.find(target)
     if cmd is None:
         return  # не наша команда — молчим, как и раньше
 
-    locale = await db.get_locale(user.id)
+    locale = await get_locale(user.id)
 
     if cmd.scope not in ("bot", "both"):
         # подсказываем только для явных /команд, чтобы не отвечать на любой «.текст»
@@ -75,7 +78,7 @@ async def on_dm_command(message: Message, bot: Bot):
         await message.answer(t("common.not_connected", locale))
         return
 
-    if cmd.module in await db.list_disabled_modules(connection["connection_id"]):
+    if cmd.module in await list_disabled_modules(connection["connection_id"]):
         await message.answer(t("common.module_disabled", locale))
         return
 

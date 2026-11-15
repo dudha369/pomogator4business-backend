@@ -1,9 +1,9 @@
 import random
 
-from core.game_lock import serialized_command
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import serialized_command
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 _DEFAULT_MAX = 100
 # потолок в пределах INT Postgres (2**31 - 1), иначе save_game падает
@@ -28,7 +28,7 @@ def _parse_int(raw: str) -> int | None:
 @serialized_command
 async def cmd_guess(ctx):
     raw = ctx.args.strip()
-    game = await db.get_guess_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("guess", ctx.connection_id, ctx.chat_id)
 
     number = _parse_int(raw)
     if game and game["status"] == "active" and number is not None:
@@ -36,7 +36,8 @@ async def cmd_guess(ctx):
         secret = game["secret"]
 
         if number == secret:
-            await db.save_guess_game(
+            await save_game(
+                "guess",
                 ctx.connection_id, ctx.chat_id, status="finished", attempts=attempts
             )
             await ctx.reply(
@@ -44,7 +45,7 @@ async def cmd_guess(ctx):
             )
             return
 
-        await db.save_guess_game(ctx.connection_id, ctx.chat_id, attempts=attempts)
+        await save_game("guess", ctx.connection_id, ctx.chat_id, attempts=attempts)
         hint = (
             t("guess.higher", ctx.locale)
             if number < secret
@@ -58,7 +59,8 @@ async def cmd_guess(ctx):
     )
     secret = random.randint(1, max_value)
 
-    await db.save_guess_game(
+    await save_game(
+        "guess",
         ctx.connection_id,
         ctx.chat_id,
         secret=secret,

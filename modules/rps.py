@@ -3,10 +3,11 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.game_lock import serialized_game
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import serialized_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
 
 router = Router(name="rps")
 
@@ -39,8 +40,8 @@ async def on_rps_callback(call: CallbackQuery):
         await call.answer()
         return
 
-    connection = await db.get_connection(call.message.business_connection_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    connection = await get_connection(call.message.business_connection_id)
+    locale = await get_locale(connection["owner_id"]) if connection else "ru"
 
     bot_choice = random.choice(_CHOICES)
 

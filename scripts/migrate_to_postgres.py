@@ -23,29 +23,21 @@ from tortoise import Tortoise
 from config import TORTOISE_ORM
 from db.models import (
     ArchiveLog,
-    ChkGame,
-    CityGame,
     ClockEmoji,
     ClockPack,
     Connection,
     DisabledModule,
     EchoChat,
     EmojiStatusSetting,
-    G2048Game,
-    GuessGame,
-    HangmanGame,
     KnownChat,
     MessageHistory,
     MessageLog,
     MirrorBot,
-    MsGame,
     Mute,
     ProfileBackup,
     StoryAutopost,
-    TttGame,
     UserLocale,
     VoiceEffect,
-    WordleGame,
 )
 
 DEFAULT_DB_PATH = "bot.db"
@@ -297,126 +289,6 @@ async def main():
                 connection_id=r["connection_id"],
                 chat_id=r["chat_id"],
                 effect=r["effect"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "ttt_games",
-            TttGame,
-            lambda r: TttGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                board=r["board"],
-                turn=r["turn"],
-                player_x_id=r["player_x_id"],
-                player_x_name=r["player_x_name"],
-                player_o_id=r["player_o_id"],
-                player_o_name=r["player_o_name"],
-                status=r["status"],
-                message_id=r["message_id"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "wordle_games",
-            WordleGame,
-            lambda r: WordleGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                secret=r["secret"],
-                guesses=r["guesses"],
-                status=r["status"],
-                message_id=r["message_id"],
-                starter_id=r["starter_id"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "chk_games",
-            ChkGame,
-            lambda r: ChkGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                board=r["board"],
-                turn=r["turn"],
-                player_w_id=r["player_w_id"],
-                player_w_name=r["player_w_name"],
-                player_b_id=r["player_b_id"],
-                player_b_name=r["player_b_name"],
-                selected=r["selected"],
-                status=r["status"],
-                message_id=r["message_id"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "ms_games",
-            MsGame,
-            lambda r: MsGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                size=r["size"],
-                bomb_mode=r["bomb_mode"],
-                coop=bool(r["coop"]),
-                mines=r["mines"],
-                revealed=r["revealed"],
-                starter_id=r["starter_id"],
-                starter_name=r["starter_name"],
-                phase=r["phase"],
-                message_id=r["message_id"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "guess_games",
-            GuessGame,
-            lambda r: GuessGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                secret=r["secret"],
-                max_value=r["max_value"],
-                attempts=r["attempts"],
-                status=r["status"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "city_games",
-            CityGame,
-            lambda r: CityGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                used_words=r["used_words"],
-                next_letter=r["next_letter"],
-                status=r["status"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "hangman_games",
-            HangmanGame,
-            lambda r: HangmanGame(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                secret=r["secret"],
-                guessed_letters=r["guessed_letters"],
-                mistakes=r["mistakes"],
-                status=r["status"],
-                message_id=r["message_id"],
-            ),
-        )
-        await migrate_simple(
-            conn,
-            "g2048_games",
-            G2048Game,
-            lambda r: G2048Game(
-                connection_id=r["connection_id"],
-                chat_id=r["chat_id"],
-                board=r["board"],
-                score=r["score"],
-                status=r["status"],
-                player_id=r["player_id"],
-                message_id=r["message_id"],
             ),
         )
 

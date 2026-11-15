@@ -5,7 +5,8 @@ import types
 import pytest
 
 from config import settings
-from core import database as db
+from db.models.message_history import get_history_entry
+from db.models.module_settings import disable_module
 from handlers.business_messages import on_business_message
 from modules.archive import on_business_deleted
 
@@ -17,7 +18,7 @@ CHAT = 7
 @pytest.fixture
 async def ready(connection, api_bot, monkeypatch):
     monkeypatch.setattr(settings, "ARCHIVE_RICH", True)
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     return connection
 
 
@@ -43,7 +44,7 @@ async def test_self_destructing_photo_is_rescued_with_bytes(ready, bot):
     )
     await on_business_message(owner_reply(replied), bot)
 
-    entry = await db.get_history_entry(CONNECTION_ID, CHAT, replied.message_id)
+    entry = await get_history_entry(CONNECTION_ID, CHAT, replied.message_id)
     assert (
         entry["media_type"] == "photo" and entry["media_data"] == b"bytes:files/secret"
     )
@@ -63,5 +64,5 @@ async def test_rescue_skips_messages_already_in_history(ready, bot):
     )
     await on_business_message(original, bot)
     await on_business_message(owner_reply(original), bot)
-    entry = await db.get_history_entry(CONNECTION_ID, CHAT, original.message_id)
+    entry = await get_history_entry(CONNECTION_ID, CHAT, original.message_id)
     assert entry["media_data"] is None and entry["file_id"] == "p"

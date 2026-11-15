@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.deps import require_user
-from core import database as db
+from db.models.known_chat import is_known_chat
 
 router = APIRouter()
 
 
 @router.get("/chat-info/{target_user_id}")
 async def get_chat_info(target_user_id: int, user: dict = Depends(require_user)):
-    is_known = await db.is_known_chat(user["id"], target_user_id)
+    is_known = await is_known_chat(user["id"], target_user_id)
     if not is_known:
         raise HTTPException(status_code=404, detail="Unknown chat")
 

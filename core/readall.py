@@ -13,7 +13,8 @@ from dataclasses import dataclass
 
 from aiogram.exceptions import TelegramRetryAfter
 
-from core import database as db
+from db.models.favorite_chat import list_favorite_chat_ids
+from db.models.message_history import list_last_incoming_by_chat
 
 logger = logging.getLogger("bot.readall")
 
@@ -87,9 +88,9 @@ async def _read_one(bot, connection_id, row):
 
 async def find_chats(connection, flt, now=None):
     """Чаты, подходящие под фильтр (без прочтения) — для предпросмотра."""
-    rows = await db.list_last_incoming_by_chat(connection["connection_id"])
+    rows = await list_last_incoming_by_chat(connection["connection_id"])
     favorites = (
-        await db.list_favorite_chat_ids(connection["owner_id"])
+        await list_favorite_chat_ids(connection["owner_id"])
         if flt.exclude_fav
         else set()
     )

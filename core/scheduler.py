@@ -10,7 +10,14 @@ from aiogram.exceptions import (
     TelegramServerError,
 )
 
-from core import database as db
+from db.models.clock import get_clock_emoji
+from db.models.emoji_status import (
+    get_active_emoji_status_settings,
+    get_emoji_status_style,
+    set_emoji_status_enabled,
+    set_emoji_status_granted,
+)
+from db.models.user_locale import get_timezone_offsets_for
 from emoji_clock import DEFAULT_STYLE_ID as DEFAULT_CLOCK_STYLE
 from core.utils import log_suppressed
 
@@ -23,7 +30,7 @@ async def _emoji_id_for(cache, time_key, style):
     for candidate in (style, DEFAULT_CLOCK_STYLE):
         key = (candidate, time_key)
         if key not in cache:
-            cache[key] = await db.get_clock_emoji(time_key, candidate)
+            cache[key] = await get_clock_emoji(time_key, candidate)
         if cache[key]:
             return cache[key]
     return None
@@ -48,8 +55,8 @@ def _is_access_revoked(error: Exception) -> bool:
 
 
 async def _disable_clock(bot, owner_id):
-    await db.set_emoji_status_granted(owner_id, False)
-    await db.set_emoji_status_enabled(owner_id, False)
+    await set_emoji_status_granted(owner_id, False)
+    await set_emoji_status_enabled(owner_id, False)
     try:
         await bot.send_message(
             chat_id=owner_id,
@@ -99,11 +106,11 @@ def _local_time_key(now_utc, offset_minutes):
 
 
 async def emoji_clock_tick(bot):
-    settings = await db.get_active_emoji_status_settings()
+    settings = await get_active_emoji_status_settings()
     if not settings:
         return
 
-    offsets = await db.get_timezone_offsets_for([owner_id for owner_id, _ in settings])
+    offsets = await get_timezone_offsets_for([owner_id for owner_id, _ in settings])
     now_utc = datetime.now(timezone.utc)
     cache = {}
 
@@ -124,8 +131,8 @@ async def emoji_clock_tick(bot):
 async def refresh_emoji_status(bot, owner_id):
     """Сразу применить текущую минуту (например, после смены стиля в приложении),
     не дожидаясь следующего тика."""
-    style = await db.get_emoji_status_style(owner_id)
-    offsets = await db.get_timezone_offsets_for([owner_id])
+    style = await get_emoji_status_style(owner_id)
+    offsets = await get_timezone_offsets_for([owner_id])
     time_key = _local_time_key(datetime.now(timezone.utc), offsets.get(owner_id, 180))
     await _push_emoji_status(bot, owner_id, style, time_key, {})
 

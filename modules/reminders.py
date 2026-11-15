@@ -5,10 +5,10 @@
 
 import time
 
-from core import database as db
-from core.context import CommandContext
+from db.models.user_locale import get_locale
+from app.platform.telegram.context import CommandContext
 from core.readall import parse_filters
-from core.registry import command
+from app.platform.telegram.registry import command
 from core.reminders import find_waiting, render_list
 
 
@@ -33,6 +33,6 @@ async def cmd_waiting(ctx: CommandContext):
         ctx.bot,
         ctx.connection,
         items,
-        ctx.locale or await db.get_locale(ctx.connection["owner_id"]),
+        ctx.locale or await get_locale(ctx.connection["owner_id"]),
     )
     await ctx.usage_error(text, parse_mode="html")

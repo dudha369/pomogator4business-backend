@@ -12,12 +12,36 @@ from aiogram.exceptions import (
     TelegramNetworkError,
 )
 
-from core import database as db
+from db.models.archive_prefs import save_archive_prefs_data
+from db.models.autoresponder import add_keyword_reply, list_keyword_replies
+from db.models.connection import get_connection, set_prefix
+from db.models.emoji_status import (
+    is_emoji_status_granted,
+    set_emoji_status_enabled,
+    set_emoji_status_granted,
+)
+from db.models.message_history import (
+    count_by_chat,
+    count_by_day,
+    get_history_entry,
+    last_rows_by_chat,
+    list_history_rows_since,
+    save_history,
+)
+from db.models.message_log import log_message, recent_message_log, trim_message_log
+from db.models.module_settings import (
+    disable_module,
+    enable_module,
+    list_disabled_modules,
+)
+from db.models.quick_template import count_templates
+from db.models.user_locale import get_timezone_name, get_timezone_offset
 from core import scheduler
-from core.context import CommandContext
+from app.platform.telegram.context import CommandContext
 from db.models.user_locale import effective_offset, is_valid_timezone
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, FakeBot, make_message
+from app.features.games.service import get_game
 
 
 def make_ctx(bot, connection, args="", from_id=OWNER_ID, text=".x"):
@@ -51,7 +75,7 @@ async def test_timezone_api_name_then_manual_offset(client):
         "/api/account/timezone", headers=h, json={"offset_minutes": 60}
     )
     assert r.json() == {"offset_minutes": 60, "timezone": None}
-    assert await db.get_timezone_offset(OWNER_ID) == 60
+    assert await get_timezone_offset(OWNER_ID) == 60
 
 
 async def test_timezone_api_rejects_garbage(client):
@@ -74,7 +98,7 @@ async def test_backup_import_applies_iana_timezone(client):
         "/api/backup/import", headers=h, json={"version": 1, "timezone": "Europe/Kyiv"}
     )
     assert r.status_code == 200
-    assert await db.get_timezone_name(OWNER_ID) == "Europe/Kyiv"
+    assert await get_timezone_name(OWNER_ID) == "Europe/Kyiv"
 
 
 # --- 13. эмодзи-часы: сеть не отключает, отозванный доступ — отключает --------------
@@ -104,8 +128,8 @@ async def clock_on(database, monkeypatch):
         return "emoji-1"
 
     monkeypatch.setattr(scheduler, "_emoji_id_for", fake_id)
-    await db.set_emoji_status_granted(OWNER_ID, True)
-    await db.set_emoji_status_enabled(OWNER_ID, True)
+    await set_emoji_status_granted(OWNER_ID, True)
+    await set_emoji_status_enabled(OWNER_ID, True)
 
 
 async def _push(bot):
@@ -115,19 +139,19 @@ async def _push(bot):
 async def test_clock_network_error_keeps_clock_enabled(clock_on):
     bot = ClockBot(_network_error())
     await _push(bot)
-    assert await db.is_emoji_status_granted(OWNER_ID) is True
+    assert await is_emoji_status_granted(OWNER_ID) is True
     assert bot.sent == []  # владельцу тоже ничего не шлём
 
 
 async def test_clock_unrelated_bad_request_keeps_clock_enabled(clock_on):
     await _push(ClockBot(_bad_request("Bad Request: DOCUMENT_INVALID")))
-    assert await db.is_emoji_status_granted(OWNER_ID) is True
+    assert await is_emoji_status_granted(OWNER_ID) is True
 
 
 async def test_clock_revoked_access_disables_and_notifies(clock_on):
     bot = ClockBot(_bad_request("Bad Request: user did not grant permission"))
     await _push(bot)
-    assert await db.is_emoji_status_granted(OWNER_ID) is False
+    assert await is_emoji_status_granted(OWNER_ID) is False
     assert len(bot.sent) == 1 and bot.sent[0]["chat_id"] == OWNER_ID
 
 
@@ -135,7 +159,7 @@ async def test_clock_forbidden_disables(clock_on):
     await _push(
         ClockBot(TelegramForbiddenError(method=MagicMock(), message="Forbidden"))
     )
-    assert await db.is_emoji_status_granted(OWNER_ID) is False
+    assert await is_emoji_status_granted(OWNER_ID) is False
 
 
 async def test_clock_success_pushes_emoji(clock_on):
@@ -148,12 +172,12 @@ async def test_clock_success_pushes_emoji(clock_on):
 
 # --- 14. логи не содержат текст личных сообщений ------------------------------
 async def test_update_logging_hides_message_text(caplog):
-    from core.logging_middleware import _size
+    from app.platform.telegram.middleware import _size
 
     assert _size("секретное сообщение") == 19 and _size(None) == 0
     import inspect
 
-    from core import logging_middleware
+    from app.platform.telegram import middleware as logging_middleware
 
     assert "_short" not in inspect.getsource(logging_middleware)
 
@@ -176,8 +200,8 @@ async def test_backup_import_respects_quotas(client):
     }
     r = await client.post("/api/backup/import", headers=h, json=payload)
     assert r.status_code == 200
-    assert len(await db.list_keyword_replies(OWNER_ID)) == MAX_KEYWORDS
-    assert await db.count_templates(OWNER_ID) == MAX_TEMPLATES
+    assert len(await list_keyword_replies(OWNER_ID)) == MAX_KEYWORDS
+    assert await count_templates(OWNER_ID) == MAX_TEMPLATES
     assert r.json()["skipped"] >= 30
 
 
@@ -186,7 +210,7 @@ async def test_backup_import_existing_keyword_is_replaced_at_quota(client):
 
     h = client.owner
     for i in range(MAX_KEYWORDS):
-        await db.add_keyword_reply(OWNER_ID, f"k{i}", "old")
+        await add_keyword_reply(OWNER_ID, f"k{i}", "old")
     r = await client.post(
         "/api/backup/import",
         headers=h,
@@ -194,7 +218,7 @@ async def test_backup_import_existing_keyword_is_replaced_at_quota(client):
     )
     assert r.status_code == 200
     rows = {
-        k["keyword"]: k["reply_text"] for k in await db.list_keyword_replies(OWNER_ID)
+        k["keyword"]: k["reply_text"] for k in await list_keyword_replies(OWNER_ID)
     }
     assert rows["k0"] == "new" and len(rows) == MAX_KEYWORDS
 
@@ -287,7 +311,7 @@ def test_minesweeper_flags_after_loss():
 
 # --- замок на текстовые ходы игр --------------------------------------------------
 async def test_serialized_command_does_not_overlap(connection):
-    from core.game_lock import serialized_command
+    from app.features.games.lock import serialized_command
 
     log = []
 
@@ -318,7 +342,7 @@ async def test_hangman_fast_double_guess_keeps_both_letters(connection):
         cmd_hangman(make_ctx(bot, connection, "л")),
         cmd_hangman(make_ctx(bot, connection, "м")),
     )
-    game = await db.get_hangman_game(CONNECTION_ID, 7)
+    game = await get_game("hangman", CONNECTION_ID, 7)
     assert {"Л", "М"} <= set(json.loads(game["guessed_letters"]))
 
 
@@ -432,7 +456,7 @@ def test_own_edits_pref_defaults_off_and_is_patchable():
 async def _own_message(bot, text):
     from handlers.business_messages import on_business_message
 
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     msg = make_message(text, chat_id=7, from_id=OWNER_ID)
     await on_business_message(msg, bot)
     return msg
@@ -456,7 +480,7 @@ async def test_own_edit_is_silent_by_default(connection):
 async def test_own_edit_notifies_when_enabled_and_marks_owner(connection):
     from db.models.archive_log import ArchiveLog
 
-    await db.save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
+    await save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
     bot = FakeBot()
     msg = await _own_message(bot, "было")
     await _edit_own(bot, msg, "стало")
@@ -468,14 +492,14 @@ async def test_own_edit_notifies_when_enabled_and_marks_owner(connection):
 async def test_bot_edit_is_not_reported_even_when_own_edits_enabled(connection):
     from core import self_actions as sa
 
-    await db.save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
+    await save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
     bot = FakeBot()
     msg = await _own_message(bot, "было")
     sa._mark_bot_edit(CONNECTION_ID, 7, msg.message_id)
     await _edit_own(bot, msg, "стало")
     assert bot.sent == []
     # история при этом актуальна
-    entry = await db.get_history_entry(CONNECTION_ID, 7, msg.message_id)
+    entry = await get_history_entry(CONNECTION_ID, 7, msg.message_id)
     assert entry["text"] == "стало"
 
 
@@ -505,7 +529,7 @@ async def _seed_history():
         (8, 2, True, NOW - 2 * 86400),
     ]
     for chat_id, message_id, is_owner, ts in rows:
-        await db.save_history(CONNECTION_ID, chat_id, message_id, is_owner, "t", ts)
+        await save_history(CONNECTION_ID, chat_id, message_id, is_owner, "t", ts)
 
 
 async def test_sql_aggregates_match_python(connection):
@@ -513,19 +537,19 @@ async def test_sql_aggregates_match_python(connection):
 
     await _seed_history()
     since = NOW - 5 * 86400
-    by_day = await db.count_by_day(CONNECTION_ID, since, 0)
+    by_day = await count_by_day(CONNECTION_ID, since, 0)
     today = NOW // 86400
     day_rows = {(int(r["day"]), bool(r["is_owner"])): int(r["n"]) for r in by_day}
     assert day_rows[(today, False)] == 3 and day_rows[(today, True)] == 1
     assert day_rows[(today - 2, True)] == 1
 
     py = stats.daily_activity(
-        await db.list_history_rows_since(CONNECTION_ID, since), NOW, 0, 5
+        await list_history_rows_since(CONNECTION_ID, since), NOW, 0, 5
     )
     sql = stats.daily_from_counts(by_day, NOW, 0, 5)
     assert py == sql
 
-    top = stats.top_from_counts(await db.count_by_chat(CONNECTION_ID, since))
+    top = stats.top_from_counts(await count_by_chat(CONNECTION_ID, since))
     assert top[0] == {"chat_id": 7, "incoming": 2, "outgoing": 1}
 
 
@@ -533,7 +557,7 @@ async def test_last_rows_by_chat_picks_latest_message(connection):
     await _seed_history()
     rows = {
         r["chat_id"]: r
-        for r in await db.last_rows_by_chat(CONNECTION_ID, NOW - 5 * 86400)
+        for r in await last_rows_by_chat(CONNECTION_ID, NOW - 5 * 86400)
     }
     assert rows[7]["message_id"] == 3 and not rows[7]["is_owner"]
     assert (
@@ -544,13 +568,13 @@ async def test_last_rows_by_chat_picks_latest_message(connection):
 async def test_message_log_only_for_owner_messages(connection):
     from handlers.business_messages import on_business_message
 
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     bot = FakeBot()
     await on_business_message(make_message("от собеседника", chat_id=7, from_id=7), bot)
-    assert await db.recent_message_log(CONNECTION_ID, 7, 10) == []
+    assert await recent_message_log(CONNECTION_ID, 7, 10) == []
     mine = make_message("от меня", chat_id=7, from_id=OWNER_ID)
     await on_business_message(mine, bot)
-    assert [m for _log, m in await db.recent_message_log(CONNECTION_ID, 7, 10)] == [
+    assert [m for _log, m in await recent_message_log(CONNECTION_ID, 7, 10)] == [
         mine.message_id
     ]
 
@@ -558,12 +582,12 @@ async def test_message_log_only_for_owner_messages(connection):
 async def test_trim_message_log_is_per_connection(database):
     for conn in ("a", "b"):
         for message_id in range(5):
-            await db.log_message(conn, 1, message_id)
-    await db.log_message("b", 1, 99)
-    removed = await db.trim_message_log(2)
+            await log_message(conn, 1, message_id)
+    await log_message("b", 1, 99)
+    removed = await trim_message_log(2)
     assert removed == 3 + 4
     for conn, expected in (("a", [3, 4]), ("b", [4, 99])):
-        got = sorted(m for _l, m in await db.recent_message_log(conn, 1, 10))
+        got = sorted(m for _l, m in await recent_message_log(conn, 1, 10))
         assert got == expected
 
 
@@ -582,22 +606,22 @@ def test_raw_json_kept_only_for_exotic_kinds(monkeypatch):
 
 
 async def test_ttl_cache_is_invalidated_on_writes(connection):
-    first = await db.get_connection(CONNECTION_ID)
+    first = await get_connection(CONNECTION_ID)
     assert first["prefix"] == "."
-    await db.set_prefix(CONNECTION_ID, "!")
-    assert (await db.get_connection(CONNECTION_ID))["prefix"] == "!"
+    await set_prefix(CONNECTION_ID, "!")
+    assert (await get_connection(CONNECTION_ID))["prefix"] == "!"
 
-    assert await db.list_disabled_modules(CONNECTION_ID) == set()
-    await db.disable_module(CONNECTION_ID, "calc")
-    assert await db.list_disabled_modules(CONNECTION_ID) == {"calc"}
-    await db.enable_module(CONNECTION_ID, "calc")
-    assert await db.list_disabled_modules(CONNECTION_ID) == set()
+    assert await list_disabled_modules(CONNECTION_ID) == set()
+    await disable_module(CONNECTION_ID, "calc")
+    assert await list_disabled_modules(CONNECTION_ID) == {"calc"}
+    await enable_module(CONNECTION_ID, "calc")
+    assert await list_disabled_modules(CONNECTION_ID) == set()
 
 
 async def test_ttl_cache_returns_independent_copies(connection):
-    a = await db.get_connection(CONNECTION_ID)
+    a = await get_connection(CONNECTION_ID)
     a["prefix"] = "ЛОМАЮ"
-    assert (await db.get_connection(CONNECTION_ID))["prefix"] != "ЛОМАЮ"
+    assert (await get_connection(CONNECTION_ID))["prefix"] != "ЛОМАЮ"
 
 
 # --- 24. /readall в фоне ----------------------------------------------------------
@@ -657,7 +681,7 @@ async def test_allowlist_blocks_other_users(client, monkeypatch):
 
 # --- 20. мелочи ---------------------------------------------------------------------
 def test_city_skips_yery_and_split_has_words_alias():
-    from core.registry import registry
+    from app.platform.telegram.registry import registry
     from modules import city
 
     assert "Ы" in city._SKIP_LETTERS

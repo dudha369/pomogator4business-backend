@@ -11,9 +11,16 @@ from aiogram.types import (
     Message,
 )
 
-from core import database as db
-from core.i18n import LANGUAGE_NAMES, t
-from core.registry import registry
+from db.models.archive_log import get_recent_archive
+from db.models.connection import get_connection_by_owner, set_prefix
+from db.models.module_settings import (
+    disable_module,
+    enable_module,
+    list_disabled_modules,
+)
+from db.models.user_locale import get_locale, has_chosen_locale, set_locale
+from app.platform.i18n import LANGUAGE_NAMES, t
+from app.platform.telegram.registry import registry
 from core.utils import is_valid_prefix
 from core.webapp import webapp_keyboard
 
@@ -61,7 +68,7 @@ def _language_keyboard(onboarding=False):
 
 
 async def _send_greeting(target, owner_id, locale, edit=False):
-    connection = await db.get_connection_by_owner(owner_id)
+    connection = await get_connection_by_owner(owner_id)
     if connection and connection["is_enabled"]:
         text = t("start.greeting_connected", locale)
         markup = webapp_keyboard(t("connection.open_app_button", locale))
@@ -79,19 +86,19 @@ async def _send_greeting(target, owner_id, locale, edit=False):
 async def cmd_start(message: Message):
     owner_id = message.from_user.id
 
-    if not await db.has_chosen_locale(owner_id):
+    if not await has_chosen_locale(owner_id):
         await message.answer(
             _ONBOARDING_PROMPT, reply_markup=_language_keyboard(onboarding=True)
         )
         return
 
-    locale = await db.get_locale(owner_id)
+    locale = await get_locale(owner_id)
     await _send_greeting(message, owner_id, locale)
 
 
 @router.message(Command("language"))
 async def cmd_language(message: Message):
-    locale = await db.get_locale(message.from_user.id)
+    locale = await get_locale(message.from_user.id)
     await message.answer(t("language.title", locale), reply_markup=_language_keyboard())
 
 
@@ -101,7 +108,7 @@ async def cb_language(call: CallbackQuery):
     new_locale = parts[1]
     onboarding = len(parts) > 2 and parts[2] == "onboarding"
 
-    await db.set_locale(call.from_user.id, new_locale)
+    await set_locale(call.from_user.id, new_locale)
 
     if onboarding:
         await _send_greeting(call.message, call.from_user.id, new_locale, edit=True)
@@ -113,13 +120,13 @@ async def cb_language(call: CallbackQuery):
 
 @router.message(Command("archive"))
 async def cmd_archive_view(message: Message):
-    locale = await db.get_locale(message.from_user.id)
-    connection = await db.get_connection_by_owner(message.from_user.id)
+    locale = await get_locale(message.from_user.id)
+    connection = await get_connection_by_owner(message.from_user.id)
     if not connection:
         await message.answer(t("common.not_connected", locale))
         return
 
-    entries = await db.get_recent_archive(connection["connection_id"], 20)
+    entries = await get_recent_archive(connection["connection_id"], 20)
     if not entries:
         await message.answer(t("settings.archive_empty", locale))
         return
@@ -138,8 +145,8 @@ async def cmd_archive_view(message: Message):
 
 @router.message(Command("settings"))
 async def cmd_settings(message: Message):
-    locale = await db.get_locale(message.from_user.id)
-    connection = await db.get_connection_by_owner(message.from_user.id)
+    locale = await get_locale(message.from_user.id)
+    connection = await get_connection_by_owner(message.from_user.id)
     if not connection:
         await message.answer(t("common.connect_first", locale))
         return
@@ -152,8 +159,8 @@ async def cmd_settings(message: Message):
 
 @router.callback_query(F.data == "settings:back")
 async def cb_back(call: CallbackQuery):
-    locale = await db.get_locale(call.from_user.id)
-    connection = await db.get_connection_by_owner(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
+    connection = await get_connection_by_owner(call.from_user.id)
     if not connection:
         await call.answer(t("common.connection_not_found", locale), show_alert=True)
         return
@@ -167,7 +174,7 @@ async def cb_back(call: CallbackQuery):
 
 @router.callback_query(F.data == "settings:prefix")
 async def cb_prefix(call: CallbackQuery, state: FSMContext):
-    locale = await db.get_locale(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
     await call.message.edit_text(t("settings.enter_new_prefix", locale))
     await state.set_state(PrefixState.waiting_for_prefix)
     await call.answer()
@@ -175,19 +182,19 @@ async def cb_prefix(call: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(PrefixState.waiting_for_prefix), F.text)
 async def on_new_prefix(message: Message, state: FSMContext):
-    locale = await db.get_locale(message.from_user.id)
+    locale = await get_locale(message.from_user.id)
     new_prefix = message.text.strip()
     if not is_valid_prefix(new_prefix):
         await message.answer(t("settings.prefix_single_char", locale))
         return
 
-    connection = await db.get_connection_by_owner(message.from_user.id)
+    connection = await get_connection_by_owner(message.from_user.id)
     if not connection:
         await message.answer(t("common.not_connected", locale))
         await state.clear()
         return
 
-    await db.set_prefix(connection["connection_id"], new_prefix)
+    await set_prefix(connection["connection_id"], new_prefix)
     await state.clear()
     await message.answer(
         t("settings.prefix_updated", locale, prefix=new_prefix),
@@ -197,13 +204,13 @@ async def on_new_prefix(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "settings:modules")
 async def cb_modules(call: CallbackQuery):
-    locale = await db.get_locale(call.from_user.id)
-    connection = await db.get_connection_by_owner(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
+    connection = await get_connection_by_owner(call.from_user.id)
     if not connection:
         await call.answer(t("common.connection_not_found", locale), show_alert=True)
         return
 
-    disabled = await db.list_disabled_modules(connection["connection_id"])
+    disabled = await list_disabled_modules(connection["connection_id"])
     await call.message.edit_text(
         t("settings.modules_title", locale),
         reply_markup=_modules_keyboard(disabled),
@@ -213,20 +220,20 @@ async def cb_modules(call: CallbackQuery):
 
 @router.callback_query(F.data.startswith("settings:toggle:"))
 async def cb_toggle(call: CallbackQuery):
-    locale = await db.get_locale(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
     module_name = call.data.split(":", 2)[2]
 
-    connection = await db.get_connection_by_owner(call.from_user.id)
+    connection = await get_connection_by_owner(call.from_user.id)
     if not connection:
         await call.answer(t("common.connection_not_found", locale), show_alert=True)
         return
 
-    disabled = await db.list_disabled_modules(connection["connection_id"])
+    disabled = await list_disabled_modules(connection["connection_id"])
     if module_name in disabled:
-        await db.enable_module(connection["connection_id"], module_name)
+        await enable_module(connection["connection_id"], module_name)
     else:
-        await db.disable_module(connection["connection_id"], module_name)
+        await disable_module(connection["connection_id"], module_name)
 
-    disabled = await db.list_disabled_modules(connection["connection_id"])
+    disabled = await list_disabled_modules(connection["connection_id"])
     await call.message.edit_reply_markup(reply_markup=_modules_keyboard(disabled))
     await call.answer()

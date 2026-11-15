@@ -68,7 +68,7 @@ async def sync(styles, args):
     from tortoise import Tortoise
 
     from config import TORTOISE_ORM, settings
-    from core import database as db
+    from db.models import clock as clock_db
     from emoji_clock.sync import runner
 
     await Tortoise.init(config=TORTOISE_ORM)
@@ -76,7 +76,7 @@ async def sync(styles, args):
     try:
         return await runner.run(
             bot,
-            db,
+            clock_db,
             styles,
             owner_id=args.owner_id
             or int(os.getenv("CLOCK_OWNER_ID", runner.DEFAULT_OWNER_ID)),

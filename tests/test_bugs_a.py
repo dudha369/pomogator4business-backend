@@ -2,10 +2,15 @@
 
 import pytest
 
-from core.context import CommandContext
+from app.platform.telegram.context import CommandContext
 from modules.guess_number import cmd_guess
 
 from .conftest import FakeBot, make_message
+from db.models.message_log import log_message, recent_message_log
+from db.models.mirror_bot import get_mirror
+from db.models.profile_backup import get_profile_backup
+from db.models.voice_effect import set_voice_effect
+from app.features.games.service import get_game, save_game
 
 
 def make_ctx(bot, connection, args="", text=".x", from_id=42):
@@ -29,21 +34,19 @@ async def test_guess_huge_number_does_not_crash(connection, raw):
 
 
 async def test_guess_huge_max_is_capped(connection):
-    from core import database as db
 
     bot = FakeBot()
     await cmd_guess(make_ctx(bot, connection, "9" * 30))
-    game = await db.get_guess_game("conn-1", 7)
+    game = await get_game("guess", "conn-1", 7)
     assert game["max_value"] == 1_000_000_000
 
 
 async def test_huge_guess_in_active_game_is_just_too_high(connection):
-    from core import database as db
 
     bot = FakeBot()
     await cmd_guess(make_ctx(bot, connection, "50"))
     await cmd_guess(make_ctx(bot, connection, "9" * 5000))
-    game = await db.get_guess_game("conn-1", 7)
+    game = await get_game("guess", "conn-1", 7)
     assert game["status"] == "active" and game["attempts"] == 1
 
 
@@ -120,13 +123,12 @@ async def test_spam_and_tr_send_plain_text(connection, monkeypatch):
 async def test_archive_view_escapes_old_text(connection, monkeypatch):
     import types
 
-    from core import database as db
     from handlers import settings
 
     async def fake_recent(*_a):
         return [{"event": "deleted", "chat_id": 7, "old_text": EVIL}]
 
-    monkeypatch.setattr(db, "get_recent_archive", fake_recent)
+    monkeypatch.setattr(settings, "get_recent_archive", fake_recent)
     answers = []
 
     async def answer(text, **kw):
@@ -199,14 +201,13 @@ class OrderBot(FakeBot):
 async def _voice_setup(connection, monkeypatch):
     import types
 
-    from core import database as db
     from modules import voice_effects
 
     async def fake_filter(data, flt):
         return b"processed"
 
     monkeypatch.setattr(voice_effects, "apply_audio_filter", fake_filter)
-    await db.set_voice_effect("conn-1", 7, "robot")
+    await set_voice_effect("conn-1", 7, "robot")
     msg = make_message(None, chat_id=7, from_id=42)
     msg.voice = types.SimpleNamespace(file_id="f")
     return voice_effects, msg
@@ -228,21 +229,20 @@ async def test_voice_effect_keeps_original_if_send_fails(connection, monkeypatch
 
 
 async def test_panic_keeps_log_when_delete_fails(connection):
-    from core import database as db
     from modules.panic import cmd_panic
 
     for mid in (1, 2, 3):
-        await db.log_message("conn-1", 7, mid)
+        await log_message("conn-1", 7, mid)
     bot = OrderBot()
     bot.fail_delete = True
     await cmd_panic(make_ctx(bot, connection, "3"))
-    rows = await db.recent_message_log("conn-1", 7, 10)
+    rows = await recent_message_log("conn-1", 7, 10)
     assert [mid for _, mid in rows] == [3, 2, 1], "журнал нужен для повтора"
 
     bot.fail_delete = False  # повтор проходит и стирает журнал
     await cmd_panic(make_ctx(bot, connection, "3"))
     assert bot.deleted[-1]["message_ids"] == [3, 2, 1]
-    assert await db.recent_message_log("conn-1", 7, 10) == []
+    assert await recent_message_log("conn-1", 7, 10) == []
 
 
 async def test_failed_self_delete_does_not_swallow_real_archive_event():
@@ -280,7 +280,6 @@ class ProfileBot(FakeBot):
 async def test_profile_second_run_keeps_original_backup(connection, monkeypatch):
     import types
 
-    from core import database as db
     from modules import profile
 
     async def avatar(bot, user_id):
@@ -300,19 +299,19 @@ async def test_profile_second_run_keeps_original_backup(connection, monkeypatch)
         return profile.cmd_profile(ctx)
 
     await run(100, "Аня")
-    first = await db.get_profile_backup("conn-1")
+    first = await get_profile_backup("conn-1")
     assert first["bio"] == "bio-of-42" and first["photo_data"] == b"photo-42"
 
     await run(200, "Боря")  # второй .profile: бэкап прежний, а не профиль Ани
-    again = await db.get_profile_backup("conn-1")
+    again = await get_profile_backup("conn-1")
     assert again["bio"] == "bio-of-42" and again["photo_data"] == b"photo-42"
 
     await profile.cmd_restore(make_ctx(bot, connection, ""))
     assert bot.bios[-1]["bio"] == "bio-of-42"
-    assert await db.get_profile_backup("conn-1") is None  # после .restore — чисто
+    assert await get_profile_backup("conn-1") is None  # после .restore — чисто
 
     await run(200, "Боря")  # теперь новый бэкап снова возможен
-    assert (await db.get_profile_backup("conn-1"))["bio"] == "bio-of-42"
+    assert (await get_profile_backup("conn-1"))["bio"] == "bio-of-42"
 
 
 # --- 4/5. зеркало и сброс очереди вебхука ---------------------------------------
@@ -424,14 +423,13 @@ async def test_mirror_start_does_not_drop_pending_on_deploy(mirror_env):
 async def test_connect_mirror_saves_nothing_when_start_fails(
     connection, mirror_env, monkeypatch
 ):
-    from core import database as db
     from core.mirror_setup import MirrorSetupError, connect_mirror
 
     MirrorBot.fail_webhook = True
     with pytest.raises(MirrorSetupError) as exc:
         await connect_mirror(42, GOOD_TOKEN)
     assert exc.value.code == "start_failed"
-    assert await db.get_mirror(42) is None
+    assert await get_mirror(42) is None
 
 
 async def test_api_mirror_connect_reports_start_failure(client, mirror_env):
@@ -475,7 +473,7 @@ async def test_mirror_handler_deletes_message_with_token(connection, mirror_env)
 
 async def test_main_webhook_does_not_drop_pending_updates(monkeypatch):
     """Старт приложения ставит вебхук без сброса очереди (деплой не теряет архив)."""
-    import app as app_module
+    import app.main as app_module
     from config import settings
 
     calls = []
@@ -530,8 +528,8 @@ async def test_serialized_game_runs_taps_one_by_one():
     import gc
     import inspect
 
-    from core import game_lock
-    from core.game_lock import serialized_game
+    from app.features.games import lock as game_lock
+    from app.features.games.lock import serialized_game
 
     log = []
 
@@ -562,18 +560,17 @@ async def test_rapid_ttt_taps_do_not_lose_a_move(connection):
     """Два одновременных нажатия: оба хода применяются (раньше второй затирал первый)."""
     import asyncio
 
-    from core import database as db
     from modules import ttt
 
     calls = []
 
     @ttt.serialized_game
     async def fake_move(call):
-        game = await db.get_ttt_game("conn-1", 7)
+        game = await get_game("ttt", "conn-1", 7)
         board = list(game["board"] if game else "." * 9)
         await asyncio.sleep(0)  # точка переключения, где раньше терялся ход
         board[call.idx] = "X"
-        await db.save_ttt_game("conn-1", 7, board="".join(board), status="active")
+        await save_game("ttt", "conn-1", 7, board="".join(board), status="active")
         calls.append(call.idx)
 
     def call(i):
@@ -583,14 +580,14 @@ async def test_rapid_ttt_taps_do_not_lose_a_move(connection):
         )
 
     await asyncio.gather(fake_move(call(0)), fake_move(call(1)))
-    assert (await db.get_ttt_game("conn-1", 7))["board"].count("X") == 2
+    assert (await get_game("ttt", "conn-1", 7))["board"].count("X") == 2
 
 
 # --- 7. spawn(): сильная ссылка и логирование падений -------------------------------
 async def test_spawn_keeps_reference_and_logs_failure(caplog):
     import asyncio
 
-    from core import tasks
+    from app.platform import tasks
 
     async def boom():
         raise ValueError("kaboom")

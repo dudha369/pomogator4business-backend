@@ -12,7 +12,11 @@ import logging
 import time
 
 from config import settings
-from core import database as db
+from db.models.ai import purge_old_drafts
+from db.models.archive_log import expire_archive_media, purge_archive
+from db.models.autoresponder import purge_autoresponder_log
+from db.models.message_history import expire_history_media, purge_history
+from db.models.message_log import trim_message_log
 
 logger = logging.getLogger("bot.retention")
 
@@ -26,26 +30,26 @@ async def run_retention_once(now=None):
     stats = {}
 
     if settings.MEDIA_RETENTION_DAYS > 0:
-        stats["media_expired"] = await db.expire_history_media(
+        stats["media_expired"] = await expire_history_media(
             now - settings.MEDIA_RETENTION_DAYS * day
         )
     if settings.ARCHIVE_MEDIA_RETENTION_DAYS > 0:
-        stats["archive_media_expired"] = await db.expire_archive_media(
+        stats["archive_media_expired"] = await expire_archive_media(
             now - settings.ARCHIVE_MEDIA_RETENTION_DAYS * day
         )
     if settings.HISTORY_RETENTION_DAYS > 0:
-        stats["history_purged"] = await db.purge_history(
+        stats["history_purged"] = await purge_history(
             now - settings.HISTORY_RETENTION_DAYS * day
         )
     if settings.ARCHIVE_RETENTION_DAYS > 0:
-        stats["archive_purged"] = await db.purge_archive(
+        stats["archive_purged"] = await purge_archive(
             now - settings.ARCHIVE_RETENTION_DAYS * day
         )
 
-    stats["autoresponder_log_purged"] = await db.purge_autoresponder_log(now - 30 * day)
-    stats["ai_drafts_purged"] = await db.purge_old_drafts(now - 7 * day)
+    stats["autoresponder_log_purged"] = await purge_autoresponder_log(now - 30 * day)
+    stats["ai_drafts_purged"] = await purge_old_drafts(now - 7 * day)
     if settings.MESSAGE_LOG_KEEP > 0:
-        stats["message_log_trimmed"] = await db.trim_message_log(
+        stats["message_log_trimmed"] = await trim_message_log(
             settings.MESSAGE_LOG_KEEP
         )
     return stats

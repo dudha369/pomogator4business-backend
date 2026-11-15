@@ -1,8 +1,10 @@
 from aiogram.types import Message
 
-from core.i18n import t
-from core.registry import registry
-from core import database as db
+from app.platform.i18n import t
+from app.platform.telegram.registry import registry
+from db.models.known_chat import is_known_chat, mark_known_chat
+from db.models.message_history import has_other_messages
+from db.models.user_locale import get_locale
 from core.utils import log_suppressed
 
 registry.register_passive_module("scam")
@@ -79,7 +81,7 @@ async def handle_new_contact(bot, connection, message: Message):
     owner_id = connection["owner_id"]
     connection_id = connection["connection_id"]
 
-    if await db.is_known_chat(owner_id, chat_id):
+    if await is_known_chat(owner_id, chat_id):
         return
 
     # known_chats — отдельный кэш; если он вдруг пуст не из-за реально
@@ -87,13 +89,13 @@ async def handle_new_contact(bot, connection, message: Message):
     # не должно превращаться в ложную тревогу для людей, с которыми
     # переписка идёт уже давно. Проверяем по факту — есть ли в истории
     # хоть одно сообщение, кроме текущего.
-    if await db.has_other_messages(connection_id, chat_id, message.message_id):
-        await db.mark_known_chat(owner_id, chat_id)
+    if await has_other_messages(connection_id, chat_id, message.message_id):
+        await mark_known_chat(owner_id, chat_id)
         return
 
-    await db.mark_known_chat(owner_id, chat_id)
+    await mark_known_chat(owner_id, chat_id)
 
-    locale = await db.get_locale(owner_id)
+    locale = await get_locale(owner_id)
     results = await _run_checks(user.id, locale)
     text = _format_profile(locale, user) + "\n\n" + _format_checks(locale, results)
 

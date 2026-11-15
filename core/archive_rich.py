@@ -41,7 +41,7 @@ from aiogram.types import (
 
 from core.archive_notice import EMPTY, format_forward, render_text
 from core.archive_prefs import ArchivePrefs, defaults
-from core.i18n import t
+from app.platform.i18n import t
 from core.rich_text import html_to_rich
 
 VISUAL = ("photo", "video", "animation")
