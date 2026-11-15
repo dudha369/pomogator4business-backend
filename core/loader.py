@@ -1,9 +1,13 @@
 import importlib
 import pkgutil
 
-import modules
+import commands
+from app.features import FEATURES
 
 
-def load_modules():
-    for module_info in pkgutil.iter_modules(modules.__path__):
-        importlib.import_module(f"modules.{module_info.name}")
+def load_commands():
+    """Импорт регистрирует команды (декораторы `@command`) в registry."""
+    for info in pkgutil.iter_modules(commands.__path__):
+        importlib.import_module(f"commands.{info.name}")
+    for feature in FEATURES:
+        importlib.import_module(f"app.features.{feature}.bot")

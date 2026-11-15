@@ -3,9 +3,10 @@ import pytest
 from db.models.chat_flags import set_chat_flags
 from db.models.favorite_chat import set_favorite_chat
 from db.models.message_history import save_history
-from db.models.reminders import upsert_reminder_settings
+from app.features.reminders import bot as rem_bot
+from app.features.reminders import service as rem
+from app.features.reminders.service import upsert_reminder_settings
 from db.models.user_locale import set_timezone_offset
-from core import reminders as rem
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID
 
@@ -71,7 +72,7 @@ async def seed(chat, mid, ts, text, owner=False):
 
 
 async def tick(bot, now=NOW):
-    return await rem.process_owner(bot, OWNER_ID, now=now)
+    return await rem_bot.process_owner(bot, OWNER_ID, now=now)
 
 
 async def test_reminds_once_per_series_and_escapes(setup, bot):
@@ -107,7 +108,7 @@ async def test_disabled_or_quiet_or_no_connection(setup, bot):
     await upsert_reminder_settings(OWNER_ID, enabled=True)
     assert await tick(bot) == 1  # после тихих часов напомнит
     assert (
-        await rem.process_owner(bot, 999, now=NOW) == 0
+        await rem_bot.process_owner(bot, 999, now=NOW) == 0
     )  # чужой владелец без подключения
 
 
@@ -203,7 +204,7 @@ async def test_waiting_endpoint_and_command(client, bot, api_bot):
 
 async def test_waiting_command_sends_list_privately(connection, bot):
     from app.platform.telegram.context import CommandContext
-    from modules.reminders import cmd_waiting
+    from app.features.reminders.bot import cmd_waiting
 
     from .conftest import make_message
 

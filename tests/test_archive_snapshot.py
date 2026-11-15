@@ -11,7 +11,7 @@ from db.models.module_settings import disable_module
 from core.archive_notice import CAPTION_LIMIT, build_notice, visible_len
 from core.snapshot import build_snapshot, edit_kind, entry_snapshot, public_view
 from handlers.business_messages import on_business_message
-from modules.archive import on_business_deleted, on_business_edited
+from commands.archive import on_business_deleted, on_business_edited
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 
@@ -202,7 +202,7 @@ async def test_deleted_location_is_one_message_without_duplicated_text(ready, bo
 
 
 async def test_info_button_answers_with_toast(ready, bot):
-    from modules.archive import on_info
+    from commands.archive import on_info
 
     class Call:
         from_user = types.SimpleNamespace(id=42)

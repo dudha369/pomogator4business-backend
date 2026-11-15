@@ -5,8 +5,8 @@ import types
 import pytest
 
 from core import mentions
-from modules.checkers import cmd_chk, on_chk_callback
-from modules.ttt import cmd_ttt, on_ttt_callback
+from app.features.games.bot.checkers import cmd_chk, on_chk_callback
+from app.features.games.bot.ttt import cmd_ttt, on_ttt_callback
 
 from .conftest import CONNECTION_ID, FakeBot, make_message
 from app.features.games.service import get_game
@@ -174,7 +174,7 @@ async def test_ttt_restart_uses_same_placeholder_in_every_locale(connection, bot
 
 @pytest.mark.parametrize("locale", ["ru", "en", "uk"])
 async def test_ttt_texts_render_in_every_locale(connection, bot, locale):
-    from modules.ttt import _build_text, _players
+    from app.features.games.bot.ttt import _build_text, _players
 
     await start_ttt(bot, connection)
     await on_ttt_callback(Call("ttt:accept", BORIS, "Боря"), bot)
@@ -202,7 +202,7 @@ async def test_checkers_accept_and_text_use_mentions(connection, bot):
 
 
 async def test_minesweeper_start_without_name_column(connection, bot):
-    from modules.minesweeper import cmd_ms
+    from app.features.games.bot.minesweeper import cmd_ms
 
     await cmd_ms(command_ctx(bot, connection, ANYA, "Аня"))
     game = await get_game("ms", CONNECTION_ID, CHAT)
@@ -214,7 +214,7 @@ async def test_minesweeper_start_without_name_column(connection, bot):
 
 def test_ttt_keyboard_buttons_always_have_text():
     """Без text aiogram кидает ValidationError (так сломался «Принять»)."""
-    from modules.ttt import _build_keyboard
+    from app.features.games.bot.ttt import _build_keyboard
 
     for board, finished in (
         (".........", False),

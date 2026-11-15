@@ -28,11 +28,11 @@ from app.platform.telegram.registry import registry
 from core.snapshot import build_snapshot
 from app.platform.tasks import spawn
 from core.utils import log_suppressed
-from modules.mute import handle_incoming as handle_mute_incoming
-from modules.scam import handle_new_contact
-from modules.type_ import TYPE_TRIGGERS, handle_type_trigger
-from modules.voice_effects import handle_voice_message
-from modules.wordle import handle_wordle_guess
+from app.features.mute.bot import handle_incoming as handle_mute_incoming
+from commands.scam import handle_new_contact
+from commands.type_ import TYPE_TRIGGERS, handle_type_trigger
+from commands.voice_effects import handle_voice_message
+from app.features.games.bot.wordle import handle_wordle_guess
 
 logger = logging.getLogger("bot.business_messages")
 router = Router(name="business_messages")

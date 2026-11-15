@@ -34,7 +34,7 @@ from db.models.module_settings import (
     enable_module,
     list_disabled_modules,
 )
-from db.models.quick_template import count_templates
+from app.features.templates.service import count_templates
 from db.models.user_locale import get_timezone_name, get_timezone_offset
 from core import scheduler
 from app.platform.telegram.context import CommandContext
@@ -185,7 +185,7 @@ async def test_update_logging_hides_message_text(caplog):
 # --- 16. импорт бэкапа соблюдает квоты ------------------------------------------
 async def test_backup_import_respects_quotas(client):
     from api.autoresponder import MAX_KEYWORDS
-    from api.templates import MAX_TEMPLATES
+    from app.features.templates.api import MAX_TEMPLATES
 
     h = client.owner
     payload = {
@@ -235,7 +235,7 @@ async def test_backup_import_existing_keyword_is_replaced_at_quota(client):
     ],
 )
 def test_calc_rejects_huge_expressions(expr):
-    from modules.calc import CalcError, safe_eval
+    from commands.calc import CalcError, safe_eval
 
     with pytest.raises(
         (CalcError, SyntaxError, ValueError, OverflowError, RecursionError)
@@ -244,7 +244,7 @@ def test_calc_rejects_huge_expressions(expr):
 
 
 def test_calc_still_works():
-    from modules.calc import safe_eval
+    from commands.calc import safe_eval
 
     assert safe_eval("2**10 + 3*4") == 1036
     assert safe_eval("10/4") == 2.5
@@ -259,7 +259,7 @@ def _board(pieces):
 
 
 def test_checkers_man_promoted_mid_capture_continues_as_king():
-    from modules import checkers as c
+    from app.features.games.bot import checkers as c
 
     # белая шашка (2,1) бьёт (1,2) и встаёт на (0,3) — последняя горизонталь;
     # как дамка она бьёт дальше по диагонали через (2,5) на (3,6)
@@ -270,7 +270,7 @@ def test_checkers_man_promoted_mid_capture_continues_as_king():
 
 
 def test_checkers_captured_piece_blocks_until_series_ends():
-    from modules import checkers as c
+    from app.features.games.bot import checkers as c
 
     board = _board({56: "W", 35: "b", 49: "b"})
     after = c.apply_single_move(board, 56, 28, 35)
@@ -281,14 +281,14 @@ def test_checkers_captured_piece_blocks_until_series_ends():
 
 
 def test_checkers_captured_marker_is_rendered():
-    from modules import checkers as c
+    from app.features.games.bot import checkers as c
 
     assert "x" in c._SYMBOLS
 
 
 # --- 19. сапёр ------------------------------------------------------------------
 def test_minesweeper_first_click_mine_is_relocated():
-    from modules.minesweeper import relocate_mine
+    from app.features.games.bot.minesweeper import relocate_mine
 
     mines = {0, 1, 2}
     moved = relocate_mine(4, mines, 1)
@@ -300,7 +300,7 @@ def _button_texts(markup):
 
 
 def test_minesweeper_flags_after_loss():
-    from modules import minesweeper as ms
+    from app.features.games.bot import minesweeper as ms
 
     keyboard = ms._game_keyboard("ru", 3, {0, 1}, {4}, {0, 8}, None, True, False)
     texts = _button_texts(keyboard)
@@ -332,7 +332,7 @@ async def test_serialized_command_does_not_overlap(connection):
 
 
 async def test_hangman_fast_double_guess_keeps_both_letters(connection):
-    from modules.hangman import cmd_hangman
+    from app.features.games.bot.hangman import cmd_hangman
 
     bot = FakeBot()
     import json
@@ -396,7 +396,7 @@ async def test_present_owner_falls_back_to_reply_if_edit_fails(connection):
 
 
 async def test_ttt_callback_answered_once(connection):
-    from modules.ttt import on_ttt_callback
+    from app.features.games.bot.ttt import on_ttt_callback
 
     from .test_games import BORIS, Call, start_ttt
 
@@ -463,7 +463,7 @@ async def _own_message(bot, text):
 
 
 async def _edit_own(bot, msg, text):
-    from modules.archive import on_business_edited
+    from commands.archive import on_business_edited
 
     edited = make_message(text, chat_id=7, from_id=OWNER_ID)
     edited.message_id = msg.message_id
@@ -682,14 +682,14 @@ async def test_allowlist_blocks_other_users(client, monkeypatch):
 # --- 20. мелочи ---------------------------------------------------------------------
 def test_city_skips_yery_and_split_has_words_alias():
     from app.platform.telegram.registry import registry
-    from modules import city
+    from app.features.games.bot import city
 
     assert "Ы" in city._SKIP_LETTERS
     assert registry.find("words") is not None
 
 
 async def test_qr_too_long_text_is_rejected_politely(connection):
-    from modules.qr import cmd_qr
+    from commands.qr import cmd_qr
 
     bot = FakeBot()
     await cmd_qr(make_ctx(bot, connection, "я" * 5000))

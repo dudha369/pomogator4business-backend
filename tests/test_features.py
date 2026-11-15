@@ -10,10 +10,10 @@ from db.models.module_settings import (
     enable_module,
     list_disabled_modules,
 )
-from db.models.quick_template import save_template
+from app.features.templates.service import save_template
 from core import stats
 from handlers.bot_commands import on_dm_command, split_command
-from modules.readall import cmd_readall
+from commands.readall import cmd_readall
 from core.readall import ReadFilter, parse_filters, select_chats
 from handlers.business_messages import on_business_message
 

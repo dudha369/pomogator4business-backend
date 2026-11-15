@@ -10,10 +10,10 @@ from tortoise import Tortoise
 from api import setup_routers
 from bot_instance import bot, dp
 from config import TORTOISE_ORM, settings
-from core.loader import load_modules
+from core.loader import load_commands
 from core.logging_config import configure_logging
 from core.mirror_manager import mirror_dispatcher, mirror_manager
-from core.reminders import run_reminders_loop
+from app.features.reminders.bot import run_reminders_loop
 from core.retention import run_retention_loop
 from core.scheduled import run_scheduled_loop
 from core.scheduler import run_emoji_clock
@@ -55,7 +55,7 @@ async def _set_webhook() -> None:
 async def lifespan(app: FastAPI):
     configure_logging()
 
-    load_modules()
+    load_commands()
     await Tortoise.init(config=TORTOISE_ORM)
 
     await _set_webhook()

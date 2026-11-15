@@ -21,6 +21,8 @@ import aiosqlite
 from tortoise import Tortoise
 
 from config import TORTOISE_ORM
+from app.features.mute.models import Mute
+from app.features.profile.models import ProfileBackup
 from db.models import (
     ArchiveLog,
     ClockEmoji,
@@ -33,8 +35,6 @@ from db.models import (
     MessageHistory,
     MessageLog,
     MirrorBot,
-    Mute,
-    ProfileBackup,
     StoryAutopost,
     UserLocale,
     VoiceEffect,
@@ -189,7 +189,7 @@ async def main():
                 last_post_date=r["last_post_date"],
             ),
         )
-        # story_queue больше не существует как фича (см. modules/story.py) —
+        # story_queue больше не существует как фича (см. commands/story.py) —
         # её данные сознательно не переносятся.
         connection_owner = await _connection_owner_map(conn)
         await migrate_known_chats(conn, connection_owner)

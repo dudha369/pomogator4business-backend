@@ -1,6 +1,6 @@
 import pytest
 
-from modules.ping import cmd_ping
+from commands.ping import cmd_ping
 from app.platform.telegram.context import CommandContext
 
 from .conftest import make_message, OWNER_ID

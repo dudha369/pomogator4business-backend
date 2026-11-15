@@ -6,7 +6,7 @@ class KnownChat(Model):
     """Собеседник, которого владелец уже "знает" — привязано к owner_id, а
     не к connection_id: переподключение бота (новый business_connection_id)
     не должно сбрасывать список и заставлять bot повторно "проверять"
-    старых контактов, см. modules/scam.py."""
+    старых контактов, см. commands/scam.py."""
 
     id = fields.IntField(pk=True)
     owner_id = fields.BigIntField()

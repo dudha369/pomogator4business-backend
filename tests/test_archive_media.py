@@ -4,7 +4,7 @@ import pytest
 
 from db.models.module_settings import disable_module
 from handlers.business_messages import on_business_message
-from modules.archive import on_business_deleted
+from commands.archive import on_business_deleted
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 
@@ -138,7 +138,7 @@ async def test_retention_frees_bytes_but_file_id_keeps_media_available(
 
 async def test_edited_message_media_stays_available(archive_ready, bot, client):
     """Подпись фото изменили, потом удалили: медиа должно сохраниться."""
-    from modules.archive import on_business_edited
+    from commands.archive import on_business_edited
 
     msg = await receive(bot, caption="до", photo=[tg_file("p")])
     edited = make_message(
