@@ -17,6 +17,7 @@ import pytest_asyncio  # noqa: E402
 from tortoise import Tortoise  # noqa: E402
 
 import bot_instance  # noqa: E402
+from tests import html_guard  # noqa: E402
 from config import TORTOISE_ORM  # noqa: E402
 from db.models.connection import get_connection, upsert_connection
 from app.platform.ttl_cache import clear_all  # noqa: E402
@@ -56,6 +57,7 @@ class FakeBot:
     """Записывает вызовы Bot API, которыми пользуется код бота."""
 
     def __init__(self):
+        self.html_problems = []  # нарушения parse_mode (см. tests/html_guard.py)
         self.sent = []  # send_message
         self.edited = []  # edit_message_text
         self.deleted = []  # delete_business_messages
@@ -77,12 +79,17 @@ class FakeBot:
         self.album_sent.append(kwargs)
         return []
 
+    def _check(self, method, kwargs):
+        self.html_problems += html_guard.problems(method, kwargs)
+
     async def send_message(self, **kwargs):
+        self._check("send_message", kwargs)
         self.sent.append(kwargs)
         self._next_id += 1
         return types.SimpleNamespace(message_id=self._next_id)
 
     async def edit_message_text(self, **kwargs):
+        self._check("edit_message_text", kwargs)
         self.edited.append(kwargs)
 
     async def delete_business_messages(self, **kwargs):
@@ -92,6 +99,7 @@ class FakeBot:
         self.reads.append(kwargs)
 
     async def send_document(self, **kwargs):
+        self._check("send_document", kwargs)
         self.documents.append(kwargs)
 
     # --- скачивание файлов и повторная отправка медиа ---
@@ -104,6 +112,7 @@ class FakeBot:
         return io.BytesIO(b"bytes:" + file_path.encode())
 
     async def _send_media(self, kind, **kwargs):
+        self._check(f"send_{kind}", kwargs)
         self.media_sent.append((kind, kwargs))
         return types.SimpleNamespace(message_id=1)
 
@@ -156,7 +165,10 @@ class FakeBot:
 
 @pytest.fixture
 def bot():
-    return FakeBot()
+    fake = FakeBot()
+    yield fake
+    # все тесты с ботом заодно проверяют parse_mode у исходящих текстов
+    assert not fake.html_problems, "\n".join(fake.html_problems)
 
 
 _counter = {"n": 0}

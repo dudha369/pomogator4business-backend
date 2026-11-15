@@ -190,6 +190,7 @@ async def _send_media(
         method, arg = _CAPTIONABLE[kind]
         if caption:
             extra["caption"] = caption
+            extra["parse_mode"] = "html"  # подпись собрана как HTML (tg-emoji, <b>)
             if kind in _CAPTION_ABOVE and above:
                 extra["show_caption_above_media"] = True
         if kind in _CAPTION_ABOVE and snap.get("has_spoiler"):
@@ -404,6 +405,7 @@ async def _notify_deleted(
     await bot.send_message(
         chat_id=chat_id,
         text=text,
+        parse_mode="html",
         reply_markup=delete_one,
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
@@ -434,6 +436,7 @@ async def _notify_album(bot, chat_id, locale, mention, sender, items, prefs, own
     await bot.send_message(
         chat_id=chat_id,
         text=header,
+        parse_mode="html",
         reply_markup=delete_one,
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
@@ -651,6 +654,7 @@ async def _notify_edited(
         sent = await bot.send_message(
             chat_id=chat_id,
             text=text,
+            parse_mode="html",
             reply_markup=link_kb,
             link_preview_options=no_preview,
         )
@@ -662,6 +666,7 @@ async def _notify_edited(
         sent = await bot.send_message(
             chat_id=chat_id,
             text=text,
+            parse_mode="html",
             reply_markup=link_kb,
             link_preview_options=no_preview,
         )
@@ -693,6 +698,7 @@ async def _notify_edited(
     notice = await bot.send_message(
         chat_id=chat_id,
         text=text,
+        parse_mode="html",
         reply_markup=link_kb,
         link_preview_options=no_preview,
     )
