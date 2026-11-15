@@ -7,9 +7,9 @@ from app.platform.telegram.middleware import UpdateLoggingMiddleware
 from core.self_actions import install_edit_marker
 from handlers.connection import router as connection_router
 from handlers.business_messages import router as business_messages_router
-from modules.archive import router as archive_router
+from commands.archive import router as archive_router
 from handlers.mirror import router as mirror_router
-from handlers.games import router as games_router
+from app.features.games.bot import router as games_router
 from handlers.settings import router as settings_router
 from handlers.ai_drafts import router as ai_drafts_router
 from handlers.bot_commands import router as bot_commands_router

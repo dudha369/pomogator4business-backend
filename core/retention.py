@@ -49,9 +49,7 @@ async def run_retention_once(now=None):
     stats["autoresponder_log_purged"] = await purge_autoresponder_log(now - 30 * day)
     stats["ai_drafts_purged"] = await purge_old_drafts(now - 7 * day)
     if settings.MESSAGE_LOG_KEEP > 0:
-        stats["message_log_trimmed"] = await trim_message_log(
-            settings.MESSAGE_LOG_KEEP
-        )
+        stats["message_log_trimmed"] = await trim_message_log(settings.MESSAGE_LOG_KEEP)
     return stats
 
 

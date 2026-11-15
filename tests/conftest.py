@@ -20,10 +20,10 @@ import bot_instance  # noqa: E402
 from config import TORTOISE_ORM  # noqa: E402
 from db.models.connection import get_connection, upsert_connection
 from app.platform.ttl_cache import clear_all  # noqa: E402
-from core.loader import load_modules  # noqa: E402
+from core.loader import load_commands  # noqa: E402
 
 bot_instance.setup_routes()
-load_modules()
+load_commands()
 
 OWNER_ID = 42
 CONNECTION_ID = "conn-1"

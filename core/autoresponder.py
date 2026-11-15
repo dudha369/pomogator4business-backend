@@ -202,9 +202,7 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
     text = message.text or message.caption or ""
     is_command = bool(text) and text.startswith(connection["prefix"])
 
-    keywords = (
-        await list_keyword_replies(owner_id) if text and not is_command else []
-    )
+    keywords = await list_keyword_replies(owner_id) if text and not is_command else []
     ai_settings = await get_ai_settings(owner_id)
     ai_on = bool(
         ai_settings

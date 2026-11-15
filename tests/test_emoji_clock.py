@@ -271,9 +271,7 @@ async def test_analog_style_shares_emoji_between_am_and_pm(database):
         FakeStickerBot(),
     )  # 60 слотов: любой час -> 00:MM
     await sync(bot, [style])
-    assert await get_clock_emoji("05:07", "t1") == await get_clock_emoji(
-        "17:07", "t1"
-    )
+    assert await get_clock_emoji("05:07", "t1") == await get_clock_emoji("17:07", "t1")
     assert (await get_clock_emoji("05:07", "t1")).endswith("|00:07")
     assert sum(len(v) for v in bot.sets.values()) == 60  # загружено 60, а не 1440
 
@@ -307,9 +305,7 @@ async def test_failed_style_is_not_switched_and_can_be_resumed(database):
         "b2": 2,
         "g1": 1,
     }  # g1 готов, b2 остался на старых
-    assert (await get_clock_emoji("00:00", "b2")).startswith(
-        "legacy"
-    )  # БД не тронута
+    assert (await get_clock_emoji("00:00", "b2")).startswith("legacy")  # БД не тронута
     assert "clock_b21_by_oldbot" in bot.sets  # старые паки не удалены
 
     bot.fail_set_prefix = None

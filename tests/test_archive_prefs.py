@@ -14,7 +14,7 @@ from db.models.module_settings import disable_module
 from core.archive_prefs import defaults, parse, validate_patch
 from handlers import business_messages
 from handlers.business_messages import on_business_message
-from modules.archive import on_business_deleted, on_business_edited
+from commands.archive import on_business_deleted, on_business_edited
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 from .test_archive_snapshot import block_text, kinds, media_of, photo, texts

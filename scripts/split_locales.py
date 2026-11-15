@@ -5,7 +5,7 @@ from core.locales.ru import RU
 from core.locales.uk import UK
 
 OUTPUT_THEMES_DIR = "core/locales/themes"
-OUTPUT_MODULES_DIR = "modules/locales"
+OUTPUT_MODULES_DIR = "commands/locales"
 
 LANGS = {"RU": RU, "EN": EN, "UK": UK}
 

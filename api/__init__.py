@@ -16,10 +16,10 @@ from api.favorites import router as favorites_router
 from api.chats import router as chats_router
 from api.ping import router as ping_router
 from api.archive_export import router as archive_export_router
-from api.templates import router as templates_router
+from app.features.templates.api import router as templates_router
 from api.chat_flags import router as chat_flags_router
 from api.ai import router as ai_router
-from api.reminders import router as reminders_router
+from app.features.reminders.api import router as reminders_router
 from api.backup import router as backup_router
 
 

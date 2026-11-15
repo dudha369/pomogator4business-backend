@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from api.aliases import MAX_ALIASES_PER_OWNER
 from api.autoresponder import MAX_KEYWORDS
 from api.deps import require_connection, require_user
-from api.templates import MAX_TEMPLATES
+from app.features.templates.api import MAX_TEMPLATES
 from db.models.ai import get_ai_settings, upsert_ai_settings
 from db.models.autoresponder import (
     add_keyword_reply,
@@ -29,13 +29,16 @@ from db.models.command_alias import (
 from db.models.connection import set_prefix
 from db.models.favorite_chat import list_favorite_chat_ids, set_favorite_chat
 from db.models.module_settings import disable_module, list_disabled_modules
-from db.models.quick_template import (
+from app.features.templates.service import (
     count_templates,
     get_template,
     list_templates,
     save_template,
 )
-from db.models.reminders import get_reminder_settings, upsert_reminder_settings
+from app.features.reminders.service import (
+    get_reminder_settings,
+    upsert_reminder_settings,
+)
 from db.models.user_locale import (
     get_timezone_name,
     get_timezone_offset,

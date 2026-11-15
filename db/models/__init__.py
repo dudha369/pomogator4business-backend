@@ -9,8 +9,6 @@ from .message_history import MessageHistory
 from .message_log import MessageLog
 from .mirror_bot import MirrorBot
 from .module_settings import DisabledModule
-from .mute import Mute
-from .profile_backup import ProfileBackup
 from .scheduled_task import ScheduledTask
 from .story import StoryAutopost
 from .user_locale import UserLocale
@@ -29,8 +27,6 @@ __all__ = [
     "MessageHistory",
     "MessageLog",
     "MirrorBot",
-    "Mute",
-    "ProfileBackup",
     "ScheduledTask",
     "StoryAutopost",
     "UserLocale",

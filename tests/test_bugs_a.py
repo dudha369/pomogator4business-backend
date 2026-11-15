@@ -3,12 +3,12 @@
 import pytest
 
 from app.platform.telegram.context import CommandContext
-from modules.guess_number import cmd_guess
+from app.features.games.bot.guess_number import cmd_guess
 
 from .conftest import FakeBot, make_message
 from db.models.message_log import log_message, recent_message_log
 from db.models.mirror_bot import get_mirror
-from db.models.profile_backup import get_profile_backup
+from app.features.profile.service import get_profile_backup
 from db.models.voice_effect import set_voice_effect
 from app.features.games.service import get_game, save_game
 
@@ -60,7 +60,7 @@ EVIL = "a <b> & <i>x"
 
 
 async def test_8ball_escapes_question(connection):
-    from modules.eightball import cmd_8ball
+    from commands.eightball import cmd_8ball
 
     bot = FakeBot()
     await cmd_8ball(make_ctx(bot, connection, EVIL))
@@ -71,10 +71,10 @@ async def test_8ball_escapes_question(connection):
 @pytest.mark.parametrize(
     "module, func, args",
     [
-        ("modules.bomb", "cmd_bomb", f"10s {EVIL}"),
-        ("modules.split", "cmd_split", EVIL),
-        ("modules.type_", "cmd_type", EVIL),
-        ("modules.plove", "cmd_plove", EVIL),
+        ("commands.bomb", "cmd_bomb", f"10s {EVIL}"),
+        ("commands.split", "cmd_split", EVIL),
+        ("commands.type_", "cmd_type", EVIL),
+        ("commands.plove", "cmd_plove", EVIL),
     ],
 )
 async def test_verbatim_commands_send_plain_text(
@@ -101,7 +101,7 @@ async def test_verbatim_commands_send_plain_text(
 async def test_spam_and_tr_send_plain_text(connection, monkeypatch):
     import asyncio
 
-    from modules import spam, tr
+    from commands import spam, tr
 
     monkeypatch.setattr(spam, "_DELAY", 0)
     bot = FakeBot()
@@ -201,7 +201,7 @@ class OrderBot(FakeBot):
 async def _voice_setup(connection, monkeypatch):
     import types
 
-    from modules import voice_effects
+    from commands import voice_effects
 
     async def fake_filter(data, flt):
         return b"processed"
@@ -229,7 +229,7 @@ async def test_voice_effect_keeps_original_if_send_fails(connection, monkeypatch
 
 
 async def test_panic_keeps_log_when_delete_fails(connection):
-    from modules.panic import cmd_panic
+    from commands.panic import cmd_panic
 
     for mid in (1, 2, 3):
         await log_message("conn-1", 7, mid)
@@ -280,7 +280,7 @@ class ProfileBot(FakeBot):
 async def test_profile_second_run_keeps_original_backup(connection, monkeypatch):
     import types
 
-    from modules import profile
+    from app.features.profile import bot as profile
 
     async def avatar(bot, user_id):
         return f"photo-{user_id}".encode()
@@ -492,7 +492,7 @@ async def test_main_webhook_does_not_drop_pending_updates(monkeypatch):
 # --- 6/9. уведомление о правке: обрезка и вынос в поток ---------------------------
 async def test_classic_edit_notice_is_clipped_below_telegram_limit(connection):
     from core.archive_prefs import defaults
-    from modules.archive import _notify_edited
+    from commands.archive import _notify_edited
 
     prefs = defaults()
     prefs = (
@@ -515,7 +515,7 @@ async def test_classic_edit_notice_is_clipped_below_telegram_limit(connection):
 
 
 async def test_highlight_changes_async_matches_sync():
-    from modules.archive import highlight_changes, highlight_changes_async
+    from commands.archive import highlight_changes, highlight_changes_async
 
     assert await highlight_changes_async("abc", "abXc") == highlight_changes(
         "abc", "abXc"
@@ -560,7 +560,7 @@ async def test_rapid_ttt_taps_do_not_lose_a_move(connection):
     """Два одновременных нажатия: оба хода применяются (раньше второй затирал первый)."""
     import asyncio
 
-    from modules import ttt
+    from app.features.games.bot import ttt
 
     calls = []
 

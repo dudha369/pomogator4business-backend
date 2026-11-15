@@ -1,4 +1,4 @@
-"""Разовая чистка: убирает неиспользуемые ключи "cmddesc.*" из modules/locales/*.py
+"""Разовая чистка: убирает неиспользуемые ключи "cmddesc.*" из commands/locales/*.py
 (их читал старый api/commands.py — он давно заменён на схему cmdmeta.*, но сами
 строки остались висеть мёртвым грузом в словарях). Заодно убирает автогенерированный
 докстринг первой строкой файла, если он там ещё остался — после переноса на cmdmeta
@@ -12,7 +12,7 @@
 import re
 from pathlib import Path
 
-LOCALES_DIR = Path("modules/locales")
+LOCALES_DIR = Path("commands/locales")
 CMDDESC_LINE = re.compile(r'^\s*"cmddesc\.[^"]+":\s*".*",?\s*$')
 DOCSTRING_LINE = re.compile(
     r'^"""Автоматически сгенерировано scripts/split_locales\.py\."""$'

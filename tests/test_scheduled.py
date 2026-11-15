@@ -12,8 +12,8 @@ from db.models.scheduled_task import (
 )
 from core import scheduled
 from app.platform.telegram.context import CommandContext
-from modules.bomb import cmd_bomb
-from modules.timer import cmd_timer
+from commands.bomb import cmd_bomb
+from commands.timer import cmd_timer
 
 from .conftest import CONNECTION_ID, FakeBot, make_message
 
