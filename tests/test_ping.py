@@ -1,7 +1,7 @@
 import pytest
 
 from modules.ping import cmd_ping
-from core.context import CommandContext
+from app.platform.telegram.context import CommandContext
 
 from .conftest import make_message, OWNER_ID
 
@@ -34,7 +34,7 @@ async def test_ping_command_replies_with_pong(connection, bot):
 
 @pytest.mark.parametrize("path", ["/", "/health"])
 def test_health_endpoints_accept_head_for_uptime_monitors(path):
-    import app as app_module
+    import app.main as app_module
 
     methods = set()
     for route in app_module.app.routes:

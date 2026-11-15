@@ -11,9 +11,10 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner
-from core import database as db
+from db.models.favorite_chat import list_favorite_chat_ids
+from db.models.message_history import list_last_incoming_by_chat, list_recent_chats
 from core.readall import ReadFilter, find_chats, read_chats
-from core.tasks import spawn
+from app.platform.tasks import spawn
 
 router = APIRouter()
 logger = logging.getLogger("bot.chats_api")
@@ -25,12 +26,12 @@ _jobs: dict[str, dict] = {}  # connection_id -> состояние послед�
 @router.get("/chats")
 async def list_chats(owner: Owner = Depends(current_owner)):
     user, connection = owner.user, owner.connection
-    chats = await db.list_recent_chats(connection["connection_id"], 200)
+    chats = await list_recent_chats(connection["connection_id"], 200)
     incoming = {
         row["chat_id"]: row["last_at"]
-        for row in await db.list_last_incoming_by_chat(connection["connection_id"])
+        for row in await list_last_incoming_by_chat(connection["connection_id"])
     }
-    favorites = await db.list_favorite_chat_ids(user["id"])
+    favorites = await list_favorite_chat_ids(user["id"])
     return {
         "chats": [
             {

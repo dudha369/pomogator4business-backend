@@ -1,8 +1,8 @@
 import ast
 import operator
 
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 _OPS = {
     ast.Add: operator.add,

@@ -4,8 +4,8 @@ import io
 import qrcode
 from aiogram.types import BufferedInputFile
 
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 
 # QR версии 40 вмещает ~2300 байт; в UTF-8 кириллица занимает по 2 байта

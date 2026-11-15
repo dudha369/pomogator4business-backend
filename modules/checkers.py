@@ -1,11 +1,13 @@
 from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.game_lock import serialized_game
-from core import database as db
-from core.i18n import t
+from app.features.games.lock import serialized_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
+from app.platform.i18n import t
 from core.mentions import format_mention, mention, remember
-from core.registry import command
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 router = Router(name="chk")
 
@@ -289,7 +291,8 @@ async def cmd_chk(ctx):
     starter = ctx.message.from_user
     remember(starter)
 
-    await db.save_chk_game(
+    await save_game(
+        "chk",
         ctx.connection_id,
         ctx.chat_id,
         board=initial_board(),
@@ -310,7 +313,7 @@ async def cmd_chk(ctx):
     message_id = await ctx.present(
         text, reply_markup=_challenge_keyboard(), parse_mode="html"
     )
-    await db.save_chk_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("chk", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("chk:"))
@@ -324,17 +327,17 @@ async def on_chk_callback(call: CallbackQuery, bot: Bot):
     business_connection_id = call.message.business_connection_id
     chat_id = call.message.chat.id
 
-    game = await db.get_chk_game(business_connection_id, chat_id)
+    game = await get_game("chk", business_connection_id, chat_id)
     if not game:
         await call.answer()
         return
 
-    connection = await db.get_connection(business_connection_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    connection = await get_connection(business_connection_id)
+    locale = await get_locale(connection["owner_id"]) if connection else "ru"
 
     if game["status"] == "pending":
         if action == "decline":
-            await db.save_chk_game(business_connection_id, chat_id, status="finished")
+            await save_game("chk", business_connection_id, chat_id, status="finished")
             await call.message.edit_text(t("chk.declined", locale))
             await call.answer()
             return
@@ -343,13 +346,14 @@ async def on_chk_callback(call: CallbackQuery, bot: Bot):
                 await call.answer(t("chk.cant_accept_own", locale), show_alert=True)
                 return
             remember(call.from_user)
-            await db.save_chk_game(
+            await save_game(
+                "chk",
                 business_connection_id,
                 chat_id,
                 player_b_id=call.from_user.id,
                 status="active",
             )
-            game = await db.get_chk_game(business_connection_id, chat_id)
+            game = await get_game("chk", business_connection_id, chat_id)
             await call.message.edit_text(
                 _build_text(locale, game, None, await _players(bot, game, locale)),
                 reply_markup=_build_keyboard(game["board"], None),
@@ -412,7 +416,7 @@ async def on_chk_callback(call: CallbackQuery, bot: Bot):
             msg = "chk.must_capture_elsewhere" if must_capture else "chk.no_moves"
             await call.answer(t(msg, locale), show_alert=True)
             return
-        await db.save_chk_game(business_connection_id, chat_id, selected=idx)
+        await save_game("chk", business_connection_id, chat_id, selected=idx)
         await call.message.edit_reply_markup(
             reply_markup=_build_keyboard(board, idx, actions)
         )
@@ -420,7 +424,7 @@ async def on_chk_callback(call: CallbackQuery, bot: Bot):
         return
 
     if idx == selected:
-        await db.save_chk_game(business_connection_id, chat_id, selected=None)
+        await save_game("chk", business_connection_id, chat_id, selected=None)
         await call.message.edit_reply_markup(reply_markup=_build_keyboard(board, None))
         await call.answer()
         return
@@ -432,7 +436,7 @@ async def on_chk_callback(call: CallbackQuery, bot: Bot):
             msg = "chk.must_capture_elsewhere" if must_capture else "chk.no_moves"
             await call.answer(t(msg, locale), show_alert=True)
             return
-        await db.save_chk_game(business_connection_id, chat_id, selected=idx)
+        await save_game("chk", business_connection_id, chat_id, selected=idx)
         await call.message.edit_reply_markup(
             reply_markup=_build_keyboard(board, idx, actions)
         )
@@ -479,14 +483,15 @@ async def _apply_move(
         if further:
             # Серия продолжается той же шашкой (уже дамкой, если дошла до края) —
             # ход не передаётся, сбитые шашки пока остаются на доске.
-            await db.save_chk_game(
+            await save_game(
+                "chk",
                 business_connection_id,
                 chat_id,
                 board=new_board,
                 selected=to_idx,
                 forced_continue=True,
             )
-            game = await db.get_chk_game(business_connection_id, chat_id)
+            game = await get_game("chk", business_connection_id, chat_id)
             await call.message.edit_text(
                 _build_text(
                     locale,
@@ -510,7 +515,8 @@ async def _apply_move(
     status = "finished" if winner else "active"
     next_turn = opponent if not winner else color
 
-    await db.save_chk_game(
+    await save_game(
+        "chk",
         business_connection_id,
         chat_id,
         board=new_board,
@@ -519,7 +525,7 @@ async def _apply_move(
         forced_continue=False,
         status=status,
     )
-    game = await db.get_chk_game(business_connection_id, chat_id)
+    game = await get_game("chk", business_connection_id, chat_id)
 
     await call.message.edit_text(
         _build_text(locale, game, winner, await _players(bot, game, locale)),

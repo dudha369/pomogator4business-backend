@@ -1,6 +1,10 @@
 import pytest
 
-from core import database as db
+from db.models.chat_flags import set_chat_flags
+from db.models.favorite_chat import set_favorite_chat
+from db.models.message_history import save_history
+from db.models.reminders import upsert_reminder_settings
+from db.models.user_locale import set_timezone_offset
 from core import reminders as rem
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID
@@ -31,7 +35,7 @@ def test_waiting_only_when_last_message_is_incoming_and_old_enough():
 
 
 def test_waited_formatting():
-    from core.i18n import t  # noqa: F401
+    from app.platform.i18n import t  # noqa: F401
 
     assert rem.format_waited(30 * 60, "ru") == "30 мин"
     assert rem.format_waited(5 * H + 20 * 60, "ru") == "5 ч 20 мин"
@@ -56,14 +60,14 @@ def test_quiet_hours():
 
 @pytest.fixture
 async def setup(connection, bot):
-    await db.set_timezone_offset(OWNER_ID, 0)
-    await db.upsert_reminder_settings(OWNER_ID, enabled=True, hours=4)
+    await set_timezone_offset(OWNER_ID, 0)
+    await upsert_reminder_settings(OWNER_ID, enabled=True, hours=4)
     bot.chat_names = {7: ("Аня <b>", "anya"), 8: ("Борис", None)}
     return connection
 
 
 async def seed(chat, mid, ts, text, owner=False):
-    await db.save_history(CONNECTION_ID, chat, mid, owner, text, ts)
+    await save_history(CONNECTION_ID, chat, mid, owner, text, ts)
 
 
 async def tick(bot, now=NOW):
@@ -92,15 +96,15 @@ async def test_answered_chat_not_reminded(setup, bot):
 
 async def test_disabled_or_quiet_or_no_connection(setup, bot):
     await seed(7, 1, NOW - 6 * H, "Привет")
-    await db.upsert_reminder_settings(
+    await upsert_reminder_settings(
         OWNER_ID, quiet_start_minutes=0, quiet_end_minutes=1439
     )
     assert await tick(bot) == 0  # тихие часы
-    await db.upsert_reminder_settings(
+    await upsert_reminder_settings(
         OWNER_ID, quiet_start_minutes=None, quiet_end_minutes=None, enabled=False
     )
     assert await tick(bot) == 0  # выключено
-    await db.upsert_reminder_settings(OWNER_ID, enabled=True)
+    await upsert_reminder_settings(OWNER_ID, enabled=True)
     assert await tick(bot) == 1  # после тихих часов напомнит
     assert (
         await rem.process_owner(bot, 999, now=NOW) == 0
@@ -110,16 +114,16 @@ async def test_disabled_or_quiet_or_no_connection(setup, bot):
 async def test_chat_flag_and_favorites_only(setup, bot):
     await seed(7, 1, NOW - 6 * H, "a")
     await seed(8, 1, NOW - 7 * H, "b")
-    await db.set_chat_flags(OWNER_ID, 7, no_remind=True)
+    await set_chat_flags(OWNER_ID, 7, no_remind=True)
     assert (
         await tick(bot) == 1
         and "Борис" in bot.sent[-1]["text"]
         and "Аня" not in bot.sent[-1]["text"]
     )
 
-    await db.set_chat_flags(OWNER_ID, 7, no_remind=False)
-    await db.upsert_reminder_settings(OWNER_ID, favorites_only=True)
-    await db.set_favorite_chat(OWNER_ID, 7, True)
+    await set_chat_flags(OWNER_ID, 7, no_remind=False)
+    await upsert_reminder_settings(OWNER_ID, favorites_only=True)
+    await set_favorite_chat(OWNER_ID, 7, True)
     sent_before = len(bot.sent)
     assert (
         await tick(bot, NOW + 60) == 1 and len(bot.sent) == sent_before + 1
@@ -192,22 +196,22 @@ async def test_waiting_endpoint_and_command(client, bot, api_bot):
     import time
 
     now = int(time.time())
-    await db.save_history(CONNECTION_ID, 7, 1, False, "Когда?", now - 5 * H)
+    await save_history(CONNECTION_ID, 7, 1, False, "Когда?", now - 5 * H)
     body = (await client.get("/api/reminders/waiting", headers=client.owner)).json()
     assert [c["chat_id"] for c in body["chats"]] == [7]
 
 
 async def test_waiting_command_sends_list_privately(connection, bot):
-    from core.context import CommandContext
+    from app.platform.telegram.context import CommandContext
     from modules.reminders import cmd_waiting
 
     from .conftest import make_message
 
-    await db.save_history(CONNECTION_ID, 7, 1, False, "Когда будет?", NOW - 5 * H)
+    await save_history(CONNECTION_ID, 7, 1, False, "Когда будет?", NOW - 5 * H)
     import time
 
     # история «5 часов назад» относительно реального времени команды
-    await db.save_history(
+    await save_history(
         CONNECTION_ID, 8, 1, False, "Ответьте", int(time.time()) - 5 * H
     )
     ctx = CommandContext(

@@ -3,13 +3,14 @@
 
 import asyncio
 
-from core import tasks
+from app.platform import tasks
 import types
 
 import pytest
 
 from config import settings
-from core import database as db
+from db.models.archive_prefs import save_archive_prefs_data
+from db.models.module_settings import disable_module
 from core.archive_prefs import defaults, parse, validate_patch
 from handlers import business_messages
 from handlers.business_messages import on_business_message
@@ -24,12 +25,12 @@ CHAT = 7
 @pytest.fixture
 async def rich(connection, api_bot, monkeypatch):
     monkeypatch.setattr(settings, "ARCHIVE_RICH", True)
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     return connection
 
 
 async def prefs(**values):
-    await db.save_archive_prefs_data(CONNECTION_ID, values)
+    await save_archive_prefs_data(CONNECTION_ID, values)
 
 
 async def receive(bot, text=None, group=None, **kwargs):

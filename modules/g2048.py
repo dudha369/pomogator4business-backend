@@ -3,10 +3,12 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.game_lock import serialized_game
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import serialized_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 router = Router(name="g2048")
 
@@ -195,7 +197,8 @@ def _text(locale, score, status):
 @command(name="2048", module="g2048", owner_only=False)
 async def cmd_2048(ctx):
     board = new_board()
-    await db.save_g2048_game(
+    await save_game(
+        "g2048",
         ctx.connection_id,
         ctx.chat_id,
         board=_board_to_str(board),
@@ -209,7 +212,7 @@ async def cmd_2048(ctx):
     keyboard = _keyboard(board, False)
 
     message_id = await ctx.present(text, reply_markup=keyboard)
-    await db.save_g2048_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("g2048", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("g2048:"))
@@ -223,13 +226,13 @@ async def on_2048_callback(call: CallbackQuery):
     business_connection_id = call.message.business_connection_id
     chat_id = call.message.chat.id
 
-    game = await db.get_g2048_game(business_connection_id, chat_id)
+    game = await get_game("g2048", business_connection_id, chat_id)
     if not game:
         await call.answer()
         return
 
-    connection = await db.get_connection(business_connection_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    connection = await get_connection(business_connection_id)
+    locale = await get_locale(connection["owner_id"]) if connection else "ru"
 
     if call.from_user.id != game["player_id"]:
         await call.answer(t("g2048.not_your_game", locale), show_alert=True)
@@ -237,7 +240,8 @@ async def on_2048_callback(call: CallbackQuery):
 
     if action == "restart":
         board = new_board()
-        await db.save_g2048_game(
+        await save_game(
+            "g2048",
             business_connection_id,
             chat_id,
             board=_board_to_str(board),
@@ -274,7 +278,8 @@ async def on_2048_callback(call: CallbackQuery):
     elif not has_moves(new_b):
         status = "lost"
 
-    await db.save_g2048_game(
+    await save_game(
+        "g2048",
         business_connection_id,
         chat_id,
         board=_board_to_str(new_b),

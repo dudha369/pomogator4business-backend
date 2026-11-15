@@ -12,8 +12,37 @@ from api.aliases import MAX_ALIASES_PER_OWNER
 from api.autoresponder import MAX_KEYWORDS
 from api.deps import require_connection, require_user
 from api.templates import MAX_TEMPLATES
-from core import database as db
-from core.registry import registry
+from db.models.ai import get_ai_settings, upsert_ai_settings
+from db.models.autoresponder import (
+    add_keyword_reply,
+    get_autoresponder_settings,
+    list_keyword_replies,
+    upsert_autoresponder_settings,
+)
+from db.models.chat_flags import list_chat_flags, set_chat_flags
+from db.models.command_alias import (
+    add_command_alias,
+    count_command_aliases,
+    get_command_alias,
+    list_command_aliases,
+)
+from db.models.connection import set_prefix
+from db.models.favorite_chat import list_favorite_chat_ids, set_favorite_chat
+from db.models.module_settings import disable_module, list_disabled_modules
+from db.models.quick_template import (
+    count_templates,
+    get_template,
+    list_templates,
+    save_template,
+)
+from db.models.reminders import get_reminder_settings, upsert_reminder_settings
+from db.models.user_locale import (
+    get_timezone_name,
+    get_timezone_offset,
+    set_timezone_name,
+    set_timezone_offset,
+)
+from app.platform.telegram.registry import registry
 from core.utils import is_valid_prefix
 from db.models.user_locale import is_valid_timezone
 
@@ -27,16 +56,16 @@ _MAX_ITEMS = 500
 async def export_backup(user: dict = Depends(require_user)):
     owner_id = user["id"]
     connection = await require_connection(owner_id)
-    autoresponder = await db.get_autoresponder_settings(owner_id) or {}
-    ai = await db.get_ai_settings(owner_id) or {}
-    reminders = await db.get_reminder_settings(owner_id) or {}
+    autoresponder = await get_autoresponder_settings(owner_id) or {}
+    ai = await get_ai_settings(owner_id) or {}
+    reminders = await get_reminder_settings(owner_id) or {}
     return {
         "version": FORMAT_VERSION,
         "prefix": connection["prefix"],
-        "timezone_offset_minutes": await db.get_timezone_offset(owner_id),
-        "timezone": await db.get_timezone_name(owner_id),
+        "timezone_offset_minutes": await get_timezone_offset(owner_id),
+        "timezone": await get_timezone_name(owner_id),
         "disabled_modules": sorted(
-            await db.list_disabled_modules(connection["connection_id"])
+            await list_disabled_modules(connection["connection_id"])
         ),
         "autoresponder": {
             k: autoresponder.get(k)
@@ -50,11 +79,11 @@ async def export_backup(user: dict = Depends(require_user)):
                 "auto_read_enabled",
             )
         },
-        "keywords": await db.list_keyword_replies(owner_id),
-        "aliases": await db.list_command_aliases(owner_id),
-        "templates": await db.list_templates(owner_id),
-        "favorites": sorted(await db.list_favorite_chat_ids(owner_id)),
-        "chat_flags": await db.list_chat_flags(owner_id),
+        "keywords": await list_keyword_replies(owner_id),
+        "aliases": await list_command_aliases(owner_id),
+        "templates": await list_templates(owner_id),
+        "favorites": sorted(await list_favorite_chat_ids(owner_id)),
+        "chat_flags": await list_chat_flags(owner_id),
         "reminders": {
             "enabled": bool(reminders.get("enabled", False)),
             "hours": reminders.get("hours", 4),
@@ -106,26 +135,26 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
 
     if payload.prefix is not None:
         if is_valid_prefix(payload.prefix):
-            await db.set_prefix(connection["connection_id"], payload.prefix)
+            await set_prefix(connection["connection_id"], payload.prefix)
             applied += 1
         else:
             skipped += 1
     if payload.timezone is not None:
         # IANA-имя важнее смещения: оно переживает переход на летнее время
         if is_valid_timezone(payload.timezone):
-            await db.set_timezone_name(owner_id, payload.timezone)
+            await set_timezone_name(owner_id, payload.timezone)
             applied += 1
         else:
             skipped += 1
     elif payload.timezone_offset_minutes is not None:
-        await db.set_timezone_offset(owner_id, payload.timezone_offset_minutes)
+        await set_timezone_offset(owner_id, payload.timezone_offset_minutes)
         applied += 1
 
     if payload.disabled_modules is not None:
         known = set(registry.modules())
         for module in payload.disabled_modules:
             if module in known:
-                await db.disable_module(connection["connection_id"], module)
+                await disable_module(connection["connection_id"], module)
                 applied += 1
             else:
                 skipped += 1
@@ -152,12 +181,12 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
             if fields.get(flag) and not (fields.get(text_key) or "").strip():
                 fields[flag] = False
                 skipped += 1
-        await db.upsert_autoresponder_settings(owner_id, **fields)
+        await upsert_autoresponder_settings(owner_id, **fields)
         applied += 1
 
     # те же квоты, что в обычных эндпоинтах: импорт не обходит лимиты.
     # Замена существующего элемента квоту не расходует.
-    known_keywords = {k["keyword"] for k in await db.list_keyword_replies(owner_id)}
+    known_keywords = {k["keyword"] for k in await list_keyword_replies(owner_id)}
     for item in payload.keywords or []:
         keyword, reply = (
             _text(item.get("keyword"), 255),
@@ -171,31 +200,31 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
             and reply.strip()
             and not (is_new and len(known_keywords) >= MAX_KEYWORDS)
         ):
-            await db.add_keyword_reply(owner_id, key, reply)
+            await add_keyword_reply(owner_id, key, reply)
             known_keywords.add(key)
             applied += 1
         else:
             skipped += 1
 
-    template_count = await db.count_templates(owner_id)
+    template_count = await count_templates(owner_id)
 
     for item in payload.templates or []:
         name, text = _text(item.get("name"), 32), _text(item.get("text"), 4096)
         key = name.strip().lower() if name else ""
         valid = bool(key) and " " not in key and bool(text and text.strip())
         if valid:
-            is_new = await db.get_template(owner_id, key) is None
+            is_new = await get_template(owner_id, key) is None
             if is_new and template_count >= MAX_TEMPLATES:
                 valid = False
             elif is_new:
                 template_count += 1
         if valid:
-            await db.save_template(owner_id, key, text)
+            await save_template(owner_id, key, text)
             applied += 1
         else:
             skipped += 1
 
-    alias_count = await db.count_command_aliases(owner_id)
+    alias_count = await count_command_aliases(owner_id)
     for item in payload.aliases or []:
         alias, command = _text(item.get("alias"), 32), _text(item.get("command"), 64)
         cmd = registry.find(command.lower()) if command else None
@@ -205,23 +234,23 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
             and " " not in alias.strip()
             and cmd
             and registry.find(alias.strip().lower()) is None
-            and await db.get_command_alias(owner_id, alias.strip().lower()) is None
+            and await get_command_alias(owner_id, alias.strip().lower()) is None
             and alias_count < MAX_ALIASES_PER_OWNER
         ):
-            await db.add_command_alias(owner_id, alias.strip().lower(), cmd.name)
+            await add_command_alias(owner_id, alias.strip().lower(), cmd.name)
             alias_count += 1
             applied += 1
         else:
             skipped += 1
 
     for chat_id in payload.favorites or []:
-        await db.set_favorite_chat(owner_id, chat_id, True)
+        await set_favorite_chat(owner_id, chat_id, True)
         applied += 1
 
     for item in payload.chat_flags or []:
         chat_id = item.get("chat_id")
         if isinstance(chat_id, int):
-            await db.set_chat_flags(
+            await set_chat_flags(
                 owner_id,
                 chat_id,
                 no_autoreply=bool(item.get("no_autoreply")),
@@ -246,7 +275,7 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
                 value is None or (isinstance(value, int) and 0 <= value <= 1439)
             ):
                 fields[key] = value
-        await db.upsert_reminder_settings(owner_id, **fields)
+        await upsert_reminder_settings(owner_id, **fields)
         applied += 1
 
     if payload.ai:
@@ -263,7 +292,7 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
         if isinstance(src.get("daily_limit"), int) and 1 <= src["daily_limit"] <= 500:
             fields["daily_limit"] = src["daily_limit"]
         # включать ИИ из копии нельзя: это решение владельца на месте (ключ, риски, лимиты)
-        await db.upsert_ai_settings(owner_id, **fields)
+        await upsert_ai_settings(owner_id, **fields)
         applied += 1
 
     return {"applied": applied, "skipped": skipped}

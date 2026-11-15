@@ -18,7 +18,15 @@ import logging
 import aiohttp
 
 from config import settings
-from core import database as db
+from db.models.ai import create_draft
+from db.models.autoresponder import (
+    count_autoreplies_since,
+    last_autoreply_at,
+    log_autoreply,
+)
+from db.models.message_history import list_chat_history
+from db.models.message_log import log_message
+from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.ai")
 
@@ -132,8 +140,8 @@ def day_start(now: int, offset_minutes: int) -> int:
 
 
 async def used_today(owner_id: int, kind: str, now: int) -> int:
-    offset = await db.get_timezone_offset(owner_id)
-    return await db.count_autoreplies_since(owner_id, kind, day_start(now, offset))
+    offset = await get_timezone_offset(owner_id)
+    return await count_autoreplies_since(owner_id, kind, day_start(now, offset))
 
 
 async def generate_reply(connection, ai_settings, chat_id, message, text, now):
@@ -142,14 +150,14 @@ async def generate_reply(connection, ai_settings, chat_id, message, text, now):
 
     if await used_today(owner_id, "ai", now) >= ai_settings["daily_limit"]:
         return None
-    last = await db.last_autoreply_at(owner_id, chat_id, "ai")
+    last = await last_autoreply_at(owner_id, chat_id, "ai")
     if last is not None and now - last < PER_CHAT_COOLDOWN_SECONDS:
         return None
 
     history = []
     limit = ai_settings["history_messages"]
     if limit > 0:
-        history = await db.list_chat_history(
+        history = await list_chat_history(
             connection["connection_id"], chat_id, limit + 1
         )
 
@@ -166,7 +174,7 @@ async def generate_reply(connection, ai_settings, chat_id, message, text, now):
 def draft_keyboard(draft_id: int, locale: str):
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-    from core.i18n import t
+    from app.platform.i18n import t
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -186,9 +194,9 @@ async def notify_draft(
     bot, connection, contact_name, incoming_text, draft_id, reply_text
 ):
     """Присылает владельцу в личку черновик ответа с кнопками."""
-    from core.i18n import t
+    from app.platform.i18n import t
 
-    locale = await db.get_locale(connection["owner_id"])
+    locale = await get_locale(connection["owner_id"])
     text = "\n\n".join(
         [
             t("ai.draft_header", locale, name=contact_name or "?"),
@@ -214,9 +222,9 @@ async def deliver_reply(bot, connection, ai_settings, message, text, reply_text,
             chat_id=chat_id,
             text=reply_text,
         )
-        await db.log_message(connection["connection_id"], chat_id, sent.message_id)
+        await log_message(connection["connection_id"], chat_id, sent.message_id)
     else:
-        draft_id = await db.create_draft(
+        draft_id = await create_draft(
             owner_id, chat_id, message.message_id, reply_text, now
         )
         name = getattr(message.chat, "full_name", None) or getattr(
@@ -225,5 +233,5 @@ async def deliver_reply(bot, connection, ai_settings, message, text, reply_text,
         await notify_draft(bot, connection, name, text, draft_id, reply_text)
 
     # считаем и черновики: каждый — это платный запрос к провайдеру
-    await db.log_autoreply(owner_id, chat_id, "ai", None, now)
+    await log_autoreply(owner_id, chat_id, "ai", None, now)
     return True

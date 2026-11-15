@@ -2,7 +2,7 @@
 
 import pytest
 
-from core import database as db
+from db.models.module_settings import disable_module
 from handlers.business_messages import on_business_message
 from modules.archive import on_business_deleted
 
@@ -16,7 +16,7 @@ async def archive_ready(connection, api_bot, monkeypatch):
     from config import settings
 
     monkeypatch.setattr(settings, "ARCHIVE_RICH", False)  # здесь проверяем обычный путь
-    await db.disable_module(CONNECTION_ID, "scam")  # без лишних уведомлений в тестах
+    await disable_module(CONNECTION_ID, "scam")  # без лишних уведомлений в тестах
     return connection
 
 

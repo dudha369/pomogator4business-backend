@@ -3,7 +3,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
-from core.logging_middleware import UpdateLoggingMiddleware
+from app.platform.telegram.middleware import UpdateLoggingMiddleware
 from core.self_actions import install_edit_marker
 from handlers.connection import router as connection_router
 from handlers.business_messages import router as business_messages_router

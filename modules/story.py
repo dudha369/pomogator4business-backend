@@ -8,9 +8,9 @@ from aiogram.types import (
     InputStoryContentPhoto,
 )
 
-from core.context import CommandContext
-from core.registry import command
-from core import database as db
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
+from db.models.story import is_autopost_enabled, toggle_autopost
 from core.utils import log_suppressed
 
 _GRID = {
@@ -126,7 +126,7 @@ async def cmd_story(ctx: CommandContext):
 
     await ctx.delete_command_message()
 
-    if await db.is_autopost_enabled(ctx.connection_id):
+    if await is_autopost_enabled(ctx.connection_id):
         await _post_all(ctx.bot, ctx.connection_id, tiles)
         return
 
@@ -148,6 +148,6 @@ async def cmd_story(ctx: CommandContext):
     module="story",
 )
 async def cmd_storyautopost(ctx: CommandContext):
-    enabled = await db.toggle_autopost(ctx.connection_id)
+    enabled = await toggle_autopost(ctx.connection_id)
     status = ctx.t("story.status_on") if enabled else ctx.t("story.status_off")
     await ctx.edit_command_message(ctx.t("story.autopost_toggled", status=status))

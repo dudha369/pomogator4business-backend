@@ -1,8 +1,8 @@
 import asyncio
 
-from core.context import CommandContext
-from core.registry import command
-from core.tasks import spawn
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
+from app.platform.tasks import spawn
 from core.utils import parse_duration
 
 _MAX_SECONDS = 5 * 60

@@ -24,7 +24,18 @@ import time
 from dataclasses import dataclass
 
 from core import ai
-from core import database as db
+from db.models.ai import get_ai_settings
+from db.models.autoresponder import (
+    get_autoresponder_settings,
+    last_autoreply_at,
+    list_keyword_replies,
+    log_autoreply,
+)
+from db.models.chat_flags import get_chat_flags
+from db.models.favorite_chat import is_favorite_chat
+from db.models.message_history import has_other_messages, last_owner_message_at
+from db.models.message_log import log_message
+from db.models.user_locale import get_timezone_offset
 
 logger = logging.getLogger("bot.autoresponder")
 
@@ -142,7 +153,7 @@ def build_candidates(
 
 
 async def _cooldown_ok(owner_id, chat_id, reply: AutoReply, now: int) -> bool:
-    last = await db.last_autoreply_at(owner_id, chat_id, reply.kind, reply.ref)
+    last = await last_autoreply_at(owner_id, chat_id, reply.kind, reply.ref)
     if last is None:
         return True
     if reply.kind == "greeting":
@@ -153,7 +164,7 @@ async def _cooldown_ok(owner_id, chat_id, reply: AutoReply, now: int) -> bool:
 
 async def _auto_read(bot, connection, message):
     try:
-        if await db.is_favorite_chat(connection["owner_id"], message.chat.id):
+        if await is_favorite_chat(connection["owner_id"], message.chat.id):
             return  # избранные чаты остаются непрочитанными — это их смысл
         await bot.read_business_message(
             business_connection_id=connection["connection_id"],
@@ -178,13 +189,13 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
 
     owner_id = connection["owner_id"]
     # строки настроек может не быть (например, включён только ИИ) — берём «всё выключено»
-    settings = await db.get_autoresponder_settings(owner_id) or _NO_SETTINGS
+    settings = await get_autoresponder_settings(owner_id) or _NO_SETTINGS
 
     if settings["auto_read_enabled"]:
         await _auto_read(bot, connection, message)
 
     chat_id = message.chat.id
-    flags = await db.get_chat_flags(owner_id, chat_id)
+    flags = await get_chat_flags(owner_id, chat_id)
     if flags["no_autoreply"]:
         return None  # чат в режиме «не беспокоить» (авто-прочтение выше — по своей настройке)
 
@@ -192,9 +203,9 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
     is_command = bool(text) and text.startswith(connection["prefix"])
 
     keywords = (
-        await db.list_keyword_replies(owner_id) if text and not is_command else []
+        await list_keyword_replies(owner_id) if text and not is_command else []
     )
-    ai_settings = await db.get_ai_settings(owner_id)
+    ai_settings = await get_ai_settings(owner_id)
     ai_on = bool(
         ai_settings
         and ai_settings["enabled"]
@@ -209,10 +220,10 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
         return None
 
     now = int(now if now is not None else time.time())
-    last_owner_at = await db.last_owner_message_at(connection["connection_id"], chat_id)
+    last_owner_at = await last_owner_message_at(connection["connection_id"], chat_id)
     # «новый собеседник»: ни владелец, ни он сам раньше в этом чате не писали
     # (по сохранённой истории) и приветствия ему ещё не отправлялись
-    is_new_contact = last_owner_at is None and not await db.has_other_messages(
+    is_new_contact = last_owner_at is None and not await has_other_messages(
         connection["connection_id"], chat_id, message.message_id
     )
     owner_recently_active = (
@@ -227,7 +238,7 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
         is_new_contact=is_new_contact,
         owner_recently_active=owner_recently_active,
         now=now,
-        tz_offset=await db.get_timezone_offset(owner_id),
+        tz_offset=await get_timezone_offset(owner_id),
         user=user,
     )
 
@@ -246,11 +257,11 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
             )
             return None
 
-        await db.log_message(connection["connection_id"], chat_id, sent.message_id)
-        await db.log_autoreply(owner_id, chat_id, reply.kind, reply.ref, now)
+        await log_message(connection["connection_id"], chat_id, sent.message_id)
+        await log_autoreply(owner_id, chat_id, reply.kind, reply.ref, now)
         if is_new_contact and reply.kind != "greeting":
             # первое сообщение уже получило ответ — приветствовать задним числом не нужно
-            await db.log_autoreply(owner_id, chat_id, "greeting", None, now)
+            await log_autoreply(owner_id, chat_id, "greeting", None, now)
         return reply
 
     # Ничего из «правил» не подошло — последний рубеж: ИИ (если включён)

@@ -5,7 +5,9 @@ import types
 import pytest
 
 from config import settings
-from core import database as db
+from db.models.archive_log import get_edit_history, get_recent_archive
+from db.models.message_history import get_history_entry, save_history
+from db.models.module_settings import disable_module
 from core.archive_notice import CAPTION_LIMIT, build_notice, visible_len
 from core.snapshot import build_snapshot, edit_kind, entry_snapshot, public_view
 from handlers.business_messages import on_business_message
@@ -20,14 +22,14 @@ CHAT = 7
 async def ready(connection, api_bot, monkeypatch):
     """Обычный (не Rich) способ уведомления — он же запасной."""
     monkeypatch.setattr(settings, "ARCHIVE_RICH", False)
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     return connection
 
 
 @pytest.fixture
 async def rich(connection, api_bot, monkeypatch):
     monkeypatch.setattr(settings, "ARCHIVE_RICH", True)
-    await db.disable_module(CONNECTION_ID, "scam")
+    await disable_module(CONNECTION_ID, "scam")
     return connection
 
 
@@ -342,7 +344,7 @@ async def test_text_edit_still_works(ready, bot):
 
 async def test_regular_media_is_not_stored_as_bytes(ready, bot):
     msg = await receive(bot, photo=[tg_file("p")])
-    entry = await db.get_history_entry(CONNECTION_ID, CHAT, msg.message_id)
+    entry = await get_history_entry(CONNECTION_ID, CHAT, msg.message_id)
     assert entry["media_data"] is None and entry["file_id"] == "p"
     assert (
         entry["media_status"] == "remote" and entry_snapshot(entry)["kind"] == "photo"
@@ -350,8 +352,8 @@ async def test_regular_media_is_not_stored_as_bytes(ready, bot):
 
 
 async def test_legacy_rows_without_snapshot_still_work(ready, bot):
-    await db.save_history(CONNECTION_ID, CHAT, 999, False, "старое", 1)
-    entry = await db.get_history_entry(CONNECTION_ID, CHAT, 999)
+    await save_history(CONNECTION_ID, CHAT, 999, False, "старое", 1)
+    entry = await get_history_entry(CONNECTION_ID, CHAT, 999)
     assert entry_snapshot(entry)["kind"] == "text"
 
 
@@ -590,7 +592,7 @@ async def test_replaced_voice_uses_regular_before_and_after(rich, bot):
 
 async def test_rescued_bytes_are_not_sent_through_rich(rich, bot):
     msg = await receive(bot, photo=photo("p"))
-    entry = await db.get_history_entry(CONNECTION_ID, CHAT, msg.message_id)
+    entry = await get_history_entry(CONNECTION_ID, CHAT, msg.message_id)
     from core.archive_rich import can_use_rich
 
     assert can_use_rich([(entry_snapshot(entry), entry)]) is True
@@ -685,7 +687,7 @@ async def test_caption_edit_without_rich_photo_kind_is_text_only(
 async def test_edit_history_is_stored_with_notice_id(rich, bot):
     msg = await receive(bot, "a")
     await edit(bot, msg, "b")
-    rows = await db.get_edit_history(CONNECTION_ID, CHAT, msg.message_id)
+    rows = await get_edit_history(CONNECTION_ID, CHAT, msg.message_id)
     assert rows[0]["notice_message_id"] == 1001 and rows[0]["edit_kind"] == "text"
 
 
@@ -802,7 +804,7 @@ async def test_deleted_own_message_has_own_header_and_flag(ready, api_bot):
     text = api_bot.sent[-1]["text"]
     assert "Удалено ваше сообщение!" in text and "Чат:" in text
     assert "собеседника" not in text
-    log = (await db.get_recent_archive(CONNECTION_ID, 5))[0]
+    log = (await get_recent_archive(CONNECTION_ID, 5))[0]
     assert log["event"] == "deleted" and log["is_owner"] is True
 
 
@@ -811,7 +813,7 @@ async def test_deleted_peer_message_has_peer_header_and_flag(ready, api_bot):
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), api_bot)
 
     assert "Удалено сообщение собеседника!" in api_bot.sent[-1]["text"]
-    log = (await db.get_recent_archive(CONNECTION_ID, 5))[0]
+    log = (await get_recent_archive(CONNECTION_ID, 5))[0]
     assert log["is_owner"] is False
 
 
@@ -829,7 +831,7 @@ async def test_own_album_uses_own_header_in_rich(rich, api_bot):
     first = await send_own(api_bot, "Поездка", photo=[tg_file("a")])
     second = await send_own(api_bot, photo=[tg_file("b")])
     first.media_group_id = second.media_group_id = "g1"
-    await db.save_history(
+    await save_history(
         CONNECTION_ID,
         CHAT,
         first.message_id,
@@ -838,7 +840,7 @@ async def test_own_album_uses_own_header_in_rich(rich, api_bot):
         1,
         snapshot=build_snapshot(first),
     )
-    await db.save_history(
+    await save_history(
         CONNECTION_ID,
         CHAT,
         second.message_id,

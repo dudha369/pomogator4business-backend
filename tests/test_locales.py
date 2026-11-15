@@ -6,7 +6,7 @@
 import re
 import string
 
-from core.i18n import LOCALES
+from app.platform.i18n import LOCALES
 
 _formatter = string.Formatter()
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from fastapi import Depends, Header, HTTPException
 
 from config import settings
-from core import database as db
+from db.models.connection import get_connection_by_owner
 from core.telegram_auth import validate_init_data
 
 
@@ -36,7 +36,7 @@ def require_user(x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-
 
 
 async def require_connection(owner_id: int):
-    connection = await db.get_connection_by_owner(owner_id)
+    connection = await get_connection_by_owner(owner_id)
     if not connection:
         raise HTTPException(status_code=404, detail="Business connection not found")
     return connection

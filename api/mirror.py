@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_user
-from core import database as db
+from db.models.mirror_bot import delete_mirror, get_mirror
 from core.mirror_manager import mirror_manager
 from core.mirror_setup import MirrorSetupError, connect_mirror
 
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/mirror")
 async def get_mirror_status(user: dict = Depends(require_user)):
-    mirror = await db.get_mirror(user["id"])
+    mirror = await get_mirror(user["id"])
     return {
         "connected": bool(mirror and mirror["is_active"]),
         "username": mirror["bot_username"] if mirror else None,
@@ -46,5 +46,5 @@ async def api_connect_mirror(
 @router.post("/mirror/disconnect")
 async def api_disconnect_mirror(user: dict = Depends(require_user)):
     await mirror_manager.stop_mirror(user["id"])
-    await db.delete_mirror(user["id"])
+    await delete_mirror(user["id"])
     return {"connected": False}

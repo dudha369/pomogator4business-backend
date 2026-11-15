@@ -4,10 +4,12 @@ import random
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.game_lock import serialized_game
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import serialized_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
+from app.features.games.service import get_game, save_game
 
 router = Router(name="ms")
 
@@ -197,7 +199,8 @@ def _game_keyboard(
 
 @command(name="ms", module="ms", owner_only=False)
 async def cmd_ms(ctx):
-    await db.save_ms_game(
+    await save_game(
+        "ms",
         ctx.connection_id,
         ctx.chat_id,
         size=6,
@@ -212,12 +215,12 @@ async def cmd_ms(ctx):
         message_id=None,
     )
 
-    game = await db.get_ms_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("ms", ctx.connection_id, ctx.chat_id)
     text = t("ms.settings_title", ctx.locale)
     keyboard = _settings_keyboard(game)
 
     message_id = await ctx.present(text, reply_markup=keyboard)
-    await db.save_ms_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("ms", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("ms:"))
@@ -233,13 +236,13 @@ async def on_ms_callback(call: CallbackQuery):
     business_connection_id = call.message.business_connection_id
     chat_id = call.message.chat.id
 
-    game = await db.get_ms_game(business_connection_id, chat_id)
+    game = await get_game("ms", business_connection_id, chat_id)
     if not game:
         await call.answer()
         return
 
-    connection = await db.get_connection(business_connection_id)
-    locale = await db.get_locale(connection["owner_id"]) if connection else "ru"
+    connection = await get_connection(business_connection_id)
+    locale = await get_locale(connection["owner_id"]) if connection else "ru"
 
     if action in ("size", "bombs", "coop", "start", "stop", "mode"):
         if call.from_user.id != game["starter_id"]:
@@ -248,11 +251,12 @@ async def on_ms_callback(call: CallbackQuery):
 
     if game["phase"] == "settings":
         if action == "size":
-            await db.save_ms_game(business_connection_id, chat_id, size=int(parts[2]))
+            await save_game("ms", business_connection_id, chat_id, size=int(parts[2]))
         elif action == "bombs":
-            await db.save_ms_game(business_connection_id, chat_id, bomb_mode=parts[2])
+            await save_game("ms", business_connection_id, chat_id, bomb_mode=parts[2])
         elif action == "coop":
-            await db.save_ms_game(
+            await save_game(
+                "ms",
                 business_connection_id, chat_id, coop=0 if game["coop"] else 1
             )
         elif action == "stop":
@@ -263,7 +267,8 @@ async def on_ms_callback(call: CallbackQuery):
             size = game["size"]
             bomb_count = resolve_bomb_count(size, game["bomb_mode"])
             mines = generate_mines(size, bomb_count)
-            await db.save_ms_game(
+            await save_game(
+                "ms",
                 business_connection_id,
                 chat_id,
                 mines=_set_to_json(mines),
@@ -272,7 +277,7 @@ async def on_ms_callback(call: CallbackQuery):
                 flag_mode=False,
                 phase="active",
             )
-            game = await db.get_ms_game(business_connection_id, chat_id)
+            game = await get_game("ms", business_connection_id, chat_id)
             await call.message.edit_text(
                 t("ms.playing", locale, size=size, bombs=bomb_count),
                 reply_markup=_game_keyboard(
@@ -285,7 +290,7 @@ async def on_ms_callback(call: CallbackQuery):
             await call.answer()
             return
 
-        game = await db.get_ms_game(business_connection_id, chat_id)
+        game = await get_game("ms", business_connection_id, chat_id)
         await call.message.edit_reply_markup(reply_markup=_settings_keyboard(game))
         await call.answer()
         return
@@ -295,7 +300,7 @@ async def on_ms_callback(call: CallbackQuery):
         return
 
     if action == "stop":
-        await db.save_ms_game(business_connection_id, chat_id, phase="finished")
+        await save_game("ms", business_connection_id, chat_id, phase="finished")
         await call.message.edit_text(t("ms.cancelled", locale))
         await call.answer()
         return
@@ -307,7 +312,7 @@ async def on_ms_callback(call: CallbackQuery):
 
     if action == "mode":
         new_mode = not game["flag_mode"]
-        await db.save_ms_game(business_connection_id, chat_id, flag_mode=new_mode)
+        await save_game("ms", business_connection_id, chat_id, flag_mode=new_mode)
         await call.message.edit_reply_markup(
             reply_markup=_game_keyboard(
                 locale, size, mines, revealed, flagged, None, False, new_mode
@@ -335,7 +340,8 @@ async def on_ms_callback(call: CallbackQuery):
             flagged.discard(idx)
         else:
             flagged.add(idx)
-        await db.save_ms_game(
+        await save_game(
+            "ms",
             business_connection_id, chat_id, flagged=_set_to_json(flagged)
         )
         await call.message.edit_reply_markup(
@@ -354,13 +360,15 @@ async def on_ms_callback(call: CallbackQuery):
     if idx in mines and not revealed:
         # самый первый ход: мину переносим, чтобы игра не заканчивалась на старте
         mines = relocate_mine(size, mines, idx)
-        await db.save_ms_game(
+        await save_game(
+            "ms",
             business_connection_id, chat_id, mines=_set_to_json(mines)
         )
 
     if idx in mines:
         revealed.add(idx)
-        await db.save_ms_game(
+        await save_game(
+            "ms",
             business_connection_id,
             chat_id,
             revealed=_revealed_to_str(revealed, size),
@@ -378,7 +386,8 @@ async def on_ms_callback(call: CallbackQuery):
     flood_reveal(size, mines, revealed, flagged, idx)
 
     if is_win(size, mines, revealed):
-        await db.save_ms_game(
+        await save_game(
+            "ms",
             business_connection_id,
             chat_id,
             revealed=_revealed_to_str(revealed, size),
@@ -393,7 +402,8 @@ async def on_ms_callback(call: CallbackQuery):
         await call.answer()
         return
 
-    await db.save_ms_game(
+    await save_game(
+        "ms",
         business_connection_id, chat_id, revealed=_revealed_to_str(revealed, size)
     )
     await call.message.edit_reply_markup(

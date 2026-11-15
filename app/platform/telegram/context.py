@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from aiogram import Bot
 from aiogram.types import Message, ReplyParameters
 
-from core import database as db
-from core.i18n import t
+from db.models.message_log import log_message
+from app.platform.i18n import t
 from core.self_actions import delete_own_messages
 from core.utils import log_suppressed
 
@@ -47,7 +47,7 @@ class CommandContext:
             text=text,
             **kwargs,
         )
-        await db.log_message(self.connection_id, self.chat_id, msg.message_id)
+        await log_message(self.connection_id, self.chat_id, msg.message_id)
         return msg
 
     async def delete_command_message(self):

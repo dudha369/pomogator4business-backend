@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner, require_user
-from core import database as db
+from db.models.reminders import get_reminder_settings, upsert_reminder_settings
 from core import reminders as reminders_core
 
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/reminders")
 async def get_reminders(user: dict = Depends(require_user)):
-    cfg = await db.get_reminder_settings(user["id"]) or {}
+    cfg = await get_reminder_settings(user["id"]) or {}
     return {
         "enabled": bool(cfg.get("enabled", False)),
         "hours": cfg.get("hours", 4),
@@ -43,7 +43,7 @@ async def update_reminders(
     for key in ("enabled", "hours", "favorites_only"):
         if key in fields and fields[key] is None:
             del fields[key]
-    await db.upsert_reminder_settings(user["id"], **fields)
+    await upsert_reminder_settings(user["id"], **fields)
     return await get_reminders(user=user)
 
 
@@ -52,7 +52,7 @@ async def waiting_now(owner: Owner = Depends(current_owner)):
     """Кто сейчас ждёт ответа (дольше настроенного порога) — для экрана настроек.
     Напоминания при этом не отправляются и не помечаются."""
     connection = owner.connection
-    cfg = await db.get_reminder_settings(owner.id) or {}
+    cfg = await get_reminder_settings(owner.id) or {}
     items = await reminders_core.find_waiting(
         connection,
         cfg.get("hours", 4) * 3600,

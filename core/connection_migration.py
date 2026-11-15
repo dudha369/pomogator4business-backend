@@ -11,7 +11,7 @@ connection_id во всех таблицах, где он есть, и копи�
 
 import logging
 
-from core.ttl_cache import clear_all
+from app.platform.ttl_cache import clear_all
 from tortoise import Tortoise
 
 from db.models.connection import Connection

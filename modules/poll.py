@@ -1,7 +1,7 @@
 from aiogram.types import InputPollOption
 
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 _MAX_OPTIONS = 10
 

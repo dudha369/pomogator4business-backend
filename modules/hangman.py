@@ -1,12 +1,12 @@
 import json
 import random
 
-from core.game_lock import serialized_command
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import serialized_command
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
 from modules.wordle_dictionary import WORDS
 from core.utils import log_suppressed
+from app.features.games.service import get_game, save_game
 
 _MAX_MISTAKES = 6
 
@@ -45,7 +45,8 @@ def _render(locale, game):
 
 
 async def _start(ctx, secret):
-    await db.save_hangman_game(
+    await save_game(
+        "hangman",
         ctx.connection_id,
         ctx.chat_id,
         secret=secret,
@@ -54,11 +55,11 @@ async def _start(ctx, secret):
         status="active",
         message_id=None,
     )
-    game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("hangman", ctx.connection_id, ctx.chat_id)
     text = _render(ctx.locale, game)
 
     message_id = await ctx.present(text, parse_mode="html")
-    await db.save_hangman_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("hangman", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def _handle_guess(ctx, game, letter):
@@ -78,14 +79,15 @@ async def _handle_guess(ctx, game, letter):
     elif mistakes >= _MAX_MISTAKES:
         status = "lost"
 
-    await db.save_hangman_game(
+    await save_game(
+        "hangman",
         ctx.connection_id,
         ctx.chat_id,
         guessed_letters=json.dumps(guessed, ensure_ascii=False),
         mistakes=mistakes,
         status=status,
     )
-    game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("hangman", ctx.connection_id, ctx.chat_id)
     text = _render(ctx.locale, game)
 
     await ctx.delete_command_message()
@@ -104,7 +106,8 @@ async def _handle_guess(ctx, game, letter):
             log_suppressed("modules/hangman.py:102", benign=True)
 
     sent = await ctx.reply(text, parse_mode="html")
-    await db.save_hangman_game(
+    await save_game(
+        "hangman",
         ctx.connection_id, ctx.chat_id, message_id=sent.message_id
     )
 
@@ -113,7 +116,7 @@ async def _handle_guess(ctx, game, letter):
 @serialized_command
 async def cmd_hangman(ctx):
     raw = ctx.args.strip()
-    game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)
+    game = await get_game("hangman", ctx.connection_id, ctx.chat_id)
 
     if game and game["status"] == "active" and len(raw) == 1 and raw.isalpha():
         await _handle_guess(ctx, game, raw.upper())

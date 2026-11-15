@@ -21,7 +21,16 @@ from aiogram.types import (
 )
 
 from config import settings
-from core import database as db
+from db.models.archive_log import get_edit_history, log_archive_event
+from db.models.connection import get_connection
+from db.models.message_history import (
+    delete_history,
+    get_history_entry,
+    list_album,
+    save_history,
+)
+from db.models.module_settings import list_disabled_modules
+from db.models.user_locale import get_locale
 from core.archive_notice import (
     CAPTION_LIMIT,
     EMPTY,
@@ -38,9 +47,9 @@ from core.archive_rich import (
     can_use_rich,
 )
 from core.archive_prefs import defaults, load_prefs
-from core.i18n import t
+from app.platform.i18n import t
 from core.mentions import format_mention
-from core.registry import registry
+from app.platform.telegram.registry import registry
 from core.self_actions import consume_self_delete, is_bot_edit
 from core.snapshot import (
     FILE_KINDS,
@@ -543,7 +552,7 @@ async def _notify_edit_history(
 
     albums = []
     if new.get("media_group_id"):
-        albums = await db.list_album(
+        albums = await list_album(
             connection["connection_id"], message.chat.id, new["media_group_id"]
         )
     media = _history_media(new, message.message_id, albums, prefs)
@@ -710,7 +719,7 @@ async def _notify_edited(
 
 @router.callback_query(F.data == "archive:link_unavailable")
 async def on_link_unavailable(call: CallbackQuery):
-    locale = await db.get_locale(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
     await call.answer(t("archive.link_unavailable", locale), show_alert=True)
 
 
@@ -738,7 +747,7 @@ async def on_delete_pair(call: CallbackQuery):
 @router.edited_business_message()
 async def on_business_edited(message: Message, bot: Bot):
     connection_id = message.business_connection_id
-    disabled = await db.list_disabled_modules(connection_id)
+    disabled = await list_disabled_modules(connection_id)
     if "archive" in disabled:
         return
 
@@ -746,12 +755,12 @@ async def on_business_edited(message: Message, bot: Bot):
     if snap is None:
         return
 
-    connection = await db.get_connection(connection_id)
+    connection = await get_connection(connection_id)
     if not connection:
         return
 
     is_owner = message.from_user.id == connection["owner_id"]
-    old_entry = await db.get_history_entry(
+    old_entry = await get_history_entry(
         connection_id, message.chat.id, message.message_id
     )
     old = entry_snapshot(old_entry)
@@ -767,11 +776,11 @@ async def on_business_edited(message: Message, bot: Bot):
     )
 
     if notify:
-        locale = await db.get_locale(connection["owner_id"])
+        locale = await get_locale(connection["owner_id"])
         mention = format_mention(
             message.from_user.full_name, message.from_user.username, message.chat.id
         )
-        previous = await db.get_edit_history(
+        previous = await get_edit_history(
             connection_id, message.chat.id, message.message_id
         )
         notice_id = None
@@ -792,7 +801,7 @@ async def on_business_edited(message: Message, bot: Bot):
         except Exception:
             log_suppressed("modules/archive.py:notify_edited")
 
-        await db.log_archive_event(
+        await log_archive_event(
             connection_id,
             message.chat.id,
             message.message_id,
@@ -808,7 +817,7 @@ async def on_business_edited(message: Message, bot: Bot):
             is_owner=is_owner,
         )
 
-    await db.save_history(
+    await save_history(
         connection_id,
         message.chat.id,
         message.message_id,
@@ -821,7 +830,7 @@ async def on_business_edited(message: Message, bot: Bot):
 
 @router.callback_query(F.data == "archive:info")
 async def on_info(call: CallbackQuery):
-    locale = await db.get_locale(call.from_user.id)
+    locale = await get_locale(call.from_user.id)
     await call.answer(t("archive.toast_deleted", locale))
 
 
@@ -844,15 +853,15 @@ def _group_albums(items):
 @router.deleted_business_messages()
 async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
     connection_id = event.business_connection_id
-    disabled = await db.list_disabled_modules(connection_id)
+    disabled = await list_disabled_modules(connection_id)
     if "archive" in disabled:
         return
 
-    connection = await db.get_connection(connection_id)
+    connection = await get_connection(connection_id)
     if not connection:
         return
 
-    locale = await db.get_locale(connection["owner_id"])
+    locale = await get_locale(connection["owner_id"])
     mention = format_mention(event.chat.full_name, event.chat.username, event.chat.id)
     prefs = await load_prefs(connection_id)
     sender = {
@@ -864,9 +873,9 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
     found = []
     for message_id in event.message_ids:
         if consume_self_delete(connection_id, event.chat.id, message_id):
-            await db.delete_history(connection_id, event.chat.id, message_id)
+            await delete_history(connection_id, event.chat.id, message_id)
             continue
-        entry = await db.get_history_entry(connection_id, event.chat.id, message_id)
+        entry = await get_history_entry(connection_id, event.chat.id, message_id)
         if entry is not None:
             found.append((message_id, entry, entry_snapshot(entry)))
 
@@ -901,7 +910,7 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
             log_suppressed("modules/archive.py:notify_deleted")
 
         for message_id, entry, snap in unit:
-            await db.log_archive_event(
+            await log_archive_event(
                 connection_id,
                 event.chat.id,
                 message_id,
@@ -918,4 +927,4 @@ async def on_business_deleted(event: BusinessMessagesDeleted, bot: Bot):
                 media_name=entry.get("media_name"),
                 media_status=entry.get("media_status"),
             )
-            await db.delete_history(connection_id, event.chat.id, message_id)
+            await delete_history(connection_id, event.chat.id, message_id)

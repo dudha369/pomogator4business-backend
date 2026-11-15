@@ -4,14 +4,14 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from api.deps import require_user
-from core import database as db
+from db.models.chat_flags import list_chat_flags, set_chat_flags
 
 router = APIRouter()
 
 
 @router.get("/chat-flags")
 async def list_flags(user: dict = Depends(require_user)):
-    return {"chats": await db.list_chat_flags(user["id"])}
+    return {"chats": await list_chat_flags(user["id"])}
 
 
 class ChatFlagsUpdate(BaseModel):
@@ -28,5 +28,5 @@ async def update_flags(payload: ChatFlagsUpdate, user: dict = Depends(require_us
         for key, value in payload.model_dump(exclude={"chat_id"}).items()
         if value is not None
     }
-    flags = await db.set_chat_flags(user["id"], payload.chat_id, **changes)
+    flags = await set_chat_flags(user["id"], payload.chat_id, **changes)
     return {"chat_id": payload.chat_id, **flags}

@@ -4,10 +4,10 @@ import io
 from PIL import Image, ImageDraw
 from aiogram.types import BufferedInputFile
 
-from core.context import CommandContext
-from core.imaging import draw_outlined_text, load_font, to_bytes, wrap_text
-from core.media import download_message_photo
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.imaging import draw_outlined_text, load_font, to_bytes, wrap_text
+from app.platform.media import download_message_photo
+from app.platform.telegram.registry import command
 
 
 def render_meme_text(image_bytes, text):

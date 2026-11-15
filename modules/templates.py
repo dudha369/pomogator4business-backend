@@ -4,10 +4,10 @@
 Шаблоны создаются в мини-приложении. `.t` без аргумента показывает список
 (только владельцу в личку — собеседник его не увидит)."""
 
-from core import database as db
+from db.models.quick_template import get_template, list_templates
 from core.autoresponder import render
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 
 @command(name="tpl", aliases=["t", "шаблон"], module="templates")
@@ -16,7 +16,7 @@ async def cmd_template(ctx: CommandContext):
     name = ctx.args.strip().lower()
 
     if not name:
-        templates = await db.list_templates(owner_id)
+        templates = await list_templates(owner_id)
         if not templates:
             await ctx.usage_error(ctx.t("tpl.empty"))
         else:
@@ -25,7 +25,7 @@ async def cmd_template(ctx: CommandContext):
             )
         return
 
-    text = await db.get_template(owner_id, name)
+    text = await get_template(owner_id, name)
     if text is None:
         await ctx.usage_error(ctx.t("tpl.not_found", name=name))
         return

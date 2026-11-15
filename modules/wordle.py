@@ -1,13 +1,13 @@
 import json
 import random
 
-from core.game_lock import game_lock, serialized_command
-from core import database as db
-from core.i18n import t
-from core.registry import command
+from app.features.games.lock import game_lock, serialized_command
+from app.platform.i18n import t
+from app.platform.telegram.registry import command
 from core.self_actions import delete_own_messages
 from modules.wordle_dictionary import WORDS
 from core.utils import log_suppressed
+from app.features.games.service import get_game, save_game
 
 _MAX_ATTEMPTS = 6
 _CIRCLES = {"green": "🟢", "blue": "🔵", "red": "🔴"}
@@ -80,7 +80,8 @@ async def cmd_word(ctx):
     else:
         secret = random.choice(WORDS)
 
-    await db.save_wordle_game(
+    await save_game(
+        "wordle",
         ctx.connection_id,
         ctx.chat_id,
         secret=secret,
@@ -92,7 +93,7 @@ async def cmd_word(ctx):
 
     text = _render_board(ctx.locale, len(secret), [], "active", secret)
     message_id = await ctx.present(text)
-    await db.save_wordle_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
+    await save_game("wordle", ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def handle_wordle_guess(bot, connection, message, locale, raw_guess):
@@ -101,7 +102,7 @@ async def handle_wordle_guess(bot, connection, message, locale, raw_guess):
 
 
 async def _handle_wordle_guess(bot, connection, message, locale, raw_guess):
-    game = await db.get_wordle_game(connection["connection_id"], message.chat.id)
+    game = await get_game("wordle", connection["connection_id"], message.chat.id)
     if not game or game["status"] != "active":
         return False
 
@@ -120,7 +121,8 @@ async def _handle_wordle_guess(bot, connection, message, locale, raw_guess):
     else:
         status = "active"
 
-    await db.save_wordle_game(
+    await save_game(
+        "wordle",
         connection["connection_id"],
         message.chat.id,
         guesses=json.dumps(guesses, ensure_ascii=False),
@@ -147,7 +149,8 @@ async def _handle_wordle_guess(bot, connection, message, locale, raw_guess):
                 chat_id=message.chat.id,
                 text=text,
             )
-            await db.save_wordle_game(
+            await save_game(
+                "wordle",
                 connection["connection_id"], message.chat.id, message_id=sent.message_id
             )
     except Exception:

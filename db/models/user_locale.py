@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from tortoise import fields
 from tortoise.models import Model
 
-from core.ttl_cache import clear_all, ttl_cache
+from app.platform.ttl_cache import clear_all, ttl_cache
 
 _DEFAULT_TZ_OFFSET_MINUTES = 180
 

@@ -4,10 +4,10 @@
 .fav — только в бизнес-чате, так как помечает текущий чат. Те же действия
 доступны в мини-приложении (страница «Чаты»)."""
 
-from core import database as db
-from core.context import CommandContext
+from db.models.favorite_chat import toggle_favorite_chat
+from app.platform.telegram.context import CommandContext
 from core.readall import parse_filters, read_chats
-from core.registry import command
+from app.platform.telegram.registry import command
 
 
 @command(name="readall", aliases=["прочитать"], module="readall", scope="both")
@@ -32,7 +32,7 @@ async def cmd_readall(ctx: CommandContext):
 
 @command(name="fav", aliases=["избранное"], module="readall")
 async def cmd_fav(ctx: CommandContext):
-    now_favorite = await db.toggle_favorite_chat(
+    now_favorite = await toggle_favorite_chat(
         ctx.connection["owner_id"], ctx.chat_id
     )
     await ctx.edit_command_message(

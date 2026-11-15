@@ -4,10 +4,10 @@ import io
 from PIL import Image, ImageDraw
 from aiogram.types import BufferedInputFile
 
-from core.context import CommandContext
-from core.imaging import circular_crop, load_font, to_bytes, wrap_text
-from core.media import download_user_avatar
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.imaging import circular_crop, load_font, to_bytes, wrap_text
+from app.platform.media import download_user_avatar
+from app.platform.telegram.registry import command
 
 
 _WIDTH = 800

@@ -10,7 +10,12 @@ import logging
 import time
 from contextlib import suppress
 
-from core import database as db
+from db.models.scheduled_task import (
+    add_scheduled_task,
+    claim_scheduled_task,
+    list_due_scheduled_tasks,
+    next_scheduled_run_at,
+)
 from core.self_actions import delete_own_messages
 
 logger = logging.getLogger("bot.scheduled")
@@ -23,7 +28,7 @@ _wake: asyncio.Event | None = None  # создаётся внутри цикла
 async def schedule(
     kind, connection_id, chat_id, delay_seconds, *, message_id=None, text=None
 ):
-    await db.add_scheduled_task(
+    await add_scheduled_task(
         kind,
         connection_id,
         chat_id,
@@ -57,9 +62,9 @@ async def process_due(bot, now=None) -> int:
     """Выполняет всё, что пора. Возвращает число выполненных задач."""
     now = int(now if now is not None else time.time())
     done = 0
-    for task in await db.list_due_scheduled_tasks(now):
+    for task in await list_due_scheduled_tasks(now):
         # at-most-once: забираем до выполнения (на деплое живут два процесса)
-        if not await db.claim_scheduled_task(task["id"]):
+        if not await claim_scheduled_task(task["id"]):
             continue
         executor = _EXECUTORS.get(task["kind"])
         if executor is None:
@@ -83,7 +88,7 @@ async def run_scheduled_loop(bot):
         next_run = None
         try:
             await process_due(bot)
-            next_run = await db.next_scheduled_run_at()
+            next_run = await next_scheduled_run_at()
         except Exception:
             logger.exception("Сбой цикла отложенных задач")
         delay = _MAX_SLEEP

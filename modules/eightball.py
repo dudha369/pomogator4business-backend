@@ -1,8 +1,8 @@
 import html
 import random
 
-from core.context import CommandContext
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 _ANSWER_COUNT = 12
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Awaitable, Callable
 
 if TYPE_CHECKING:
-    from core.context import CommandContext
+    from app.platform.telegram.context import CommandContext
 
 
 @dataclass

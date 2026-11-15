@@ -1,6 +1,8 @@
 import time
 
-from core import database as db
+from db.models.archive_log import log_archive_event
+from db.models.connection import upsert_connection
+from db.models.message_history import save_history
 
 from .conftest import CONNECTION_ID, OWNER_ID
 
@@ -105,9 +107,9 @@ async def test_alias_lifecycle_and_validation(client):
 
 
 async def test_stats_counts(client):
-    await db.save_history(CONNECTION_ID, 7, 1, False, "a", NOW - 60)
-    await db.save_history(CONNECTION_ID, 7, 2, True, "b", NOW - 30)
-    await db.save_history(CONNECTION_ID, 7, 3, False, "old", NOW - 3 * 86400)
+    await save_history(CONNECTION_ID, 7, 1, False, "a", NOW - 60)
+    await save_history(CONNECTION_ID, 7, 2, True, "b", NOW - 30)
+    await save_history(CONNECTION_ID, 7, 3, False, "old", NOW - 3 * 86400)
     body = (await client.get("/api/stats", headers=client.owner)).json()
     assert body["week"] == {"total": 3, "incoming": 2}
     assert body["today"]["total"] <= 2
@@ -115,8 +117,8 @@ async def test_stats_counts(client):
 
 async def test_chats_favorites_and_readall(client, api_bot):
     h = client.owner
-    await db.save_history(CONNECTION_ID, 7, 71, False, "a", NOW - 1800)
-    await db.save_history(CONNECTION_ID, 8, 80, False, "b", NOW - 30 * 3600)
+    await save_history(CONNECTION_ID, 7, 71, False, "a", NOW - 1800)
+    await save_history(CONNECTION_ID, 8, 80, False, "b", NOW - 30 * 3600)
     await client.post(
         "/api/favorites", headers=h, json={"chat_id": 7, "favorite": True}
     )
@@ -145,7 +147,7 @@ async def test_chats_favorites_and_readall(client, api_bot):
 
 async def test_archive_sort_pagination_media_and_filters(client):
     h = client.owner
-    await db.save_history(
+    await save_history(
         CONNECTION_ID,
         7,
         70,
@@ -156,7 +158,7 @@ async def test_archive_sort_pagination_media_and_filters(client):
         media_data=b"JPEG",
     )
     for i, ts in enumerate((NOW - 300, NOW - 200, NOW - 100)):
-        await db.log_archive_event(
+        await log_archive_event(
             CONNECTION_ID, 7, 70 + i, "deleted" if i < 2 else "edited", "t", None, ts
         )
 
@@ -201,20 +203,20 @@ async def test_archive_sort_pagination_media_and_filters(client):
 
 async def test_archive_entries_expose_author_flag(client):
     h = client.owner
-    await db.log_archive_event(
+    await log_archive_event(
         CONNECTION_ID, 7, 1, "deleted", "мой", None, NOW, is_owner=True
     )
-    await db.log_archive_event(CONNECTION_ID, 7, 2, "deleted", "чужой", None, NOW)
+    await log_archive_event(CONNECTION_ID, 7, 2, "deleted", "чужой", None, NOW)
     entries = (await client.get("/api/archive?sort=asc", headers=h)).json()["entries"]
     assert [e["is_owner"] for e in entries] == [True, False]
 
 
 async def test_archive_media_is_private_to_owner(client, database):
-    await db.upsert_connection("other", 777, 777, True)
-    await db.save_history(
+    await upsert_connection("other", 777, 777, True)
+    await save_history(
         "other", 1, 1, False, "x", NOW, media_type="photo", media_data=b"SECRET"
     )
-    await db.log_archive_event("other", 1, 1, "deleted", "x", None, NOW)
+    await log_archive_event("other", 1, 1, "deleted", "x", None, NOW)
     # чужая запись архива недоступна владельцу другого подключения
     assert (
         await client.get("/api/archive/1/media", headers=client.owner)

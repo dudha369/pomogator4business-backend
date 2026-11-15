@@ -13,9 +13,15 @@ import asyncio
 import logging
 import time
 
-from core import database as db
+from db.models.autoresponder import last_autoreply_ref, log_autoreply
+from db.models.chat_flags import list_chat_flags
+from db.models.connection import get_connection_by_owner
+from db.models.favorite_chat import list_favorite_chat_ids
+from db.models.message_history import get_history_entry, last_rows_by_chat
+from db.models.reminders import get_reminder_settings, list_reminder_owner_ids
+from db.models.user_locale import get_locale, get_timezone_offset
 from core.autoresponder import in_away_window
-from core.i18n import t
+from app.platform.i18n import t
 from core.mentions import escape, mention
 
 logger = logging.getLogger("bot.reminders")
@@ -87,15 +93,15 @@ async def find_waiting(
 ):
     """Чаты, ждущие ответа, с учётом флагов, избранного и уже отправленных напоминаний."""
     owner_id = connection["owner_id"]
-    rows = await db.last_rows_by_chat(
+    rows = await last_rows_by_chat(
         connection["connection_id"], now - MAX_AGE_SECONDS
     )
     candidates = compute_waiting(rows, now, min_seconds)
     if not candidates:
         return []
 
-    flags = {f["chat_id"]: f for f in await db.list_chat_flags(owner_id)}
-    favorites = await db.list_favorite_chat_ids(owner_id) if favorites_only else set()
+    flags = {f["chat_id"]: f for f in await list_chat_flags(owner_id)}
+    favorites = await list_favorite_chat_ids(owner_id) if favorites_only else set()
 
     result = []
     for item in candidates:
@@ -105,7 +111,7 @@ async def find_waiting(
         if favorites_only and chat_id not in favorites:
             continue
         if skip_reminded:
-            ref = await db.last_autoreply_ref(owner_id, chat_id, "reminder")
+            ref = await last_autoreply_ref(owner_id, chat_id, "reminder")
             if ref == str(item["message_id"]):
                 continue  # об этой серии уже напоминали
         result.append(item)
@@ -116,7 +122,7 @@ async def render_list(bot, connection, items, locale: str) -> str:
     """HTML-текст со списком ждущих чатов (имена — упоминаниями, текст экранирован)."""
     lines = [t("rem.header", locale)]
     for item in items[:MAX_LINES]:
-        entry = await db.get_history_entry(
+        entry = await get_history_entry(
             connection["connection_id"], item["chat_id"], item["message_id"]
         )
         preview = (entry["text"] or "") if entry else ""
@@ -144,14 +150,14 @@ async def render_list(bot, connection, items, locale: str) -> str:
 async def process_owner(bot, owner_id: int, now: int | None = None) -> int:
     """Одна проверка владельца. Возвращает число чатов в отправленном напоминании."""
     now = int(now if now is not None else time.time())
-    cfg = await db.get_reminder_settings(owner_id)
+    cfg = await get_reminder_settings(owner_id)
     if not cfg or not cfg["enabled"]:
         return 0
-    connection = await db.get_connection_by_owner(owner_id)
+    connection = await get_connection_by_owner(owner_id)
     if connection is None:
         return 0
 
-    offset = await db.get_timezone_offset(owner_id)
+    offset = await get_timezone_offset(owner_id)
     if is_quiet(now, offset, cfg["quiet_start_minutes"], cfg["quiet_end_minutes"]):
         return 0  # отправим на следующей проверке, когда тихие часы закончатся
 
@@ -161,7 +167,7 @@ async def process_owner(bot, owner_id: int, now: int | None = None) -> int:
     if not items:
         return 0
 
-    locale = await db.get_locale(owner_id)
+    locale = await get_locale(owner_id)
     text = await render_list(bot, connection, items, locale)
     try:
         await bot.send_message(
@@ -176,7 +182,7 @@ async def process_owner(bot, owner_id: int, now: int | None = None) -> int:
         return 0
 
     for item in items:
-        await db.log_autoreply(
+        await log_autoreply(
             owner_id, item["chat_id"], "reminder", str(item["message_id"]), now
         )
     return len(items)
@@ -186,7 +192,7 @@ async def run_reminders_loop(bot):
     await asyncio.sleep(60)
     while True:
         try:
-            for owner_id in await db.list_reminder_owner_ids():
+            for owner_id in await list_reminder_owner_ids():
                 try:
                     await process_owner(bot, owner_id)
                 except Exception:

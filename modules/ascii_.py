@@ -3,9 +3,9 @@ import io
 
 from PIL import Image, ImageFilter
 
-from core.context import CommandContext
-from core.media import download_message_photo, download_user_avatar
-from core.registry import command
+from app.platform.telegram.context import CommandContext
+from app.platform.media import download_message_photo, download_user_avatar
+from app.platform.telegram.registry import command
 
 
 _BRAILLE_BASE = 0x2800

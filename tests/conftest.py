@@ -18,8 +18,8 @@ from tortoise import Tortoise  # noqa: E402
 
 import bot_instance  # noqa: E402
 from config import TORTOISE_ORM  # noqa: E402
-from core import database as db  # noqa: E402
-from core.ttl_cache import clear_all  # noqa: E402
+from db.models.connection import get_connection, upsert_connection
+from app.platform.ttl_cache import clear_all  # noqa: E402
 from core.loader import load_modules  # noqa: E402
 
 bot_instance.setup_routes()
@@ -48,8 +48,8 @@ async def database():
 
 @pytest_asyncio.fixture
 async def connection(database):
-    await db.upsert_connection(CONNECTION_ID, OWNER_ID, OWNER_ID, True)
-    return await db.get_connection(CONNECTION_ID)
+    await upsert_connection(CONNECTION_ID, OWNER_ID, OWNER_ID, True)
+    return await get_connection(CONNECTION_ID)
 
 
 class FakeBot:

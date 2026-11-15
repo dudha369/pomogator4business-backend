@@ -7,7 +7,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import GetUserProfilePhotos
 
 from api import avatar as avatar_api
-from core import database as db
+from db.models.known_chat import mark_known_chat
 
 from .conftest import OWNER_ID
 
@@ -24,7 +24,7 @@ def clean_cache():
 
 @pytest.fixture
 async def known_chat(connection, api_bot):
-    await db.mark_known_chat(OWNER_ID, KNOWN)
+    await mark_known_chat(OWNER_ID, KNOWN)
 
 
 def bot_calls(bot, monkeypatch, handler):

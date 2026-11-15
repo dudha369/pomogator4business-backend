@@ -7,8 +7,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
-from core import database as db
-from core.crypto import decrypt_token
+from db.models.mirror_bot import get_all_active_mirrors
+from app.platform.crypto import decrypt_token
 from mirror.router import router as mirror_router
 from core.utils import log_suppressed
 
@@ -127,7 +127,7 @@ class MirrorManager:
             await self._shutdown_bot(bot, delete_webhook=True)
 
     async def start_all(self):
-        mirrors = await db.get_all_active_mirrors()
+        mirrors = await get_all_active_mirrors()
         for row in mirrors:
             # Одно битое зеркало (например, после смены BOT_TOKEN токен уже
             # не расшифровывается) не должно валить запуск всего приложения.
