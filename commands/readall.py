@@ -32,9 +32,7 @@ async def cmd_readall(ctx: CommandContext):
 
 @command(name="fav", aliases=["избранное"], module="readall")
 async def cmd_fav(ctx: CommandContext):
-    now_favorite = await toggle_favorite_chat(
-        ctx.connection["owner_id"], ctx.chat_id
-    )
+    now_favorite = await toggle_favorite_chat(ctx.connection["owner_id"], ctx.chat_id)
     await ctx.edit_command_message(
         ctx.t("fav.added" if now_favorite else "fav.removed")
     )

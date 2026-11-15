@@ -212,9 +212,7 @@ async def test_waiting_command_sends_list_privately(connection, bot):
     import time
 
     # история «5 часов назад» относительно реального времени команды
-    await save_history(
-        CONNECTION_ID, 8, 1, False, "Ответьте", int(time.time()) - 5 * H
-    )
+    await save_history(CONNECTION_ID, 8, 1, False, "Ответьте", int(time.time()) - 5 * H)
     ctx = CommandContext(
         bot=bot,
         message=make_message(".waiting 2h", chat_id=OWNER_ID, from_id=OWNER_ID),

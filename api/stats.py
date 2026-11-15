@@ -67,8 +67,6 @@ async def get_overview(
         "top_chats": stats_calc.top_from_counts(
             await count_by_chat(connection_id, since)
         ),
-        "archive": await count_archive_events_since(
-            connection["connection_id"], since
-        ),
+        "archive": await count_archive_events_since(connection["connection_id"], since),
         "reply_time": stats_calc.reply_summary(stats_calc.reply_times(rows)),
     }

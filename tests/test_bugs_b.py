@@ -217,9 +217,7 @@ async def test_backup_import_existing_keyword_is_replaced_at_quota(client):
         json={"version": 1, "keywords": [{"keyword": "k0", "reply_text": "new"}]},
     )
     assert r.status_code == 200
-    rows = {
-        k["keyword"]: k["reply_text"] for k in await list_keyword_replies(OWNER_ID)
-    }
+    rows = {k["keyword"]: k["reply_text"] for k in await list_keyword_replies(OWNER_ID)}
     assert rows["k0"] == "new" and len(rows) == MAX_KEYWORDS
 
 
@@ -556,8 +554,7 @@ async def test_sql_aggregates_match_python(connection):
 async def test_last_rows_by_chat_picks_latest_message(connection):
     await _seed_history()
     rows = {
-        r["chat_id"]: r
-        for r in await last_rows_by_chat(CONNECTION_ID, NOW - 5 * 86400)
+        r["chat_id"]: r for r in await last_rows_by_chat(CONNECTION_ID, NOW - 5 * 86400)
     }
     assert rows[7]["message_id"] == 3 and not rows[7]["is_owner"]
     assert (
