@@ -3,7 +3,7 @@ from tortoise.models import Model
 
 
 class AiSettings(Model):
-    owner_id = fields.BigIntField(pk=True)
+    owner_id = fields.BigIntField(pk=True, generated=False)
     enabled = fields.BooleanField(default=False)
     # draft — бот присылает владельцу черновик с кнопками; auto — отвечает сам
     mode = fields.CharField(max_length=8, default="draft")

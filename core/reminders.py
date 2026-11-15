@@ -87,7 +87,7 @@ async def find_waiting(
 ):
     """Чаты, ждущие ответа, с учётом флагов, избранного и уже отправленных напоминаний."""
     owner_id = connection["owner_id"]
-    rows = await db.list_history_rows_since(
+    rows = await db.last_rows_by_chat(
         connection["connection_id"], now - MAX_AGE_SECONDS
     )
     candidates = compute_waiting(rows, now, min_seconds)
@@ -168,7 +168,6 @@ async def process_owner(bot, owner_id: int, now: int | None = None) -> int:
             chat_id=connection["owner_chat_id"],
             text=text,
             parse_mode="html",
-            disable_web_page_preview=True,
         )
     except Exception:
         logger.warning(

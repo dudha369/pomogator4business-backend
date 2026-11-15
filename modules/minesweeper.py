@@ -29,6 +29,17 @@ def generate_mines(size, bomb_count, rng=None):
     return set(rng.sample(range(total), min(bomb_count, total)))
 
 
+def relocate_mine(size, mines, index, rng=None):
+    """Первый клик не должен попадать на мину: переносим её на случайную свободную клетку."""
+    rng = rng or random
+    free = [i for i in range(size * size) if i not in mines and i != index]
+    moved = set(mines)
+    moved.discard(index)
+    if free:
+        moved.add(rng.choice(free))
+    return moved
+
+
 def adjacent_count(size, mines, index):
     row, col = divmod(index, size)
     count = 0
@@ -145,13 +156,14 @@ def _game_keyboard(
             idx = r * size + c
 
             if idx in revealed or finished:
-                if idx in mines:
+                if idx in flagged:
+                    # итог игры: верный флаг — зелёный, ошибочный — красный крест
+                    text, style = (
+                        ("🚩", "success") if idx in mines else ("❌", "danger")
+                    )
+                elif idx in mines:
                     text = "💥" if idx == exploded_idx else "💣"
                     style = "danger"
-                elif idx in flagged:
-                    # флаг стоял верно — подсветим как успех при завершении игры
-                    text = "🚩"
-                    style = "success" if finished and idx not in mines else None
                 else:
                     count = adjacent_count(size, mines, idx)
                     text = _NUMBER_EMOJI.get(count, "·")
@@ -204,10 +216,8 @@ async def cmd_ms(ctx):
     text = t("ms.settings_title", ctx.locale)
     keyboard = _settings_keyboard(game)
 
-    await ctx.edit_command_message(text, reply_markup=keyboard)
-    await db.save_ms_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    message_id = await ctx.present(text, reply_markup=keyboard)
+    await db.save_ms_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("ms:"))
@@ -340,6 +350,13 @@ async def on_ms_callback(call: CallbackQuery):
         # сначала нужно снять флаг переключением режима — защищаем от случайного открытия
         await call.answer(t("ms.cell_flagged", locale), show_alert=True)
         return
+
+    if idx in mines and not revealed:
+        # самый первый ход: мину переносим, чтобы игра не заканчивалась на старте
+        mines = relocate_mine(size, mines, idx)
+        await db.save_ms_game(
+            business_connection_id, chat_id, mines=_set_to_json(mines)
+        )
 
     if idx in mines:
         revealed.add(idx)

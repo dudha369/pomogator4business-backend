@@ -63,7 +63,13 @@ def command_ctx(bot, connection, user_id, name, username=None):
     )
     _LAST["message_id"] = msg.message_id
     return CommandContext(
-        bot=bot, message=msg, connection=connection, args="", locale="ru"
+        bot=bot,
+        message=msg,
+        # стартер — «владелец»: старый путь (правка команды). Путь собеседника
+        # проверяют тесты ctx.present в test_bugs_b.py
+        connection={**connection, "owner_id": user_id},
+        args="",
+        locale="ru",
     )
 
 

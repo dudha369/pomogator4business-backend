@@ -133,7 +133,7 @@ async def test_chats_favorites_and_readall(client, api_bot):
     assert dry.json()["matched"] == 1 and api_bot.reads == []
 
     done = await client.post("/api/readall", headers=h, json={"older_hours": 24})
-    assert done.json() == {"matched": 1, "done": 1, "failed": 0}
+    assert done.json() == {"matched": 1, "done": 1, "failed": 0, "running": False}
     assert api_bot.reads[0]["chat_id"] == 8 and api_bot.reads[0]["message_id"] == 80
     assert (
         await client.post("/api/readall", headers=h, json={"last_hours": 0})

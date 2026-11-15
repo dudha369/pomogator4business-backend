@@ -98,13 +98,19 @@ async def find_chats(connection, flt, now=None):
     )
 
 
-async def read_chats(bot, connection, flt, now=None):
+async def read_chats(bot, connection, flt, now=None, progress=None):
     """Помечает прочитанными подходящие чаты. Возвращает
-    {"matched": N, "done": N, "failed": N}."""
+    {"matched": N, "done": N, "failed": N}. Если передан словарь progress, он
+    обновляется по ходу дела (его читает эндпоинт статуса)."""
     chats = await find_chats(connection, flt, now)
-    done = 0
+    state = progress if progress is not None else {}
+    state.update(matched=len(chats), done=0, failed=0)
     for row in chats:
-        if await _read_one(bot, connection["connection_id"], row):
-            done += 1
+        key = (
+            "done"
+            if await _read_one(bot, connection["connection_id"], row)
+            else "failed"
+        )
+        state[key] += 1
         await asyncio.sleep(0.05)  # не упираемся в лимиты Bot API
-    return {"matched": len(chats), "done": done, "failed": len(chats) - done}
+    return {k: state[k] for k in ("matched", "done", "failed")}

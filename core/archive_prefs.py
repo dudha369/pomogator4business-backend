@@ -26,6 +26,7 @@ class ArchivePrefs:
     caption_edit_media: bool = True  # файл над «Было/Стало» при правке подписи
     location_map: bool = False  # геолокацию показывать картой прямо в сообщении
     voice_transcript: bool = False  # распознавать голосовые и показывать текст
+    own_edits: bool = False  # уведомлять и об изменениях СВОИХ сообщений
 
     def as_dict(self) -> dict:
         data = asdict(self)
@@ -57,6 +58,7 @@ def _clean(key, value):
         "caption_edit_media",
         "location_map",
         "voice_transcript",
+        "own_edits",
     ):
         if not isinstance(value, bool):
             raise ValueError(f"{key}: нужно true/false")

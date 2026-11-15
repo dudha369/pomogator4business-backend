@@ -63,9 +63,7 @@ async def cmd_quiz(ctx: CommandContext):
     index = random.randrange(len(QUESTIONS))
     question, options, _correct = QUESTIONS[index]
 
-    await ctx.edit_command_message(
-        f"❓ {question}", reply_markup=_keyboard(index, options)
-    )
+    await ctx.present(f"❓ {question}", reply_markup=_keyboard(index, options))
 
 
 @router.callback_query(F.data.startswith("quiz:"))

@@ -10,6 +10,7 @@ _MAX_PARTS = 40
 @command(
     name="split",
     module="split",
+    aliases=["words"],
 )
 async def cmd_split(ctx: CommandContext):
     if not ctx.args.strip():

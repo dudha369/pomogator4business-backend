@@ -50,10 +50,16 @@ async def get_overview(
     now = int(time.time())
     since = now - days * 86400
 
-    rows = await db.list_history_rows_since(connection["connection_id"], since)
+    connection_id = connection["connection_id"]
+    # счёт и топ — SQL-агрегатами; в память грузим только лёгкие строки для скорости ответа
+    rows = await db.list_history_rows_since(connection_id, since)
     return {
-        "days": stats_calc.daily_activity(rows, now, offset, days),
-        "top_chats": stats_calc.top_chats(rows),
+        "days": stats_calc.daily_from_counts(
+            await db.count_by_day(connection_id, since, offset), now, offset, days
+        ),
+        "top_chats": stats_calc.top_from_counts(
+            await db.count_by_chat(connection_id, since)
+        ),
         "archive": await db.count_archive_events_since(
             connection["connection_id"], since
         ),

@@ -1,5 +1,6 @@
 import random
 
+from core.game_lock import serialized_command
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -24,6 +25,7 @@ def _parse_int(raw: str) -> int | None:
 
 
 @command(name="guess", module="guess", owner_only=False)
+@serialized_command
 async def cmd_guess(ctx):
     raw = ctx.args.strip()
     game = await db.get_guess_game(ctx.connection_id, ctx.chat_id)

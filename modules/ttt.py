@@ -161,7 +161,7 @@ async def cmd_ttt(ctx):
         message_id=None,
     )
 
-    await ctx.edit_command_message(
+    message_id = await ctx.present(
         text=t(
             "ttt.challenge",
             ctx.locale,
@@ -171,9 +171,7 @@ async def cmd_ttt(ctx):
         reply_markup=_challenge_keyboard(ctx.locale),
         parse_mode="html",
     )
-    await db.save_ttt_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    await db.save_ttt_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def _show(call, bot, locale, game, winner=None, winning_line=None):
@@ -195,7 +193,7 @@ async def _on_accept(call, bot, ctx):
     game = ctx.game
     if call.from_user.id == game["player_x_id"]:
         await call.answer(t("ttt.cant_accept_own", ctx.locale), show_alert=True)
-        return
+        return True
     remember(call.from_user)
     await db.save_ttt_game(
         ctx.conn_id, ctx.chat_id, player_o_id=call.from_user.id, status="active"
@@ -245,16 +243,16 @@ async def _on_move(call, bot, ctx, idx):
         symbol = "O"
     else:
         await call.answer(t("ttt.not_your_game", ctx.locale), show_alert=True)
-        return
+        return True
 
     if symbol != game["turn"]:
         await call.answer(t("ttt.not_your_turn", ctx.locale), show_alert=True)
-        return
+        return True
 
     board = list(game["board"])
     if board[idx] != ".":
         await call.answer(t("ttt.cell_taken", ctx.locale))
-        return
+        return True
 
     board[idx] = symbol
     board_str = "".join(board)
@@ -305,18 +303,19 @@ async def on_ttt_callback(call: CallbackQuery, bot: Bot):
     ctx = _Ctx(conn_id, chat_id, locale, game)
     status = game["status"]
 
+    answered = False
     if status == "pending" and action == "decline":
         await _on_decline(call, ctx)
     elif status == "pending" and action == "accept":
-        await _on_accept(call, bot, ctx)
+        answered = await _on_accept(call, bot, ctx)
     elif status == "active" and action == "move":
-        await _on_move(call, bot, ctx, idx)
+        answered = await _on_move(call, bot, ctx, idx)
     elif status == "active" and action == "taken":
         await call.answer(t("ttt.cell_taken", locale))
         return
     elif status == "finished" and action == "restart":
         await _on_restart(call, ctx)
-    else:
-        pass
 
-    await call.answer()
+    # callback отвечаем один раз: повторный answer даёт «query is too old»
+    if not answered:
+        await call.answer()

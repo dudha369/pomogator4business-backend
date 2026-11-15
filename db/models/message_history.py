@@ -1,4 +1,4 @@
-from tortoise import fields
+from tortoise import Tortoise, fields
 from tortoise.functions import Max
 from tortoise.models import Model
 
@@ -201,6 +201,48 @@ async def list_history_rows_since(connection_id, since_ts, limit=100000):
         .order_by("created_at")
         .limit(limit)
         .values("chat_id", "message_id", "is_owner", "created_at")
+    )
+
+
+async def _query(sql, params):
+    """Сырой SQL с одинаковыми {1},{2}… для SQLite (?) и Postgres ($n): агрегаты,
+    которые ORM выразит хуже (оконная функция, деление дат)."""
+    conn = Tortoise.get_connection("default")
+    postgres = conn.capabilities.dialect == "postgres"
+    marks = {f"p{i}": (f"${i}" if postgres else "?") for i in range(1, len(params) + 1)}
+    return await conn.execute_query_dict(sql.format(**marks), list(params))
+
+
+async def last_rows_by_chat(connection_id, since_ts):
+    """По одной (последней) строке на чат: хватает, чтобы понять, кто ждёт ответа,
+    и не тащит в память всю историю окна."""
+    return await _query(
+        "SELECT chat_id, message_id, is_owner, created_at FROM ("
+        " SELECT chat_id, message_id, is_owner, created_at,"
+        "  ROW_NUMBER() OVER (PARTITION BY chat_id"
+        "   ORDER BY created_at DESC, message_id DESC) AS rn"
+        " FROM message_history WHERE connection_id = {p1} AND created_at >= {p2}"
+        ") t WHERE rn = 1",
+        (connection_id, since_ts),
+    )
+
+
+async def count_by_day(connection_id, since_ts, offset_minutes):
+    """[{day, is_owner, n}]: сообщения по локальным суткам (day — число суток с 1970-01-01)."""
+    return await _query(
+        "SELECT (created_at + {p1}) / 86400 AS day, is_owner, COUNT(*) AS n"
+        " FROM message_history WHERE connection_id = {p2} AND created_at >= {p3}"
+        " GROUP BY 1, 2",
+        (int(offset_minutes) * 60, connection_id, since_ts),
+    )
+
+
+async def count_by_chat(connection_id, since_ts):
+    """[{chat_id, is_owner, n}] — активность по собеседникам."""
+    return await _query(
+        "SELECT chat_id, is_owner, COUNT(*) AS n FROM message_history"
+        " WHERE connection_id = {p1} AND created_at >= {p2} GROUP BY 1, 2",
+        (connection_id, since_ts),
     )
 
 

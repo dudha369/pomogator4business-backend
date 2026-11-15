@@ -1,6 +1,7 @@
 import json
 import random
 
+from core.game_lock import game_lock, serialized_command
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -68,6 +69,7 @@ def _render_board(locale, secret_length, guesses, status, secret):
 
 
 @command(name="word", module="wordle", owner_only=False)
+@serialized_command
 async def cmd_word(ctx):
     raw = ctx.args.strip().upper()
     if raw:
@@ -89,13 +91,16 @@ async def cmd_word(ctx):
     )
 
     text = _render_board(ctx.locale, len(secret), [], "active", secret)
-    await ctx.edit_command_message(text)
-    await db.save_wordle_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    message_id = await ctx.present(text)
+    await db.save_wordle_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def handle_wordle_guess(bot, connection, message, locale, raw_guess):
+    async with game_lock(connection["connection_id"], message.chat.id):
+        return await _handle_wordle_guess(bot, connection, message, locale, raw_guess)
+
+
+async def _handle_wordle_guess(bot, connection, message, locale, raw_guess):
     game = await db.get_wordle_game(connection["connection_id"], message.chat.id)
     if not game or game["status"] != "active":
         return False

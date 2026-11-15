@@ -131,7 +131,9 @@ async def cmd_archive_view(message: Message):
             f"{icon} chat {entry['chat_id']}: {html.escape(repr(entry['old_text']), quote=False)}"
         )
 
-    await message.answer(t("settings.archive_header", locale) + "\n".join(lines))
+    await message.answer(
+        t("settings.archive_header", locale) + "\n".join(lines), parse_mode="html"
+    )
 
 
 @router.message(Command("settings"))

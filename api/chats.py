@@ -3,14 +3,23 @@
 Нужно, потому что команду .readall нельзя написать в «Избранном» или в личке
 с ботом из бизнес-чата, а список чатов удобнее выбирать глазами."""
 
-from fastapi import APIRouter, Depends, HTTPException
+import asyncio
+import logging
+import time
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner
 from core import database as db
 from core.readall import ReadFilter, find_chats, read_chats
+from core.tasks import spawn
 
 router = APIRouter()
+logger = logging.getLogger("bot.chats_api")
+
+_WAIT_SECONDS = 20  # меньше клиентского таймаута в 30 с
+_jobs: dict[str, dict] = {}  # connection_id -> состояние последнего запуска
 
 
 @router.get("/chats")
@@ -60,7 +69,37 @@ async def read_all(payload: ReadAllRequest, owner: Owner = Depends(current_owner
 
     from bot_instance import bot
 
+    connection_id = connection["connection_id"]
+    job = _jobs.get(connection_id)
+    if job is None or not job["running"]:
+        job = _jobs[connection_id] = {
+            "running": True,
+            "matched": 0,
+            "done": 0,
+            "failed": 0,
+        }
+        spawn(_run_job(bot, connection, flt, job), name=f"readall:{connection_id}")
+
+    # На 1000+ чатов прочтение занимает минуты, а у клиента таймаут 30 с: ждём
+    # недолго, а если не уложились — отдаём прогресс, работа идёт в фоне.
+    deadline = time.monotonic() + _WAIT_SECONDS
+    while job["running"] and time.monotonic() < deadline:
+        await asyncio.sleep(0.2)
+    return dict(job)
+
+
+@router.get("/readall/status")
+async def read_all_status(owner: Owner = Depends(current_owner)):
+    job = _jobs.get(owner.connection["connection_id"])
+    return (
+        dict(job) if job else {"running": False, "matched": 0, "done": 0, "failed": 0}
+    )
+
+
+async def _run_job(bot, connection, flt, job):
     try:
-        return await read_chats(bot, connection, flt)
+        await read_chats(bot, connection, flt, progress=job)
     except Exception:
-        raise HTTPException(status_code=502, detail="Telegram request failed")
+        logger.exception("readall: сбой фоновой задачи")
+    finally:
+        job["running"] = False

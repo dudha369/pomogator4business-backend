@@ -3,6 +3,7 @@ import hmac
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
@@ -81,7 +82,9 @@ class MirrorManager:
             )
             raise MirrorStartError("no_webhook_url")
 
-        bot = Bot(token=token)
+        bot = Bot(
+            token=token, default=DefaultBotProperties(link_preview_is_disabled=True)
+        )
         try:
             await bot.set_webhook(
                 url=_mirror_webhook_url(owner_id),

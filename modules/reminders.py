@@ -35,4 +35,4 @@ async def cmd_waiting(ctx: CommandContext):
         items,
         ctx.locale or await db.get_locale(ctx.connection["owner_id"]),
     )
-    await ctx.usage_error(text, parse_mode="html", disable_web_page_preview=True)
+    await ctx.usage_error(text, parse_mode="html")

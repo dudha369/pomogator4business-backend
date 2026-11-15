@@ -182,7 +182,18 @@ def _raw(message):
 
 
 def build_snapshot(message, bot_id=None):
-    """Message -> снимок (dict) или None, если в сообщении нечего хранить."""
+    """Message -> снимок (dict) или None, если в сообщении нечего хранить.
+
+    raw_json нужен только для экзотических типов (всё, что не текст и не файл):
+    у текста и файлов всё важное уже лежит в колонках и payload, а полный JSON
+    каждого сообщения быстро съедает базу."""
+    snap = _build_snapshot(message, bot_id)
+    if snap is not None and (snap["kind"] == "text" or snap["kind"] in FILE_KINDS):
+        snap["raw_json"] = None
+    return snap
+
+
+def _build_snapshot(message, bot_id=None):
     text = getattr(message, "text", None) or getattr(message, "caption", None)
     snap = {
         "kind": None,

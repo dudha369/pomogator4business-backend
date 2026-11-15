@@ -22,6 +22,16 @@ def require_user(x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-
     except Exception:
         raise HTTPException(status_code=401, detail="Missing user in init data")
 
+    if settings.MAINTENANCE_MODE:
+        raise HTTPException(status_code=503, detail={"reason": "maintenance_mode"})
+    allowed = {
+        int(part)
+        for part in settings.ALLOWED_USER_IDS.split(",")
+        if part.strip().isdigit()
+    }
+    if allowed and user.get("id") not in allowed:
+        raise HTTPException(status_code=403, detail={"reason": "access_denied"})
+
     return user
 
 

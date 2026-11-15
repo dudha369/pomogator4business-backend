@@ -1,12 +1,16 @@
+import json
+import logging
 from dataclasses import dataclass
 
 from aiogram import Bot
-from aiogram.types import Message
+from aiogram.types import Message, ReplyParameters
 
 from core import database as db
 from core.i18n import t
 from core.self_actions import delete_own_messages
 from core.utils import log_suppressed
+
+logger = logging.getLogger("bot.context")
 
 
 @dataclass
@@ -53,10 +57,12 @@ class CommandContext:
             self.bot, self.connection_id, self.chat_id, [self.message.message_id]
         )
 
-    async def edit_command_message(self, text: str, **kwargs):
+    async def edit_command_message(self, text: str, **kwargs) -> bool:
+        """Заменить сообщение-команду результатом. True — получилось (в личке с ботом
+        править нечего: просто отвечаем)."""
         if self.dm:
             await self.reply(text, **kwargs)
-            return
+            return True
         try:
             await self.bot.edit_message_text(
                 business_connection_id=self.connection_id,
@@ -67,6 +73,52 @@ class CommandContext:
             )
         except Exception:
             log_suppressed("core/context.py:54", benign=True)
+            return False
+        return True
+
+    @property
+    def is_owner_author(self) -> bool:
+        user = self.message.from_user
+        return user is not None and user.id == self.connection["owner_id"]
+
+    def _can_delete_others(self) -> bool:
+        try:
+            rights = json.loads(self.connection.get("rights_json") or "{}")
+        except (json.JSONDecodeError, TypeError):
+            return False
+        return bool(rights.get("can_delete_all_messages"))
+
+    async def present(self, text: str, **kwargs) -> int:
+        """Показать результат команды и вернуть message_id итогового сообщения.
+
+        Владелец: его сообщение-команда превращается в результат. Собеседник (игры
+        с owner_only=False): правка чужого сообщения невозможна, поэтому, если у бота
+        есть право удалять чужие сообщения, команда удаляется, а игра приходит новым
+        сообщением; нет права или удалить не вышло — игра идёт ответом на команду."""
+        if self.dm:
+            return (await self.reply(text, **kwargs)).message_id
+
+        if self.is_owner_author:
+            if await self.edit_command_message(text, **kwargs):
+                return self.message.message_id
+            return (await self.reply(text, **kwargs)).message_id
+
+        deleted = False
+        if self._can_delete_others():
+            deleted = await delete_own_messages(
+                self.bot, self.connection_id, self.chat_id, [self.message.message_id]
+            )
+        else:
+            # TODO(alerts): сообщить владельцу через alerts.report(code="no_delete_right")
+            logger.info(
+                "Нет права can_delete_all_messages (connection=%s): игра ответом на команду",
+                self.connection_id,
+            )
+        if not deleted:
+            kwargs["reply_parameters"] = ReplyParameters(
+                message_id=self.message.message_id
+            )
+        return (await self.reply(text, **kwargs)).message_id
 
     async def usage_error(self, text: str, **kwargs):
         await self.delete_command_message()

@@ -1,6 +1,7 @@
 import json
 import random
 
+from core.game_lock import serialized_command
 from core import database as db
 from core.i18n import t
 from core.registry import command
@@ -56,10 +57,8 @@ async def _start(ctx, secret):
     game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)
     text = _render(ctx.locale, game)
 
-    await ctx.edit_command_message(text)
-    await db.save_hangman_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    message_id = await ctx.present(text, parse_mode="html")
+    await db.save_hangman_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 async def _handle_guess(ctx, game, letter):
@@ -98,18 +97,20 @@ async def _handle_guess(ctx, game, letter):
                 chat_id=ctx.chat_id,
                 message_id=game["message_id"],
                 text=text,
+                parse_mode="html",
             )
             return
         except Exception:
             log_suppressed("modules/hangman.py:102", benign=True)
 
-    sent = await ctx.reply(text)
+    sent = await ctx.reply(text, parse_mode="html")
     await db.save_hangman_game(
         ctx.connection_id, ctx.chat_id, message_id=sent.message_id
     )
 
 
 @command(name="hangman", module="hangman", owner_only=False)
+@serialized_command
 async def cmd_hangman(ctx):
     raw = ctx.args.strip()
     game = await db.get_hangman_game(ctx.connection_id, ctx.chat_id)

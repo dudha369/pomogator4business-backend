@@ -1,6 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
+from core.ttl_cache import clear_all, ttl_cache
+
 
 class Connection(Model):
     connection_id = fields.CharField(max_length=255, pk=True)
@@ -37,8 +39,10 @@ async def upsert_connection(
             "rights_json": rights_json,
         },
     )
+    clear_all()
 
 
+@ttl_cache
 async def get_connection(connection_id):
     rows = await Connection.filter(connection_id=connection_id).values()
     return rows[0] if rows else None
@@ -56,3 +60,4 @@ async def get_connection_by_owner(owner_id):
 
 async def set_prefix(connection_id, prefix):
     await Connection.filter(connection_id=connection_id).update(prefix=prefix)
+    clear_all()

@@ -15,9 +15,9 @@ def local_date(ts: int, offset_minutes: int) -> str:
     return moment.strftime("%Y-%m-%d")
 
 
-def daily_activity(rows, now: int, offset_minutes: int, days: int):
-    """[{date, incoming, outgoing}] за последние `days` суток (включая сегодня),
-    дни без сообщений заполнены нулями."""
+def daily_from_counts(counts, now: int, offset_minutes: int, days: int):
+    """counts: [{day, is_owner, n}] (day — число суток с 1970-01-01 по локальному времени).
+    Возвращает [{date, incoming, outgoing}] за `days` суток, пустые дни — нули."""
     today = datetime.datetime.fromtimestamp(
         now + offset_minutes * 60, datetime.timezone.utc
     ).date()
@@ -25,24 +25,49 @@ def daily_activity(rows, now: int, offset_minutes: int, days: int):
         (today - datetime.timedelta(days=i)).isoformat(): {"incoming": 0, "outgoing": 0}
         for i in range(days - 1, -1, -1)
     }
-    for row in rows:
-        bucket = buckets.get(local_date(row["created_at"], offset_minutes))
+    epoch = datetime.date(1970, 1, 1)
+    for row in counts:
+        date = (epoch + datetime.timedelta(days=int(row["day"]))).isoformat()
+        bucket = buckets.get(date)
         if bucket is not None:
-            bucket["outgoing" if row["is_owner"] else "incoming"] += 1
-    return [{"date": date, **counts} for date, counts in buckets.items()]
+            bucket["outgoing" if row["is_owner"] else "incoming"] += int(row["n"])
+    return [{"date": date, **c} for date, c in buckets.items()]
 
 
-def top_chats(rows, limit: int = 5):
-    totals = {}
+def daily_activity(rows, now: int, offset_minutes: int, days: int):
+    """То же по «сырым» строкам истории (по одной на сообщение)."""
+    counts = {}
     for row in rows:
+        day = (row["created_at"] + offset_minutes * 60) // 86400
+        key = (day, bool(row["is_owner"]))
+        counts[key] = counts.get(key, 0) + 1
+    return daily_from_counts(
+        [{"day": d, "is_owner": o, "n": n} for (d, o), n in counts.items()],
+        now,
+        offset_minutes,
+        days,
+    )
+
+
+def top_from_counts(counts, limit: int = 5):
+    """counts: [{chat_id, is_owner, n}] -> топ собеседников."""
+    totals = {}
+    for row in counts:
         entry = totals.setdefault(
             row["chat_id"], {"chat_id": row["chat_id"], "incoming": 0, "outgoing": 0}
         )
-        entry["outgoing" if row["is_owner"] else "incoming"] += 1
+        entry["outgoing" if row["is_owner"] else "incoming"] += int(row["n"])
     ranked = sorted(
         totals.values(), key=lambda e: (-(e["incoming"] + e["outgoing"]), e["chat_id"])
     )
     return ranked[:limit]
+
+
+def top_chats(rows, limit: int = 5):
+    return top_from_counts(
+        [{"chat_id": r["chat_id"], "is_owner": r["is_owner"], "n": 1} for r in rows],
+        limit,
+    )
 
 
 def reply_times(rows):

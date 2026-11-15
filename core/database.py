@@ -110,6 +110,9 @@ from db.models.message_history import (
     get_recent_history,
     has_other_messages,
     last_owner_message_at,
+    last_rows_by_chat,
+    count_by_day,
+    count_by_chat,
     list_album,
     set_history_transcript,
     list_chat_history,
@@ -155,10 +158,12 @@ from db.models.story import is_autopost_enabled, toggle_autopost
 from db.models.ttt import get_ttt_game, save_ttt_game
 from db.models.user_locale import (
     get_locale,
+    get_timezone_name,
     get_timezone_offset,
     get_timezone_offsets_for,
     has_chosen_locale,
     set_locale,
+    set_timezone_name,
     set_timezone_offset,
 )
 from db.models.voice_effect import get_voice_effect, set_voice_effect
@@ -201,6 +206,9 @@ __all__ = [
     "count_keyword_replies",
     "last_autoreply_at",
     "last_owner_message_at",
+    "last_rows_by_chat",
+    "count_by_day",
+    "count_by_chat",
     "log_autoreply",
     "purge_autoresponder_log",
     "list_recent_chats",
@@ -263,6 +271,7 @@ __all__ = [
     "get_archive_page",
     "get_recent_archive",
     "get_recent_history",
+    "get_timezone_name",
     "get_timezone_offset",
     "get_timezone_offsets_for",
     "get_ttt_game",
@@ -297,6 +306,7 @@ __all__ = [
     "set_locale",
     "set_prefix",
     "set_timed_mute",
+    "set_timezone_name",
     "set_timezone_offset",
     "set_voice_effect",
     "set_warn_mute",

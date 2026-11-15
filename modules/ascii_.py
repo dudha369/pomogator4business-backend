@@ -76,4 +76,4 @@ async def cmd_ascii(ctx: CommandContext):
         image_to_braille, image_bytes, invert=invert, edge=edge
     )
 
-    await ctx.edit_command_message(f"<code>{art}</code>")
+    await ctx.edit_command_message(f"<code>{art}</code>", parse_mode="html")

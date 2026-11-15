@@ -20,6 +20,18 @@ def game_lock(connection_id, chat_id) -> asyncio.Lock:
     return lock
 
 
+def serialized_command(handler):
+    """То же для текстовых ходов-команд (.hangman, .guess, .city, .word): два быстрых
+    сообщения подряд не должны читать одно и то же состояние и затирать друг друга."""
+
+    @functools.wraps(handler)
+    async def wrapper(ctx, *args, **kwargs):
+        async with game_lock(ctx.connection_id, ctx.chat_id):
+            return await handler(ctx, *args, **kwargs)
+
+    return wrapper
+
+
 def serialized_game(handler):
     """Декоратор callback-хендлера игры: ходы в одном чате идут строго по очереди."""
 

@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     WEBHOOK_BASE_URL: str = ""
     WEBHOOK_SECRET_RAW: str = Field(default="", alias="WEBHOOK_SECRET")
 
+    # режим обслуживания: API отвечает 503 maintenance_mode (бот при этом работает)
+    MAINTENANCE_MODE: bool = False
+    # ограничение доступа к мини-приложению: id через запятую; пусто — доступ у всех
+    ALLOWED_USER_IDS: str = ""
+
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
     # Какие типы файлов показывать в Rich. Голосовые по умолчанию обычные: на iPhone

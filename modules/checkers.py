@@ -19,6 +19,8 @@ _SYMBOLS = {
     "W": "🤍",
     "b": "⚫",
     "B": "🖤",
+    # сбитая шашка серии: ещё стоит на доске (турецкий удар), снимется в конце хода
+    "x": "💥",
 }
 
 
@@ -160,19 +162,27 @@ def legal_actions_for(board, idx, color):
 
 
 def apply_single_move(board, from_idx, to_idx, captured_idx):
+    """Один шаг хода. Сбитая шашка не снимается, а помечается «x»: по правилу
+    турецкого удара она остаётся на доске до конца серии — через неё нельзя
+    перепрыгнуть повторно, и она блокирует линию. Снимает её finish_series."""
     cells = list(board)
     piece = cells[from_idx]
     cells[from_idx] = "."
     if captured_idx is not None:
-        cells[captured_idx] = "."
+        cells[captured_idx] = "x"
     cells[to_idx] = piece
     return "".join(cells)
 
 
+def finish_series(board):
+    """Конец хода: убрать с доски шашки, сбитые за серию."""
+    return board.replace("x", ".")
+
+
 def maybe_promote(board, idx):
-    """Превращение в дамку — ТОЛЬКО когда боевая серия (или тихий ход)
-    закончилась именно на последней горизонтали. Если шашка прошла через
-    неё транзитом в середине серии боёв, она дамкой не становится."""
+    """Превращение в дамку, как только простая шашка встала на последнюю
+    горизонталь. Если это произошло посреди серии боёв, шашка становится дамкой
+    сразу и продолжает бить уже по правилам дамки (русские шашки)."""
     cells = list(board)
     piece = cells[idx]
     row = idx // _SIZE
@@ -297,12 +307,10 @@ async def cmd_chk(ctx):
         ctx.locale,
         name=format_mention(starter.full_name, starter.username, starter.id),
     )
-    await ctx.edit_command_message(
+    message_id = await ctx.present(
         text, reply_markup=_challenge_keyboard(), parse_mode="html"
     )
-    await db.save_chk_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    await db.save_chk_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("chk:"))
@@ -462,13 +470,15 @@ async def _apply_move(
     to_idx,
     captured_idx,
 ):
-    new_board = apply_single_move(board, from_idx, to_idx, captured_idx)
+    new_board = maybe_promote(
+        apply_single_move(board, from_idx, to_idx, captured_idx), to_idx
+    )
 
     if captured_idx is not None:
         further = piece_captures(new_board, to_idx)
         if further:
-            # Серия продолжается той же шашкой — ход не передаётся,
-            # в дамки шашка пока не превращается (maybe_promote не вызывается).
+            # Серия продолжается той же шашкой (уже дамкой, если дошла до края) —
+            # ход не передаётся, сбитые шашки пока остаются на доске.
             await db.save_chk_game(
                 business_connection_id,
                 chat_id,
@@ -490,9 +500,7 @@ async def _apply_move(
             )
             await call.answer()
             return
-        new_board = maybe_promote(new_board, to_idx)
-    else:
-        new_board = maybe_promote(new_board, to_idx)
+        new_board = finish_series(new_board)
 
     opponent = "b" if color == "w" else "w"
     winner = None

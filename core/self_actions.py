@@ -1,4 +1,13 @@
 import time
+
+from aiogram.client.session.middlewares.base import BaseRequestMiddleware
+from aiogram.methods import (
+    EditMessageCaption,
+    EditMessageMedia,
+    EditMessageReplyMarkup,
+    EditMessageText,
+)
+
 from core.utils import log_suppressed
 
 _TTL_SECONDS = 30
@@ -56,3 +65,51 @@ async def delete_own_messages(
             _pending.pop((connection_id, chat_id, message_id), None)
         return False
     return True
+
+
+# --- правки, сделанные самим ботом -------------------------------------------------
+# Telegram присылает edited_business_message и на правки бота (typewriter, ходы в играх,
+# «Было/Стало»): в архив они попадать не должны. Метка живёт, пока бот правит сообщение
+# (каждая правка её продлевает), и не «съедается» при проверке: на одну правку может
+# прийти несколько апдейтов.
+_EDIT_TTL_SECONDS = 20
+_bot_edits: dict[tuple[str, int, int], float] = {}
+
+_EDIT_METHODS = (
+    EditMessageText,
+    EditMessageCaption,
+    EditMessageMedia,
+    EditMessageReplyMarkup,
+)
+
+
+def _mark_bot_edit(connection_id: str, chat_id: int, message_id: int) -> None:
+    now = time.monotonic()
+    for key in [k for k, until in _bot_edits.items() if until < now]:
+        del _bot_edits[key]
+    _bot_edits[(connection_id, chat_id, message_id)] = now + _EDIT_TTL_SECONDS
+
+
+def is_bot_edit(connection_id: str, chat_id: int, message_id: int) -> bool:
+    until = _bot_edits.get((connection_id, chat_id, message_id))
+    return until is not None and until >= time.monotonic()
+
+
+class BotEditMarker(BaseRequestMiddleware):
+    """Единая точка для ВСЕХ правок бота в бизнес-чатах: метка ставится на уровне
+    сессии Bot, поэтому не нужно помнить об обёртке в каждом месте вызова
+    (message.edit_text, bot.edit_message_text, edit_reply_markup…)."""
+
+    async def __call__(self, make_request, bot, method):
+        if isinstance(method, _EDIT_METHODS):
+            connection_id = getattr(method, "business_connection_id", None)
+            chat_id = getattr(method, "chat_id", None)
+            message_id = getattr(method, "message_id", None)
+            if connection_id and chat_id is not None and message_id is not None:
+                _mark_bot_edit(connection_id, int(chat_id), message_id)
+        return await make_request(bot, method)
+
+
+def install_edit_marker(bot) -> None:
+    """Подключить маркер к боту (основному и каждому зеркальному)."""
+    bot.session.middleware(BotEditMarker())

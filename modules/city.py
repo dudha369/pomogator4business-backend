@@ -1,9 +1,10 @@
 import json
 
+from core.game_lock import serialized_command
 from core import database as db
 from core.registry import command
 
-_SKIP_LETTERS = "ЬЪЙ"
+_SKIP_LETTERS = "ЬЪЫЙ"
 
 
 def next_letter(word):
@@ -20,6 +21,7 @@ def is_valid_city_text(word):
 
 
 @command(name="city", module="city", owner_only=False)
+@serialized_command
 async def cmd_city(ctx):
     raw = ctx.args.strip()
 

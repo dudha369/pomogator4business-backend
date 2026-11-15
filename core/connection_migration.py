@@ -11,6 +11,7 @@ connection_id во всех таблицах, где он есть, и копи�
 
 import logging
 
+from core.ttl_cache import clear_all
 from tortoise import Tortoise
 
 from db.models.connection import Connection
@@ -50,6 +51,7 @@ async def adopt_previous_connection(new_connection_id: str, owner_id: int):
     old_id, old_prefix = previous[0]["connection_id"], previous[0]["prefix"]
 
     await Connection.filter(connection_id=new_connection_id).update(prefix=old_prefix)
+    clear_all()
 
     moved = {}
     for model in _models_with_connection_id():

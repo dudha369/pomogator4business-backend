@@ -13,11 +13,9 @@ from aiogram.types import Update
 logger = logging.getLogger("bot.updates")
 
 
-def _short(text, limit: int = 60) -> str:
-    if not text:
-        return ""
-    text = text.replace("\n", " ")
-    return text if len(text) <= limit else text[: limit - 1] + "…"
+def _size(text) -> int:
+    """В логи (Render) попадает только длина: текст личных сообщений там не место."""
+    return len(text) if text else 0
 
 
 def _describe(update: Update) -> str:
@@ -25,7 +23,7 @@ def _describe(update: Update) -> str:
         m = update.business_message
         return (
             f"business_message conn={m.business_connection_id} chat={m.chat.id} "
-            f"from={m.from_user.id if m.from_user else '?'} text={_short(m.text or m.caption)!r}"
+            f"from={m.from_user.id if m.from_user else '?'} text_len={_size(m.text or m.caption)}"
         )
     if update.edited_business_message:
         m = update.edited_business_message
@@ -46,7 +44,7 @@ def _describe(update: Update) -> str:
         m = update.message
         return (
             f"message chat={m.chat.id} from={m.from_user.id if m.from_user else '?'} "
-            f"text={_short(m.text)!r}"
+            f"text_len={_size(m.text)}"
         )
     if update.callback_query:
         cq = update.callback_query

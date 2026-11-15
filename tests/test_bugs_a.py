@@ -49,8 +49,8 @@ async def test_huge_guess_in_active_game_is_just_too_high(connection):
 
 # --- 2. неэкранированный пользовательский текст при глобальном parse_mode=HTML ---
 def effective_parse_mode(kwargs):
-    """Без явного parse_mode у основного бота действует HTML (bot_instance.py)."""
-    return kwargs.get("parse_mode", "HTML")
+    """Глобального parse_mode больше нет: без явного значения разметки нет."""
+    return kwargs.get("parse_mode")
 
 
 EVIL = "a <b> & <i>x"
@@ -326,7 +326,7 @@ class MirrorBot:
     instances = []
     fail_webhook = False
 
-    def __init__(self, token):
+    def __init__(self, token, **kwargs):
         self.token = token
         self.webhooks, self.deleted_webhook, self.closed = [], False, False
         self.session = types_ns(close=self._close)

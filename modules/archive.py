@@ -41,7 +41,7 @@ from core.archive_prefs import defaults, load_prefs
 from core.i18n import t
 from core.mentions import format_mention
 from core.registry import registry
-from core.self_actions import consume_self_delete
+from core.self_actions import consume_self_delete, is_bot_edit
 from core.snapshot import (
     FILE_KINDS,
     build_snapshot,
@@ -757,7 +757,16 @@ async def on_business_edited(message: Message, bot: Bot):
     old = entry_snapshot(old_entry)
     change = edit_kind(old, snap) if old is not None else None
 
-    if not is_owner and change:
+    # правки самого бота (typewriter, ходы игр) в архив не попадают, как и правки
+    # владельца, пока он не включил «уведомлять о правках своих сообщений»
+    prefs = await load_prefs(connection_id)
+    notify = (
+        bool(change)
+        and not is_bot_edit(connection_id, message.chat.id, message.message_id)
+        and (not is_owner or prefs.own_edits)
+    )
+
+    if notify:
         locale = await db.get_locale(connection["owner_id"])
         mention = format_mention(
             message.from_user.full_name, message.from_user.username, message.chat.id
@@ -778,7 +787,7 @@ async def on_business_edited(message: Message, bot: Bot):
                 old_entry,
                 snap,
                 previous,
-                await load_prefs(connection_id),
+                prefs,
             )
         except Exception:
             log_suppressed("modules/archive.py:notify_edited")
@@ -796,6 +805,7 @@ async def on_business_edited(message: Message, bot: Bot):
             old_snapshot=old,
             new_snapshot=snap,
             notice_message_id=notice_id,
+            is_owner=is_owner,
         )
 
     await db.save_history(

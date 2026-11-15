@@ -208,10 +208,8 @@ async def cmd_2048(ctx):
     text = _text(ctx.locale, 0, "active")
     keyboard = _keyboard(board, False)
 
-    await ctx.edit_command_message(text, reply_markup=keyboard)
-    await db.save_g2048_game(
-        ctx.connection_id, ctx.chat_id, message_id=ctx.message.message_id
-    )
+    message_id = await ctx.present(text, reply_markup=keyboard)
+    await db.save_g2048_game(ctx.connection_id, ctx.chat_id, message_id=message_id)
 
 
 @router.callback_query(F.data.startswith("g2048:"))

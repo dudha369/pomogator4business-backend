@@ -79,6 +79,7 @@ class ArchivePrefsPatch(BaseModel):
     caption_edit_media: bool | None = None
     location_map: bool | None = None
     voice_transcript: bool | None = None
+    own_edits: bool | None = None
 
 
 def _prefs_response(prefs):

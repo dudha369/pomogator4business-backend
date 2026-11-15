@@ -16,10 +16,19 @@ _OPS = {
 }
 
 _MAX_POWER_EXPONENT = 1000
+_MAX_EXPRESSION_LENGTH = 200
+# предел размера целого результата: ((9**999)**999)**999 иначе съедает всю память процесса
+_MAX_RESULT_BITS = 4000
 
 
 class CalcError(Exception):
     pass
+
+
+def _check_size(value):
+    if isinstance(value, int) and value.bit_length() > _MAX_RESULT_BITS:
+        raise CalcError("result too large")
+    return value
 
 
 def _eval_node(node):
@@ -34,9 +43,14 @@ def _eval_node(node):
             raise CalcError("bad operator")
         left = _eval_node(node.left)
         right = _eval_node(node.right)
-        if op_type is ast.Pow and abs(right) > _MAX_POWER_EXPONENT:
-            raise CalcError("exponent too large")
-        return _OPS[op_type](left, right)
+        if op_type is ast.Pow:
+            if abs(right) > _MAX_POWER_EXPONENT:
+                raise CalcError("exponent too large")
+            # размер степени оцениваем ДО вычисления
+            if isinstance(left, int) and isinstance(right, int) and right > 0:
+                if left.bit_length() * right > _MAX_RESULT_BITS:
+                    raise CalcError("result too large")
+        return _check_size(_OPS[op_type](left, right))
 
     if isinstance(node, ast.UnaryOp):
         op_type = type(node.op)
@@ -48,6 +62,8 @@ def _eval_node(node):
 
 
 def safe_eval(expression):
+    if len(expression) > _MAX_EXPRESSION_LENGTH:
+        raise CalcError("expression too long")
     tree = ast.parse(expression, mode="eval")
     return _eval_node(tree.body)
 
@@ -61,7 +77,15 @@ async def cmd_calc(ctx: CommandContext):
 
     try:
         result = safe_eval(expression)
-    except (CalcError, SyntaxError, ZeroDivisionError, OverflowError, ValueError):
+    except (
+        CalcError,
+        SyntaxError,
+        ZeroDivisionError,
+        OverflowError,
+        ValueError,
+        RecursionError,
+        MemoryError,
+    ):
         await ctx.reply(ctx.t("calc.error"))
         return
 

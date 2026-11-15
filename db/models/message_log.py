@@ -37,16 +37,23 @@ async def forget_message_log(log_ids):
 
 
 async def trim_message_log(keep):
-    """Оставляет только последние `keep` записей журнала (он нужен лишь для
+    """Оставляет по `keep` последних записей журнала НА КАЖДОЕ подключение (он нужен лишь для
     .del и подобных команд, которым важны свежие сообщения). Возвращает число
     удалённых строк."""
-    rows = (
-        await MessageLog.all()
-        .order_by("-log_id")
-        .offset(keep)
-        .limit(1)
-        .values_list("log_id", flat=True)
+    removed = 0
+    connection_ids = (
+        await MessageLog.all().distinct().values_list("connection_id", flat=True)
     )
-    if not rows:
-        return 0
-    return await MessageLog.filter(log_id__lte=rows[0]).delete()
+    for connection_id in connection_ids:  # у каждого подключения свой «хвост»
+        rows = (
+            await MessageLog.filter(connection_id=connection_id)
+            .order_by("-log_id")
+            .offset(keep)
+            .limit(1)
+            .values_list("log_id", flat=True)
+        )
+        if rows:
+            removed += await MessageLog.filter(
+                connection_id=connection_id, log_id__lte=rows[0]
+            ).delete()
+    return removed

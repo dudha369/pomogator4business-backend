@@ -11,10 +11,12 @@ from core import database as db
 from core.archive_prefs import load_prefs
 from core.autoresponder import handle_incoming as handle_autoresponder
 from core.context import CommandContext
+from core.i18n import t
 from core.media import extract_history_media, extract_media_from_reply
 from core.registry import registry
 from core.snapshot import build_snapshot
 from core.tasks import spawn
+from core.utils import log_suppressed
 from modules.mute import handle_incoming as handle_mute_incoming
 from modules.scam import handle_new_contact
 from modules.type_ import TYPE_TRIGGERS, handle_type_trigger
@@ -262,8 +264,36 @@ async def step_command(inc: Incoming) -> bool:
         args=args,
         locale=await db.get_locale(inc.connection["owner_id"]),
     )
-    await cmd.handler(ctx)
+    try:
+        await cmd.handler(ctx)
+    except Exception:
+        # команду часто удаляют ДО выполнения: без этого при сбое она исчезает молча
+        logger.exception("Сбой команды %s", cmd.name)
+        await _report_command_failure(inc, cmd.name, ctx.locale)
     return True
+
+
+_FAILURE_NOTICE_INTERVAL = 60
+_last_failure_notice: dict[tuple[str, str], float] = {}
+
+
+async def _report_command_failure(inc: Incoming, name: str, locale: str) -> None:
+    """Сообщить владельцу, что команда не выполнилась (не чаще раза в минуту на команду)."""
+    key, now = (inc.connection_id, name), time.monotonic()
+    if (
+        now - _last_failure_notice.get(key, -_FAILURE_NOTICE_INTERVAL)
+        < _FAILURE_NOTICE_INTERVAL
+    ):
+        return
+    _last_failure_notice[key] = now
+    try:
+        await inc.bot.send_message(
+            chat_id=inc.connection["owner_chat_id"],
+            text=t("cmd.failed", locale, name=name),
+            parse_mode=None,
+        )
+    except Exception:
+        log_suppressed("handlers/business_messages.py:report_failure", benign=True)
 
 
 PIPELINE = (
@@ -290,9 +320,12 @@ async def on_business_message(message: Message, bot: Bot):
     if not connection or not connection["is_enabled"]:
         return
 
-    await db.log_message(
-        connection["connection_id"], message.chat.id, message.message_id
-    )
+    is_owner = message.from_user.id == connection["owner_id"]
+    if is_owner:
+        # журнал нужен только для .del/.panic — они трогают сообщения владельца
+        await db.log_message(
+            connection["connection_id"], message.chat.id, message.message_id
+        )
 
     await run_pipeline(
         Incoming(
@@ -300,6 +333,6 @@ async def on_business_message(message: Message, bot: Bot):
             message=message,
             connection=connection,
             disabled=await db.list_disabled_modules(connection["connection_id"]),
-            is_owner=message.from_user.id == connection["owner_id"],
+            is_owner=is_owner,
         )
     )

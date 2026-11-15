@@ -8,10 +8,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from api.aliases import MAX_ALIASES_PER_OWNER
+from api.autoresponder import MAX_KEYWORDS
 from api.deps import require_connection, require_user
+from api.templates import MAX_TEMPLATES
 from core import database as db
 from core.registry import registry
 from core.utils import is_valid_prefix
+from db.models.user_locale import is_valid_timezone
 
 router = APIRouter()
 
@@ -30,6 +34,7 @@ async def export_backup(user: dict = Depends(require_user)):
         "version": FORMAT_VERSION,
         "prefix": connection["prefix"],
         "timezone_offset_minutes": await db.get_timezone_offset(owner_id),
+        "timezone": await db.get_timezone_name(owner_id),
         "disabled_modules": sorted(
             await db.list_disabled_modules(connection["connection_id"])
         ),
@@ -71,6 +76,7 @@ class BackupImport(BaseModel):
     version: int
     prefix: str | None = Field(default=None, max_length=8)
     timezone_offset_minutes: int | None = Field(default=None, ge=-14 * 60, le=14 * 60)
+    timezone: str | None = Field(default=None, max_length=64)
     disabled_modules: list[str] | None = Field(default=None, max_length=_MAX_ITEMS)
     autoresponder: dict | None = None
     keywords: list[dict] | None = Field(default=None, max_length=_MAX_ITEMS)
@@ -104,7 +110,14 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
             applied += 1
         else:
             skipped += 1
-    if payload.timezone_offset_minutes is not None:
+    if payload.timezone is not None:
+        # IANA-имя важнее смещения: оно переживает переход на летнее время
+        if is_valid_timezone(payload.timezone):
+            await db.set_timezone_name(owner_id, payload.timezone)
+            applied += 1
+        else:
+            skipped += 1
+    elif payload.timezone_offset_minutes is not None:
         await db.set_timezone_offset(owner_id, payload.timezone_offset_minutes)
         applied += 1
 
@@ -142,25 +155,47 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
         await db.upsert_autoresponder_settings(owner_id, **fields)
         applied += 1
 
+    # те же квоты, что в обычных эндпоинтах: импорт не обходит лимиты.
+    # Замена существующего элемента квоту не расходует.
+    known_keywords = {k["keyword"] for k in await db.list_keyword_replies(owner_id)}
     for item in payload.keywords or []:
         keyword, reply = (
             _text(item.get("keyword"), 255),
             _text(item.get("reply_text"), 4096),
         )
-        if keyword and keyword.strip() and reply and reply.strip():
-            await db.add_keyword_reply(owner_id, keyword.strip().lower(), reply)
+        key = keyword.strip().lower() if keyword else ""
+        is_new = key not in known_keywords
+        if (
+            key
+            and reply
+            and reply.strip()
+            and not (is_new and len(known_keywords) >= MAX_KEYWORDS)
+        ):
+            await db.add_keyword_reply(owner_id, key, reply)
+            known_keywords.add(key)
             applied += 1
         else:
             skipped += 1
+
+    template_count = await db.count_templates(owner_id)
 
     for item in payload.templates or []:
         name, text = _text(item.get("name"), 32), _text(item.get("text"), 4096)
-        if name and name.strip() and " " not in name.strip() and text and text.strip():
-            await db.save_template(owner_id, name.strip().lower(), text)
+        key = name.strip().lower() if name else ""
+        valid = bool(key) and " " not in key and bool(text and text.strip())
+        if valid:
+            is_new = await db.get_template(owner_id, key) is None
+            if is_new and template_count >= MAX_TEMPLATES:
+                valid = False
+            elif is_new:
+                template_count += 1
+        if valid:
+            await db.save_template(owner_id, key, text)
             applied += 1
         else:
             skipped += 1
 
+    alias_count = await db.count_command_aliases(owner_id)
     for item in payload.aliases or []:
         alias, command = _text(item.get("alias"), 32), _text(item.get("command"), 64)
         cmd = registry.find(command.lower()) if command else None
@@ -171,8 +206,10 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
             and cmd
             and registry.find(alias.strip().lower()) is None
             and await db.get_command_alias(owner_id, alias.strip().lower()) is None
+            and alias_count < MAX_ALIASES_PER_OWNER
         ):
             await db.add_command_alias(owner_id, alias.strip().lower(), cmd.name)
+            alias_count += 1
             applied += 1
         else:
             skipped += 1

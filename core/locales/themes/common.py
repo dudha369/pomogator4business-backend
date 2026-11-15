@@ -1,6 +1,7 @@
 """Автоматически сгенерировано scripts/split_locales.py."""
 
 RU = {
+    "cmd.failed": "⚠️ Команда .{name} не выполнилась. Подробности в логах, попробуйте ещё раз.",
     "common.module_disabled": "Этот модуль выключен. Включить его можно в мини-приложении.",
     "common.chat_only_command": "Эта команда работает только в бизнес-чатах.",
     "common.not_connected": "Бот не подключён к вашему бизнес-аккаунту.",
@@ -9,6 +10,7 @@ RU = {
 }
 
 EN = {
+    "cmd.failed": "⚠️ The .{name} command failed. See the logs for details; please try again.",
     "common.module_disabled": "This module is turned off. You can enable it in the mini app.",
     "common.chat_only_command": "This command only works in business chats.",
     "common.not_connected": "The bot isn't connected to your business account.",
@@ -17,6 +19,7 @@ EN = {
 }
 
 UK = {
+    "cmd.failed": "⚠️ Команда .{name} не виконалась. Подробиці в логах, спробуйте ще раз.",
     "common.module_disabled": "Цей модуль вимкнено. Увімкнути його можна в міні-застосунку.",
     "common.chat_only_command": "Ця команда працює лише в бізнес-чатах.",
     "common.not_connected": "Бот не підключений до вашого бізнес-акаунта.",

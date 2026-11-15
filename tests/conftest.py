@@ -19,6 +19,7 @@ from tortoise import Tortoise  # noqa: E402
 import bot_instance  # noqa: E402
 from config import TORTOISE_ORM  # noqa: E402
 from core import database as db  # noqa: E402
+from core.ttl_cache import clear_all  # noqa: E402
 from core.loader import load_modules  # noqa: E402
 
 bot_instance.setup_routes()
@@ -39,7 +40,9 @@ async def database():
             "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
         )
     await Tortoise.generate_schemas()
+    clear_all()  # кэш настроек не должен переживать пересозданную БД
     yield
+    clear_all()
     await Tortoise.close_connections()
 
 
