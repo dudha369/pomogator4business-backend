@@ -2,7 +2,7 @@ import importlib
 import pkgutil
 
 import commands
-from app.features import FEATURES
+from app.features import FEATURES, feature_module
 
 
 def load_commands():
@@ -10,4 +10,4 @@ def load_commands():
     for info in pkgutil.iter_modules(commands.__path__):
         importlib.import_module(f"commands.{info.name}")
     for feature in FEATURES:
-        importlib.import_module(f"app.features.{feature}.bot")
+        feature_module(feature, "bot")

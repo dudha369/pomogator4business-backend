@@ -28,7 +28,8 @@ from app.features.archive.render.classic import (
     highlight_changes_async,
 )
 from app.features.archive.service import gift_sticker_id
-from app.features.archive.snapshot import FILE_KINDS, GIFT_KINDS
+from app.features.archive.snapshot import GIFT_KINDS
+from app.features.history.snapshot import FILE_KINDS
 from app.platform.i18n import t
 
 logger = logging.getLogger("bot.archive")

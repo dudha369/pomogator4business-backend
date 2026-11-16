@@ -24,7 +24,7 @@ from core.mentions import escape, mention
 from core.readall import parse_filters
 from db.models.autoresponder import log_autoreply
 from db.models.connection import get_connection_by_owner
-from db.models.message_history import get_history_entry
+from app.features.history.service import get_history_entry
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.reminders")

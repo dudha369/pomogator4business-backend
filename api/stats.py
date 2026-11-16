@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 
 from api.deps import Owner, current_owner
 from app.features.archive.queries import count_archive_events_since
-from db.models.message_history import (
+from app.features.history.service import (
     count_by_chat,
     count_by_day,
     count_messages_since,

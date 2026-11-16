@@ -8,7 +8,7 @@ from core import autoresponder as ar
 from db.models.ai import create_draft, get_draft, upsert_ai_settings
 from db.models.autoresponder import add_keyword_reply
 from db.models.chat_flags import set_chat_flags
-from db.models.message_history import save_history
+from app.features.history.service import save_history
 from db.models.user_locale import set_timezone_offset
 from handlers.ai_drafts import on_draft_button
 

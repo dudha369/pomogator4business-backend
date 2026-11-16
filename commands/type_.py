@@ -108,3 +108,15 @@ async def cmd_type(ctx: CommandContext):
         _DEFAULT_CURSOR,
         ctx.message.message_id,
     )
+
+
+async def type_trigger_step(handler, message, data):
+    """Middleware: сообщение с `_type`-триггером всегда заканчивает цепочку
+    (выполняется только у владельца при включённом модуле)."""
+    inc = data["inc"]
+    for trigger in TYPE_TRIGGERS:
+        if (inc.text or "").startswith(trigger):
+            if inc.is_owner and inc.enabled("type"):
+                await handle_type_trigger(inc.bot, message, inc.connection, trigger)
+            return None
+    return await handler(message, data)

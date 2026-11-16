@@ -26,6 +26,14 @@ from core.loader import load_commands  # noqa: E402
 bot_instance.setup_routes()
 load_commands()
 
+
+async def on_business_message(message, bot):
+    """Прогоняет сообщение через настоящую цепочку middleware бизнес-сообщений."""
+    from handlers.business_messages import router
+
+    return await router.propagate_event("business_message", message, bot=bot)
+
+
 OWNER_ID = 42
 CONNECTION_ID = "conn-1"
 NOW = 1_800_000_000

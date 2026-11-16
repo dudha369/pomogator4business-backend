@@ -106,7 +106,7 @@ TORTOISE_ORM = {
                 "db.models.chat_flags",
                 "db.models.ai",
                 "app.features.reminders.models",
-                "db.models.message_history",
+                "app.features.history.models",
                 "app.features.archive.models",
                 "app.features.profile.models",
                 "db.models.mirror_bot",

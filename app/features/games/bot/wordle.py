@@ -3,7 +3,7 @@ import random
 
 from app.features.games.lock import game_lock, serialized_command
 from app.platform.i18n import t
-from app.platform.telegram.registry import command
+from app.platform.telegram.registry import command, registry
 from core.self_actions import delete_own_messages
 from app.features.games.bot.wordle_dictionary import WORDS
 from core.utils import log_suppressed
@@ -99,6 +99,14 @@ async def cmd_word(ctx):
 async def handle_wordle_guess(bot, connection, message, locale, raw_guess):
     async with game_lock(connection["connection_id"], message.chat.id):
         return await _handle_wordle_guess(bot, connection, message, locale, raw_guess)
+
+
+async def _guess_unknown_alias(bot, connection, message, locale, alias):
+    await handle_wordle_guess(bot, connection, message, locale, alias)
+
+
+# `.слово` без такой команды — это попытка угадать слово
+registry.add_fallback("wordle", _guess_unknown_alias)
 
 
 async def _handle_wordle_guess(bot, connection, message, locale, raw_guess):

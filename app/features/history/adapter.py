@@ -2,7 +2,7 @@
 
 Всё остальное в фиче работает со снимками-словарями (`snapshot.py`, `service.py`)."""
 
-from app.features.archive.snapshot import (
+from app.features.history.snapshot import (
     FILE_KINDS,
     PAYLOAD_FIELDS,
     gift_sticker,

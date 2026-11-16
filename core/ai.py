@@ -24,7 +24,7 @@ from db.models.autoresponder import (
     last_autoreply_at,
     log_autoreply,
 )
-from db.models.message_history import list_chat_history
+from app.features.history.service import list_chat_history
 from db.models.message_log import log_message
 from db.models.user_locale import get_locale, get_timezone_offset
 

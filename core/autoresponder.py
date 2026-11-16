@@ -33,7 +33,7 @@ from db.models.autoresponder import (
 )
 from db.models.chat_flags import get_chat_flags
 from db.models.favorite_chat import is_favorite_chat
-from db.models.message_history import has_other_messages, last_owner_message_at
+from app.features.history.service import has_other_messages, last_owner_message_at
 from db.models.message_log import log_message
 from db.models.user_locale import get_timezone_offset
 
@@ -276,3 +276,14 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
             logger.warning("Сбой ИИ-ответа chat=%s", chat_id, exc_info=True)
 
     return None
+
+
+async def autoresponder_step(handler, message, data):
+    """Middleware: автоответ собеседнику; сбой не прерывает обработку сообщения."""
+    inc = data["inc"]
+    if not inc.is_owner:
+        try:
+            await handle_incoming(inc.bot, inc.connection, inc.message)
+        except Exception:
+            logger.exception("Сбой автоответчика")
+    return await handler(message, data)

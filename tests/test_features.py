@@ -4,7 +4,7 @@ import types
 
 from app.features.archive.queries import log_archive_event
 from db.models.chat_flags import get_chat_flags
-from db.models.message_history import save_history
+from app.features.history.service import save_history
 from db.models.module_settings import (
     disable_module,
     enable_module,
@@ -15,7 +15,7 @@ from core import stats
 from handlers.bot_commands import on_dm_command, split_command
 from commands.readall import cmd_readall
 from core.readall import ReadFilter, parse_filters, select_chats
-from handlers.business_messages import on_business_message
+from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 

@@ -20,7 +20,7 @@ from db.models.emoji_status import (
     set_emoji_status_enabled,
     set_emoji_status_granted,
 )
-from db.models.message_history import (
+from app.features.history.service import (
     count_by_chat,
     count_by_day,
     get_history_entry,
@@ -452,7 +452,7 @@ def test_own_edits_pref_defaults_off_and_is_patchable():
 
 
 async def _own_message(bot, text):
-    from handlers.business_messages import on_business_message
+    from tests.conftest import on_business_message
 
     await disable_module(CONNECTION_ID, "scam")
     msg = make_message(text, chat_id=7, from_id=OWNER_ID)
@@ -503,16 +503,16 @@ async def test_bot_edit_is_not_reported_even_when_own_edits_enabled(connection):
 
 # --- 21. сбой команды не проходит молча -----------------------------------------------
 async def test_command_failure_is_reported_once_per_minute(connection):
-    from handlers import business_messages as bm
+    from app.platform.telegram import dispatch as bm
 
     bm._last_failure_notice.clear()
     bot = FakeBot()
     inc = types.SimpleNamespace(
         bot=bot, connection=connection, connection_id=CONNECTION_ID
     )
-    await bm._report_command_failure(inc, "dice", "ru")
-    await bm._report_command_failure(inc, "dice", "ru")
-    await bm._report_command_failure(inc, "flip", "ru")
+    await bm.report_command_failure(inc, "dice", "ru")
+    await bm.report_command_failure(inc, "dice", "ru")
+    await bm.report_command_failure(inc, "flip", "ru")
     assert [m["chat_id"] for m in bot.sent] == [OWNER_ID, OWNER_ID]
     assert ".dice" in bot.sent[0]["text"]
 
@@ -563,7 +563,7 @@ async def test_last_rows_by_chat_picks_latest_message(connection):
 
 
 async def test_message_log_only_for_owner_messages(connection):
-    from handlers.business_messages import on_business_message
+    from tests.conftest import on_business_message
 
     await disable_module(CONNECTION_ID, "scam")
     bot = FakeBot()
@@ -589,7 +589,7 @@ async def test_trim_message_log_is_per_connection(database):
 
 
 def test_raw_json_kept_only_for_exotic_kinds(monkeypatch):
-    from app.features.archive import adapter as snapshot
+    from app.features.history import adapter as snapshot
 
     def fake(kind):
         return lambda message, bot_id=None: {"kind": kind, "raw_json": {"a": 1}}

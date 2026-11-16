@@ -3,7 +3,7 @@ from aiogram.types import Message
 from app.platform.i18n import t
 from app.platform.telegram.registry import registry
 from db.models.known_chat import is_known_chat, mark_known_chat
-from db.models.message_history import has_other_messages
+from app.features.history.service import has_other_messages
 from db.models.user_locale import get_locale
 from core.utils import log_suppressed
 
@@ -103,3 +103,14 @@ async def handle_new_contact(bot, connection, message: Message):
         await bot.send_message(chat_id=connection["owner_chat_id"], text=text)
     except Exception:
         log_suppressed("commands/scam.py:101")
+
+
+async def new_contact_step(handler, message, data):
+    """Middleware: проверка нового контакта (scam) или хотя бы пометка «знакомый»."""
+    inc = data["inc"]
+    if not inc.is_owner:
+        if inc.enabled("scam"):
+            await handle_new_contact(inc.bot, inc.connection, inc.message)
+        else:
+            await mark_known_chat(inc.connection["owner_id"], inc.chat_id)
+    return await handler(message, data)
