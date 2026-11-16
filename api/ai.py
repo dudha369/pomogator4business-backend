@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner, require_user
+from api.schemas import AiCore
 from core import ai
 from db.models.ai import get_ai_settings, upsert_ai_settings
 from db.models.autoresponder import log_autoreply
@@ -17,6 +18,15 @@ from db.models.autoresponder import log_autoreply
 router = APIRouter()
 
 TEST_LIMIT_PER_DAY = 20
+
+
+class AiState(AiCore):
+    configured: bool  # задан ли ключ провайдера на сервере
+    used_today: int
+
+
+class AiTestOut(BaseModel):
+    reply: str
 
 
 async def _state(owner_id: int):
@@ -33,7 +43,7 @@ async def _state(owner_id: int):
     }
 
 
-@router.get("/ai")
+@router.get("/ai", response_model=AiState)
 async def get_ai(user: dict = Depends(require_user)):
     return await _state(user["id"])
 
@@ -48,7 +58,7 @@ class AiUpdate(BaseModel):
     daily_limit: int | None = Field(default=None, ge=1, le=500)
 
 
-@router.post("/ai")
+@router.post("/ai", response_model=AiState)
 async def update_ai(payload: AiUpdate, user: dict = Depends(require_user)):
     fields = {
         k: v for k, v in payload.model_dump().items() if k in payload.model_fields_set
@@ -70,7 +80,7 @@ class AiTest(BaseModel):
     text: str = Field(min_length=1, max_length=1000)
 
 
-@router.post("/ai/test")
+@router.post("/ai/test", response_model=AiTestOut)
 async def test_ai(payload: AiTest, owner: Owner = Depends(current_owner)):
     """Пробный ответ по текущим инструкциям — без истории и без отправки."""
     user, connection = owner.user, owner.connection

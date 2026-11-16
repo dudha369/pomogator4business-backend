@@ -100,7 +100,7 @@ if settings.CORS_ORIGINS:
 app.include_router(setup_routers(), prefix="/api")
 
 
-@app.post(settings.WEBHOOK_PATH)
+@app.post(settings.WEBHOOK_PATH, include_in_schema=False)
 async def telegram_webhook(
     request: Request,
     x_telegram_bot_api_secret_token: str = Header(default=None),
@@ -118,7 +118,7 @@ async def telegram_webhook(
     return Response(status_code=200)
 
 
-@app.post(f"{settings.MIRROR_WEBHOOK_PATH}/{{owner_id}}")
+@app.post(f"{settings.MIRROR_WEBHOOK_PATH}/{{owner_id}}", include_in_schema=False)
 async def mirror_webhook(
     owner_id: int,
     request: Request,

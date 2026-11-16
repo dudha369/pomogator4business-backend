@@ -36,7 +36,18 @@ def _remember(user_id, data):
     _cache[user_id] = (time.monotonic() + ttl, data)
 
 
-@router.get("/avatar/{target_user_id}")
+@router.get(
+    "/avatar/{target_user_id}",
+    response_class=Response,
+    # байты картинки, не JSON: response_model здесь не применим
+    responses={
+        200: {
+            "content": {
+                "image/jpeg": {"schema": {"type": "string", "format": "binary"}}
+            }
+        }
+    },
+)
 async def get_avatar(target_user_id: int, user: dict = Depends(require_user)):
     is_known = await is_known_chat(user["id"], target_user_id)
     if not is_known:

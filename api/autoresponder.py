@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from api.deps import require_user
+from api.schemas import KeywordReply
 from db.models.autoresponder import (
     add_keyword_reply,
     delete_keyword_reply,
@@ -26,7 +27,29 @@ MAX_TEXT_LENGTH = 4096  # лимит Telegram на длину сообщения
 MAX_KEYWORDS = 100
 
 
-@router.get("/autoresponder")
+class AutoresponderState(BaseModel):
+    greeting_enabled: bool
+    greeting_text: str | None
+    away_enabled: bool
+    away_text: str | None
+    away_start_minutes: int | None
+    away_end_minutes: int | None
+    # попадает ли сейчас «нет на месте» в расписание (по часовому поясу владельца)
+    away_active_now: bool
+    auto_read_enabled: bool
+    keywords: list[KeywordReply]
+
+
+class KeywordSaved(BaseModel):
+    keyword: str
+    reply_text: str
+
+
+class KeywordDeleted(BaseModel):
+    deleted: str
+
+
+@router.get("/autoresponder", response_model=AutoresponderState)
 async def get_settings(user: dict = Depends(require_user)):
     settings = await get_autoresponder_settings(user["id"])
     keywords = await list_keyword_replies(user["id"])
@@ -59,7 +82,7 @@ class AutoresponderUpdate(BaseModel):
     auto_read_enabled: bool | None = None
 
 
-@router.post("/autoresponder")
+@router.post("/autoresponder", response_model=AutoresponderState)
 async def update_settings(
     payload: AutoresponderUpdate, user: dict = Depends(require_user)
 ):
@@ -94,7 +117,7 @@ class KeywordReplyCreate(BaseModel):
     reply_text: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
 
 
-@router.post("/autoresponder/keywords")
+@router.post("/autoresponder/keywords", response_model=KeywordSaved)
 async def create_keyword(
     payload: KeywordReplyCreate, user: dict = Depends(require_user)
 ):
@@ -112,7 +135,7 @@ async def create_keyword(
     return {"keyword": keyword, "reply_text": payload.reply_text}
 
 
-@router.delete("/autoresponder/keywords/{keyword}")
+@router.delete("/autoresponder/keywords/{keyword}", response_model=KeywordDeleted)
 async def remove_keyword(keyword: str, user: dict = Depends(require_user)):
     await delete_keyword_reply(user["id"], keyword.strip())
     return {"deleted": keyword.strip().lower()}

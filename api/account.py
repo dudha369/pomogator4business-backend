@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from api.deps import require_user
 from api.emoji_status import build_styles_payload
+from api.schemas import EmojiStatusState, MirrorStatus
 from db.models.connection import get_connection_by_owner
 from db.models.emoji_status import (
     get_emoji_status_style,
@@ -26,7 +27,27 @@ from db.models.user_locale import is_valid_timezone
 router = APIRouter()
 
 
-@router.get("/account")
+class ConnectionInfo(BaseModel):
+    owner_name: str | None
+    owner_username: str | None
+    prefix: str
+    rights: dict[str, bool | None]  # права бизнес-бота (BusinessBotRights)
+
+
+class AccountOut(BaseModel):
+    connection: ConnectionInfo | None
+    mirror: MirrorStatus
+    emoji_status: EmojiStatusState
+    timezone_offset_minutes: int
+    timezone: str | None
+
+
+class TimezoneOut(BaseModel):
+    offset_minutes: int
+    timezone: str | None
+
+
+@router.get("/account", response_model=AccountOut)
 async def get_account(user: dict = Depends(require_user)):
     owner_id = user["id"]
     connection = await get_connection_by_owner(owner_id)
@@ -76,7 +97,7 @@ class TimezoneUpdate(BaseModel):
     offset_minutes: int | None = None
 
 
-@router.post("/account/timezone")
+@router.post("/account/timezone", response_model=TimezoneOut)
 async def update_timezone(payload: TimezoneUpdate, user: dict = Depends(require_user)):
     owner_id = user["id"]
     if payload.timezone is not None:

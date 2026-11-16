@@ -1,6 +1,7 @@
 """GET /commands — список всех команд бота для отображения в мини-приложении."""
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.platform.i18n import t
 from app.platform.telegram.registry import registry
@@ -8,7 +9,23 @@ from app.platform.telegram.registry import registry
 router = APIRouter()
 
 
-@router.get("/commands")
+class CommandInfo(BaseModel):
+    module: str
+    name: str
+    aliases: list[str]
+    title: str
+    description: str
+    long_description: str
+    usage: str
+    owner_only: bool
+    scope: str
+
+
+class CommandsOut(BaseModel):
+    commands: list[CommandInfo]
+
+
+@router.get("/commands", response_model=CommandsOut)
 async def list_commands(locale: str = "ru"):
     result = []
     for module_name, commands in sorted(registry.modules().items()):

@@ -1,9 +1,12 @@
 """Настройка личного зеркала через мини-приложение — ввод токена напрямую."""
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_user
+from api.schemas import MirrorStatus
 from db.models.mirror_bot import delete_mirror, get_mirror
 from core.mirror_manager import mirror_manager
 from core.mirror_setup import MirrorSetupError, connect_mirror
@@ -11,13 +14,21 @@ from core.mirror_setup import MirrorSetupError, connect_mirror
 router = APIRouter()
 
 
-@router.get("/mirror")
+class MirrorState(MirrorStatus):
+    # подключено в БД, но вебхук мог не подняться (деплой, нет WEBHOOK_BASE_URL)
+    running: bool
+
+
+class MirrorDisconnected(BaseModel):
+    connected: Literal[False]
+
+
+@router.get("/mirror", response_model=MirrorState)
 async def get_mirror_status(user: dict = Depends(require_user)):
     mirror = await get_mirror(user["id"])
     return {
         "connected": bool(mirror and mirror["is_active"]),
         "username": mirror["bot_username"] if mirror else None,
-        # подключено в БД, но вебхук мог не подняться (деплой, нет WEBHOOK_BASE_URL)
         "running": mirror_manager.is_running(user["id"]),
     }
 
@@ -26,7 +37,7 @@ class MirrorConnect(BaseModel):
     token: str
 
 
-@router.post("/mirror/connect")
+@router.post("/mirror/connect", response_model=MirrorStatus)
 async def api_connect_mirror(
     payload: MirrorConnect, user: dict = Depends(require_user)
 ):
@@ -43,7 +54,7 @@ async def api_connect_mirror(
     return {"connected": True, "username": username}
 
 
-@router.post("/mirror/disconnect")
+@router.post("/mirror/disconnect", response_model=MirrorDisconnected)
 async def api_disconnect_mirror(user: dict = Depends(require_user)):
     await mirror_manager.stop_mirror(user["id"])
     await delete_mirror(user["id"])

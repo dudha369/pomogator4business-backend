@@ -10,7 +10,11 @@ from app.platform.i18n import LANGUAGE_NAMES
 router = APIRouter()
 
 
-@router.get("/locale")
+class LocaleOut(BaseModel):
+    locale: str
+
+
+@router.get("/locale", response_model=LocaleOut)
 async def get_locale(user: dict = Depends(require_user)):
     return {"locale": await locale_db.get_locale(user["id"])}
 
@@ -19,7 +23,7 @@ class LocaleUpdate(BaseModel):
     locale: str
 
 
-@router.post("/locale")
+@router.post("/locale", response_model=LocaleOut)
 async def update_locale(payload: LocaleUpdate, user: dict = Depends(require_user)):
     if payload.locale not in LANGUAGE_NAMES:
         raise HTTPException(status_code=400, detail="Unsupported locale")

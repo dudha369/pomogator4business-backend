@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from api.deps import require_user
 from db.models.known_chat import is_known_chat
@@ -6,7 +7,12 @@ from db.models.known_chat import is_known_chat
 router = APIRouter()
 
 
-@router.get("/chat-info/{target_user_id}")
+class ChatInfoOut(BaseModel):
+    full_name: str
+    username: str | None
+
+
+@router.get("/chat-info/{target_user_id}", response_model=ChatInfoOut)
 async def get_chat_info(target_user_id: int, user: dict = Depends(require_user)):
     is_known = await is_known_chat(user["id"], target_user_id)
     if not is_known:

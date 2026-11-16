@@ -3,6 +3,7 @@
 import time
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
 from api.deps import Owner, current_owner
 from app.features.archive.queries import count_archive_events_since
@@ -18,7 +19,47 @@ from core import stats as stats_calc
 router = APIRouter()
 
 
-@router.get("/stats")
+class MessageCounts(BaseModel):
+    total: int
+    incoming: int
+
+
+class StatsOut(BaseModel):
+    today: MessageCounts
+    week: MessageCounts
+
+
+class DayActivity(BaseModel):
+    date: str  # YYYY-MM-DD по часовому поясу владельца
+    incoming: int
+    outgoing: int
+
+
+class TopChat(BaseModel):
+    chat_id: int
+    incoming: int
+    outgoing: int
+
+
+class ArchiveCounts(BaseModel):
+    deleted: int
+    edited: int
+
+
+class ReplyTime(BaseModel):
+    median_seconds: int | None
+    p90_seconds: int | None
+    samples: int
+
+
+class OverviewOut(BaseModel):
+    days: list[DayActivity]
+    top_chats: list[TopChat]
+    archive: ArchiveCounts
+    reply_time: ReplyTime
+
+
+@router.get("/stats", response_model=StatsOut)
 async def get_stats(owner: Owner = Depends(current_owner)):
     """Сообщения за сегодня (по часовому поясу владельца) и за последние 7 суток.
 
@@ -45,7 +86,7 @@ async def get_stats(owner: Owner = Depends(current_owner)):
     }
 
 
-@router.get("/stats/overview")
+@router.get("/stats/overview", response_model=OverviewOut)
 async def get_overview(
     days: int = Query(default=30, ge=1, le=90),
     owner: Owner = Depends(current_owner),

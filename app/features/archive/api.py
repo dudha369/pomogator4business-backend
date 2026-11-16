@@ -1,4 +1,5 @@
 import urllib.parse
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
@@ -17,7 +18,76 @@ from app.features.archive.prefs import (
 router = APIRouter()
 
 
-@router.get("/archive")
+class SnapshotView(BaseModel):
+    """Снимок сообщения для интерфейса (без raw_json и file_id — файл через /media)."""
+
+    kind: str | None
+    text: str | None
+    entities: list[dict[str, Any]] | None
+    show_caption_above: bool
+    has_spoiler: bool
+    has_file: bool
+    file_size: int | None
+    too_large: bool
+    mime: str | None
+    file_name: str | None
+    payload: dict[str, Any] | None
+    forward: dict[str, Any] | None
+    media_group_id: str | None
+    transcript: str | None
+
+
+class ArchiveEntry(BaseModel):
+    log_id: int
+    connection_id: str
+    chat_id: int
+    message_id: int
+    event: Literal["deleted", "edited"]
+    old_text: str | None
+    new_text: str | None
+    kind: str | None
+    is_owner: bool  # автор сообщения: True — владелец, False — собеседник
+    edit_kind: str | None
+    created_at: int
+    old: SnapshotView | None
+    new: SnapshotView | None
+    media_type: str | None
+    media_mime: str | None
+    media_name: str | None
+    media_status: str | None
+    media_available: bool
+
+
+class ArchivePage(BaseModel):
+    entries: list[ArchiveEntry]
+    has_more: bool
+    next_before_id: int | None
+
+
+class ArchivePrefsOut(BaseModel):
+    rich: bool
+    rich_kinds: list[str]
+    album_style: str
+    collapse_media: bool
+    edit_history: bool
+    caption_edit_media: bool
+    location_map: bool
+    voice_transcript: bool
+    own_edits: bool
+
+
+class ArchiveOptions(BaseModel):
+    # допустимые значения — чтобы интерфейс не хранил их у себя копией
+    album_style: list[str]
+    rich_kinds: list[str]
+
+
+class ArchiveSettingsOut(BaseModel):
+    prefs: ArchivePrefsOut
+    options: ArchiveOptions
+
+
+@router.get("/archive", response_model=ArchivePage)
 async def get_archive(
     before_id: int | None = Query(default=None),
     limit: int = Query(default=30, ge=1, le=100),
@@ -52,7 +122,14 @@ async def get_archive(
     }
 
 
-@router.get("/archive/{log_id}/media")
+@router.get(
+    "/archive/{log_id}/media",
+    response_class=Response,
+    # байты файла, не JSON: response_model здесь не применим
+    responses={
+        200: {"content": {"*/*": {"schema": {"type": "string", "format": "binary"}}}}
+    },
+)
 async def get_archive_media(
     log_id: int,
     which: str = Query(default="auto", pattern="^(auto|old|new)$"),
@@ -96,12 +173,12 @@ def _prefs_response(prefs):
     }
 
 
-@router.get("/archive/settings")
+@router.get("/archive/settings", response_model=ArchiveSettingsOut)
 async def get_archive_settings(owner: Owner = Depends(current_owner)):
     return _prefs_response(await load_prefs(owner.connection["connection_id"]))
 
 
-@router.post("/archive/settings")
+@router.post("/archive/settings", response_model=ArchiveSettingsOut)
 async def update_archive_settings(
     patch: ArchivePrefsPatch, owner: Owner = Depends(current_owner)
 ):

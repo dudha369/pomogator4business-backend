@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner, require_user
+from api.schemas import RemindersSettings
 from app.features.reminders import service
 from app.features.reminders.service import (
     get_reminder_settings,
@@ -15,7 +16,18 @@ from app.features.reminders.service import (
 router = APIRouter()
 
 
-@router.get("/reminders")
+class WaitingChat(BaseModel):
+    chat_id: int
+    message_id: int
+    since: int  # время последнего входящего
+    waited_seconds: int
+
+
+class WaitingOut(BaseModel):
+    chats: list[WaitingChat]
+
+
+@router.get("/reminders", response_model=RemindersSettings)
 async def get_reminders(user: dict = Depends(require_user)):
     cfg = await get_reminder_settings(user["id"]) or {}
     return {
@@ -35,7 +47,7 @@ class RemindersUpdate(BaseModel):
     favorites_only: bool | None = None
 
 
-@router.post("/reminders")
+@router.post("/reminders", response_model=RemindersSettings)
 async def update_reminders(
     payload: RemindersUpdate, user: dict = Depends(require_user)
 ):
@@ -50,7 +62,7 @@ async def update_reminders(
     return await get_reminders(user=user)
 
 
-@router.get("/reminders/waiting")
+@router.get("/reminders/waiting", response_model=WaitingOut)
 async def waiting_now(owner: Owner = Depends(current_owner)):
     """Кто сейчас ждёт ответа (дольше настроенного порога) — для экрана настроек.
     Напоминания при этом не отправляются и не помечаются."""

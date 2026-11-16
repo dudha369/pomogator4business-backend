@@ -23,7 +23,26 @@ _WAIT_SECONDS = 20  # меньше клиентского таймаута в 30
 _jobs: dict[str, dict] = {}  # connection_id -> состояние последнего запуска
 
 
-@router.get("/chats")
+class ChatItem(BaseModel):
+    chat_id: int
+    last_at: int
+    last_incoming_at: int | None
+    favorite: bool
+
+
+class ChatsOut(BaseModel):
+    chats: list[ChatItem]
+
+
+class ReadProgress(BaseModel):
+    matched: int
+    done: int
+    failed: int
+    # нет у dry_run: там ничего не запускается
+    running: bool = False
+
+
+@router.get("/chats", response_model=ChatsOut)
 async def list_chats(owner: Owner = Depends(current_owner)):
     user, connection = owner.user, owner.connection
     chats = await list_recent_chats(connection["connection_id"], 200)
@@ -52,7 +71,7 @@ class ReadAllRequest(BaseModel):
     dry_run: bool = False  # только посчитать, сколько чатов подойдёт
 
 
-@router.post("/readall")
+@router.post("/readall", response_model=ReadProgress, response_model_exclude_unset=True)
 async def read_all(payload: ReadAllRequest, owner: Owner = Depends(current_owner)):
     connection = owner.connection
     flt = ReadFilter(
@@ -89,7 +108,7 @@ async def read_all(payload: ReadAllRequest, owner: Owner = Depends(current_owner
     return dict(job)
 
 
-@router.get("/readall/status")
+@router.get("/readall/status", response_model=ReadProgress)
 async def read_all_status(owner: Owner = Depends(current_owner)):
     job = _jobs.get(owner.connection["connection_id"])
     return (
