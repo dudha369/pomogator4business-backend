@@ -2,8 +2,10 @@
 
 Чистые функции без обращений к Telegram — их легко тестировать."""
 
+import asyncio
 import html as _html
 import re
+from difflib import SequenceMatcher
 from html import escape
 
 from app.platform.i18n import t
@@ -192,3 +194,47 @@ def build_notice(
                 body = escape(transcript[:room]).rstrip() + "…"
             result += f"\n\n<b>{label}</b>\n<blockquote expandable>{body}</blockquote>"
     return result
+
+
+# --- «Было/Стало» ------------------------------------------------------------
+
+_CLIP = 1700  # два текста по 4096 не влезут в одно сообщение — режем оба
+
+
+def clip(text) -> str:
+    text = text or ""
+    return text if len(text) <= _CLIP else text[:_CLIP].rstrip() + "…"
+
+
+def highlight_changes(old_text: str, new_text: str) -> str:
+    """Новый текст в HTML: вставленное/изменённое выделено жирным."""
+    matcher = SequenceMatcher(None, old_text, new_text, autojunk=False)
+    result = []
+    for tag, _i1, _i2, j1, j2 in matcher.get_opcodes():
+        new_part = new_text[j1:j2]
+        if tag == "equal":
+            result.append(escape(new_part))
+        elif tag in ("replace", "insert") and new_part:
+            result.append(f"<b>{escape(new_part)}</b>")
+    return "".join(result)
+
+
+async def highlight_changes_async(old_text: str, new_text: str) -> str:
+    """SequenceMatcher квадратичен: на патологичных строках до секунд — в поток,
+    иначе встаёт весь event loop (WEB_CONCURRENCY=1)."""
+    return await asyncio.to_thread(highlight_changes, old_text, new_text)
+
+
+async def before_after(locale, old_text, new_text) -> str:
+    old_html = escape(clip(old_text)) or EMPTY
+    new_html = (
+        await highlight_changes_async(clip(old_text), clip(new_text))
+        if new_text
+        else EMPTY
+    )
+    return (
+        f"\n\n{t('archive.caption_before', locale)}\n"
+        f"<blockquote expandable>{old_html}</blockquote>\n\n"
+        f"{t('archive.caption_after', locale)}\n"
+        f"<blockquote expandable>{new_html}</blockquote>"
+    )

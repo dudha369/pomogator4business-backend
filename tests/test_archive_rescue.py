@@ -8,7 +8,7 @@ from config import settings
 from db.models.message_history import get_history_entry
 from db.models.module_settings import disable_module
 from handlers.business_messages import on_business_message
-from commands.archive import on_business_deleted
+from app.features.archive.bot.deleted import on_business_deleted
 
 from .conftest import CONNECTION_ID, OWNER_ID, deleted_event, make_message, tg_file
 

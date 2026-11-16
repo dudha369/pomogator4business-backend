@@ -12,7 +12,7 @@ from aiogram.exceptions import (
     TelegramNetworkError,
 )
 
-from db.models.archive_prefs import save_archive_prefs_data
+from app.features.archive.queries import save_archive_prefs_data
 from db.models.autoresponder import add_keyword_reply, list_keyword_replies
 from db.models.connection import get_connection, set_prefix
 from db.models.emoji_status import (
@@ -445,7 +445,7 @@ async def test_bot_edit_marker_ignores_non_business_edits():
 
 
 def test_own_edits_pref_defaults_off_and_is_patchable():
-    from core.archive_prefs import defaults, validate_patch
+    from app.features.archive.prefs import defaults, validate_patch
 
     assert defaults().own_edits is False
     assert validate_patch({"own_edits": True})["own_edits"] is True
@@ -461,7 +461,7 @@ async def _own_message(bot, text):
 
 
 async def _edit_own(bot, msg, text):
-    from commands.archive import on_business_edited
+    from app.features.archive.bot.edited import on_business_edited
 
     edited = make_message(text, chat_id=7, from_id=OWNER_ID)
     edited.message_id = msg.message_id
@@ -476,7 +476,7 @@ async def test_own_edit_is_silent_by_default(connection):
 
 
 async def test_own_edit_notifies_when_enabled_and_marks_owner(connection):
-    from db.models.archive_log import ArchiveLog
+    from app.features.archive.models import ArchiveLog
 
     await save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
     bot = FakeBot()
@@ -589,7 +589,7 @@ async def test_trim_message_log_is_per_connection(database):
 
 
 def test_raw_json_kept_only_for_exotic_kinds(monkeypatch):
-    from core import snapshot
+    from app.features.archive import adapter as snapshot
 
     def fake(kind):
         return lambda message, bot_id=None: {"kind": kind, "raw_json": {"a": 1}}

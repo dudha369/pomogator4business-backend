@@ -1,6 +1,6 @@
 import types
 
-from db.models.archive_log import get_archive_page, log_archive_event
+from app.features.archive.queries import get_archive_page, log_archive_event
 from db.models.connection import get_connection, set_prefix, upsert_connection
 from db.models.echo import is_echo_enabled, toggle_echo
 from db.models.message_history import get_history_entry, save_history

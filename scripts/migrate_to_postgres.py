@@ -21,10 +21,10 @@ import aiosqlite
 from tortoise import Tortoise
 
 from config import TORTOISE_ORM
+from app.features.archive.models import ArchiveLog
 from app.features.mute.models import Mute
 from app.features.profile.models import ProfileBackup
 from db.models import (
-    ArchiveLog,
     ClockEmoji,
     ClockPack,
     Connection,

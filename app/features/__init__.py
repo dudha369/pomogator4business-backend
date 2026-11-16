@@ -5,4 +5,4 @@
 Простые команды без состояния живут в `commands/`.
 """
 
-FEATURES = ("games", "mute", "profile", "reminders", "templates")
+FEATURES = ("archive", "games", "mute", "profile", "reminders", "templates")

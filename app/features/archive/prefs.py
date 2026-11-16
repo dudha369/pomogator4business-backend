@@ -8,7 +8,7 @@ import asyncio
 from dataclasses import asdict, dataclass
 
 from config import settings
-from db.models.archive_prefs import get_archive_prefs_data, save_archive_prefs_data
+from app.features.archive.queries import get_archive_prefs_data, save_archive_prefs_data
 
 ALBUM_STYLES = ("slideshow", "collage", "list")
 RICH_KINDS = ("photo", "video", "animation", "audio", "voice", "document")
