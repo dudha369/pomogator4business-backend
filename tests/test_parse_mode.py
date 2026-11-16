@@ -45,8 +45,11 @@ def test_guard_flags_unescaped_text_in_html_mode():
 
 @pytest.mark.asyncio
 async def test_archive_notices_escape_user_text(bot, connection):
-    from commands.archive import _before_after, highlight_changes
-    from core.archive_notice import build_notice
+    from app.features.archive.render.classic import (
+        before_after as _before_after,
+        highlight_changes,
+    )
+    from app.features.archive.render.classic import build_notice
 
     evil = "<b>1</b> & <tg-emoji emoji-id='1'>x</tg-emoji> </blockquote>"
     snap = {"kind": "text", "text": evil, "forward": {"name": "<i>X</i> & Y"}}
@@ -90,6 +93,7 @@ _HTML_BUILDERS = {
     "highlight_changes_async",
     "kind_detail",
     "_before_after",
+    "before_after",
     "mention",
 }
 

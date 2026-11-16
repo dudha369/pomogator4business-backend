@@ -5,13 +5,15 @@ import types
 import pytest
 
 from config import settings
-from db.models.archive_log import get_edit_history, get_recent_archive
+from app.features.archive.queries import get_edit_history, get_recent_archive
 from db.models.message_history import get_history_entry, save_history
 from db.models.module_settings import disable_module
-from core.archive_notice import CAPTION_LIMIT, build_notice, visible_len
-from core.snapshot import build_snapshot, edit_kind, entry_snapshot, public_view
+from app.features.archive.render.classic import CAPTION_LIMIT, build_notice, visible_len
+from app.features.archive.adapter import build_snapshot
+from app.features.archive.snapshot import edit_kind, entry_snapshot, public_view
 from handlers.business_messages import on_business_message
-from commands.archive import on_business_deleted, on_business_edited
+from app.features.archive.bot.deleted import on_business_deleted
+from app.features.archive.bot.edited import on_business_edited
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 
@@ -202,7 +204,7 @@ async def test_deleted_location_is_one_message_without_duplicated_text(ready, bo
 
 
 async def test_info_button_answers_with_toast(ready, bot):
-    from commands.archive import on_info
+    from app.features.archive.bot.callbacks import on_info
 
     class Call:
         from_user = types.SimpleNamespace(id=42)
@@ -593,7 +595,7 @@ async def test_replaced_voice_uses_regular_before_and_after(rich, bot):
 async def test_rescued_bytes_are_not_sent_through_rich(rich, bot):
     msg = await receive(bot, photo=photo("p"))
     entry = await get_history_entry(CONNECTION_ID, CHAT, msg.message_id)
-    from core.archive_rich import can_use_rich
+    from app.features.archive.render.rich import can_use_rich
 
     assert can_use_rich([(entry_snapshot(entry), entry)]) is True
     assert (
@@ -747,7 +749,7 @@ async def test_gift_without_sticker_gets_formatted_text(ready, bot):
 
 
 def test_dice_results_are_described():
-    from core.archive_notice import describe_dice
+    from app.features.archive.render.classic import describe_dice
 
     assert "5" in describe_dice("ru", "🎲", 5) and "⚄" in describe_dice("ru", "🎲", 5)
     assert "Гол" in describe_dice("ru", "⚽", 4) and "Мимо" in describe_dice(
@@ -771,7 +773,7 @@ async def test_dice_notice_is_bold_quote(ready, bot):
 
 
 def test_html_to_rich_converts_our_markup():
-    from core.rich_text import html_to_rich
+    from app.features.archive.render.rich_text import html_to_rich
 
     result = html_to_rich(
         '<tg-emoji emoji-id="1">📦</tg-emoji> <b>Привет</b> <a href="tg://user?id=7">Аня &amp; Ко</a>'

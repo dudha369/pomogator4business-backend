@@ -40,7 +40,7 @@ async def delete_own_messages(
 ) -> bool:
     """Единая точка удаления сообщений ботом через Business API.
 
-    Помечает message_id как "самоудаление" до вызова API, чтобы archive.py
+    Помечает message_id как "самоудаление" до вызова API, чтобы архив (app/features/archive/bot/deleted.py)
     не отреагировал на прилетевший следом deleted_business_messages.
     Возвращает True, если Telegram принял удаление (вызывающий решает, что
     делать с данными при неудаче — например, не стирать журнал).

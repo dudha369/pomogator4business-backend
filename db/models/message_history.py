@@ -2,7 +2,11 @@ from tortoise import Tortoise, fields
 from tortoise.functions import Max
 from tortoise.models import Model
 
-from core.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES, SNAPSHOT_COLUMNS
+from app.features.archive.snapshot import (
+    FILE_KINDS,
+    MAX_DOWNLOAD_BYTES,
+    SNAPSHOT_COLUMNS,
+)
 
 
 class MessageHistory(Model):
@@ -55,7 +59,7 @@ async def save_history(
 ):
     """Сохраняет (или обновляет при правке) сообщение.
 
-    snapshot — результат core.snapshot.build_snapshot; media_* — байты файла
+    snapshot — результат app.features.archive.adapter.build_snapshot; media_* — байты файла
     (нужны только для исчезающих медиа, обычные файлы достаются по file_id)."""
     snapshot = snapshot or {}
     if media_type is None and snapshot.get("kind") in FILE_KINDS:

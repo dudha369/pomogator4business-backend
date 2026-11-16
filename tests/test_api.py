@@ -1,6 +1,6 @@
 import time
 
-from db.models.archive_log import log_archive_event
+from app.features.archive.queries import log_archive_event
 from db.models.connection import upsert_connection
 from db.models.message_history import save_history
 

@@ -13,9 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner
-from core import archive_export as export
-from core.archive_media import attach_media_info, load_media
-from db.models.archive_log import get_archive_page
+from app.features.archive import export as export
+from app.features.archive.media import attach_media_info, load_media
+from app.features.archive.queries import get_archive_page
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.archive_export")

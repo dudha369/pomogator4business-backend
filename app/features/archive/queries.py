@@ -1,35 +1,8 @@
-from tortoise import fields
-from tortoise.models import Model
+"""Запросы к таблицам архива (`archive_log`, `archive_prefs`) — без логики и без aiogram."""
 
+from tortoise.expressions import Q
 
-class ArchiveLog(Model):
-    log_id = fields.BigIntField(pk=True)
-    connection_id = fields.CharField(max_length=255)
-    chat_id = fields.BigIntField()
-    message_id = fields.BigIntField()
-    event = fields.CharField(max_length=32)
-    old_text = fields.TextField(null=True)
-    new_text = fields.TextField(null=True)
-    media_type = fields.CharField(max_length=16, null=True)
-    media_mime = fields.CharField(max_length=255, null=True)
-    media_name = fields.CharField(max_length=255, null=True)
-    media_status = fields.CharField(max_length=16, null=True)
-    media_data = fields.BinaryField(null=True)
-    kind = fields.CharField(max_length=24, null=True)
-    # автор сообщения: True — владелец, False — собеседник (Telegram не сообщает,
-    # кто именно удалил, поэтому в уведомлении называем автора)
-    is_owner = fields.BooleanField(default=False)
-    edit_kind = fields.CharField(max_length=24, null=True)
-    old_snapshot = fields.JSONField(null=True)
-    new_snapshot = fields.JSONField(null=True)
-    # id сообщения-уведомления в чате с ботом: его правим, а не шлём новое
-    notice_message_id = fields.BigIntField(null=True)
-    created_at = fields.BigIntField()
-
-    class Meta:
-        table = "archive_log"
-        indexes = (("connection_id", "event", "log_id"),)
-
+from app.features.archive.models import ArchiveLog, ArchivePrefs
 
 LIST_COLUMNS = (
     "log_id",
@@ -132,8 +105,6 @@ async def get_archive_page(
     if date_to is not None:
         query = query.filter(created_at__lte=date_to)
     if search:
-        from tortoise.expressions import Q
-
         query = query.filter(
             Q(old_text__icontains=search) | Q(new_text__icontains=search)
         )
@@ -209,4 +180,15 @@ async def get_edit_history(connection_id, chat_id, message_id):
             "notice_message_id",
             "created_at",
         )
+    )
+
+
+async def get_archive_prefs_data(connection_id):
+    row = await ArchivePrefs.get_or_none(connection_id=connection_id)
+    return row.data if row else {}
+
+
+async def save_archive_prefs_data(connection_id, data):
+    await ArchivePrefs.update_or_create(
+        connection_id=connection_id, defaults={"data": data}
     )

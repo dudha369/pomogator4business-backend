@@ -11,7 +11,7 @@ from aiogram.types import (
     Message,
 )
 
-from db.models.archive_log import get_recent_archive
+from app.features.archive.queries import get_recent_archive
 from db.models.connection import get_connection_by_owner, set_prefix
 from db.models.module_settings import (
     disable_module,

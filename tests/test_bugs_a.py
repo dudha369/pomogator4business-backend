@@ -491,8 +491,8 @@ async def test_main_webhook_does_not_drop_pending_updates(monkeypatch):
 
 # --- 6/9. уведомление о правке: обрезка и вынос в поток ---------------------------
 async def test_classic_edit_notice_is_clipped_below_telegram_limit(connection):
-    from core.archive_prefs import defaults
-    from commands.archive import _notify_edited
+    from app.features.archive.prefs import defaults
+    from app.features.archive.bot.edited import notify_edited as _notify_edited
 
     prefs = defaults()
     prefs = (
@@ -515,7 +515,10 @@ async def test_classic_edit_notice_is_clipped_below_telegram_limit(connection):
 
 
 async def test_highlight_changes_async_matches_sync():
-    from commands.archive import highlight_changes, highlight_changes_async
+    from app.features.archive.render.classic import (
+        highlight_changes,
+        highlight_changes_async,
+    )
 
     assert await highlight_changes_async("abc", "abXc") == highlight_changes(
         "abc", "abXc"

@@ -2,7 +2,7 @@
 
 import types
 
-from db.models.archive_log import log_archive_event
+from app.features.archive.queries import log_archive_event
 from db.models.chat_flags import get_chat_flags
 from db.models.message_history import save_history
 from db.models.module_settings import (

@@ -19,13 +19,13 @@ from db.models.message_history import (
 from db.models.message_log import log_message
 from db.models.module_settings import list_disabled_modules
 from db.models.user_locale import get_locale
-from core.archive_prefs import load_prefs
+from app.features.archive.prefs import load_prefs
 from core.autoresponder import handle_incoming as handle_autoresponder
 from app.platform.telegram.context import CommandContext
 from app.platform.i18n import t
 from app.platform.media import extract_history_media, extract_media_from_reply
 from app.platform.telegram.registry import registry
-from core.snapshot import build_snapshot
+from app.features.archive.adapter import build_snapshot
 from app.platform.tasks import spawn
 from core.utils import log_suppressed
 from app.features.mute.bot import handle_incoming as handle_mute_incoming

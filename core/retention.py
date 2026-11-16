@@ -13,7 +13,7 @@ import time
 
 from config import settings
 from db.models.ai import purge_old_drafts
-from db.models.archive_log import expire_archive_media, purge_archive
+from app.features.archive.queries import expire_archive_media, purge_archive
 from db.models.autoresponder import purge_autoresponder_log
 from db.models.message_history import expire_history_media, purge_history
 from db.models.message_log import trim_message_log

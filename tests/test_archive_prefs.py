@@ -9,12 +9,13 @@ import types
 import pytest
 
 from config import settings
-from db.models.archive_prefs import save_archive_prefs_data
+from app.features.archive.queries import save_archive_prefs_data
 from db.models.module_settings import disable_module
-from core.archive_prefs import defaults, parse, validate_patch
+from app.features.archive.prefs import defaults, parse, validate_patch
 from handlers import business_messages
 from handlers.business_messages import on_business_message
-from commands.archive import on_business_deleted, on_business_edited
+from app.features.archive.bot.deleted import on_business_deleted
+from app.features.archive.bot.edited import on_business_edited
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 from .test_archive_snapshot import block_text, kinds, media_of, photo, texts
@@ -291,7 +292,7 @@ async def test_gift_sticker_is_downloadable_by_the_web(rich, bot, client):
 
 async def test_simultaneous_settings_updates_do_not_overwrite_each_other(connection):
     """Два быстрых переключателя подряд: оба изменения должны сохраниться."""
-    from core.archive_prefs import load_prefs, update_prefs
+    from app.features.archive.prefs import load_prefs, update_prefs
 
     await asyncio.gather(
         update_prefs(CONNECTION_ID, {"collapse_media": True}),

@@ -8,9 +8,9 @@
 
 import logging
 
-from db.models.archive_log import get_log_media, list_log_media_availability
+from app.features.archive.queries import get_log_media, list_log_media_availability
 from db.models.message_history import get_history_media, list_media_flags
-from core.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES, public_view
+from app.features.archive.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES, public_view
 
 logger = logging.getLogger("bot.archive_media")
 

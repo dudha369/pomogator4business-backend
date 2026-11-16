@@ -7,7 +7,7 @@
 
 Мы собираем сообщение блоками (InputRichBlock*), а не HTML: так работают документы
 (в HTML для них нет разметки), медиа берутся по file_id без посредника, а текст
-заголовков и подписей преобразуется из нашего HTML в RichText (core.rich_text).
+заголовков и подписей преобразуется из нашего HTML в RichText (app.features.archive.render.rich_text).
 Файлы, которые хранятся байтами (исчезающие), в Rich не идут — для них остаётся
 обычная отправка; решает вызывающий код."""
 
@@ -39,10 +39,10 @@ from aiogram.types import (
     RichBlockCaption,
 )
 
-from core.archive_notice import EMPTY, format_forward, render_text
-from core.archive_prefs import ArchivePrefs, defaults
+from app.features.archive.render.classic import EMPTY, format_forward, render_text
+from app.features.archive.prefs import ArchivePrefs, defaults
 from app.platform.i18n import t
-from core.rich_text import html_to_rich
+from app.features.archive.render.rich_text import html_to_rich
 
 VISUAL = ("photo", "video", "animation")
 ALL_KINDS = VISUAL + ("audio", "voice", "document")

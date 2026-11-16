@@ -3,8 +3,8 @@ import io
 import json
 import re
 
-from core import archive_export as ex
-from db.models.archive_log import log_archive_event
+from app.features.archive import export as ex
+from app.features.archive.queries import log_archive_event
 from db.models.message_history import save_history
 
 from .conftest import CONNECTION_ID
