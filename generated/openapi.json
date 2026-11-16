@@ -1,0 +1,5317 @@
+{
+  "components": {
+    "schemas": {
+      "AccountOut": {
+        "properties": {
+          "connection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConnectionInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emoji_status": {
+            "$ref": "#/components/schemas/EmojiStatusState"
+          },
+          "mirror": {
+            "$ref": "#/components/schemas/MirrorStatus"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "timezone_offset_minutes": {
+            "title": "Timezone Offset Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "connection",
+          "mirror",
+          "emoji_status",
+          "timezone_offset_minutes",
+          "timezone"
+        ],
+        "title": "AccountOut",
+        "type": "object"
+      },
+      "AiCore": {
+        "properties": {
+          "daily_limit": {
+            "title": "Daily Limit",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "history_messages": {
+            "title": "History Messages",
+            "type": "integer"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "mode": {
+            "enum": [
+              "draft",
+              "auto"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "mode",
+          "instructions",
+          "history_messages",
+          "daily_limit"
+        ],
+        "title": "AiCore",
+        "type": "object"
+      },
+      "AiState": {
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "daily_limit": {
+            "title": "Daily Limit",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "history_messages": {
+            "title": "History Messages",
+            "type": "integer"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "mode": {
+            "enum": [
+              "draft",
+              "auto"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "used_today": {
+            "title": "Used Today",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "mode",
+          "instructions",
+          "history_messages",
+          "daily_limit",
+          "configured",
+          "used_today"
+        ],
+        "title": "AiState",
+        "type": "object"
+      },
+      "AiTest": {
+        "properties": {
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AiTest",
+        "type": "object"
+      },
+      "AiTestOut": {
+        "properties": {
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reply"
+        ],
+        "title": "AiTestOut",
+        "type": "object"
+      },
+      "AiUpdate": {
+        "properties": {
+          "daily_limit": {
+            "anyOf": [
+              {
+                "maximum": 500.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Limit"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "history_messages": {
+            "anyOf": [
+              {
+                "maximum": 30.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Messages"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "draft",
+                  "auto"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          }
+        },
+        "title": "AiUpdate",
+        "type": "object"
+      },
+      "AliasCreate": {
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "command": {
+            "title": "Command",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command",
+          "alias"
+        ],
+        "title": "AliasCreate",
+        "type": "object"
+      },
+      "AliasesOut": {
+        "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/CommandAlias"
+            },
+            "title": "Aliases",
+            "type": "array"
+          }
+        },
+        "required": [
+          "aliases"
+        ],
+        "title": "AliasesOut",
+        "type": "object"
+      },
+      "ArchiveCounts": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          },
+          "edited": {
+            "title": "Edited",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted",
+          "edited"
+        ],
+        "title": "ArchiveCounts",
+        "type": "object"
+      },
+      "ArchiveEntry": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "connection_id": {
+            "title": "Connection Id",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "edit_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edit Kind"
+          },
+          "event": {
+            "enum": [
+              "deleted",
+              "edited"
+            ],
+            "title": "Event",
+            "type": "string"
+          },
+          "is_owner": {
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "log_id": {
+            "title": "Log Id",
+            "type": "integer"
+          },
+          "media_available": {
+            "title": "Media Available",
+            "type": "boolean"
+          },
+          "media_mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Mime"
+          },
+          "media_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Name"
+          },
+          "media_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Status"
+          },
+          "media_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Type"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "integer"
+          },
+          "new": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SnapshotView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Text"
+          },
+          "old": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SnapshotView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "old_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old Text"
+          }
+        },
+        "required": [
+          "log_id",
+          "connection_id",
+          "chat_id",
+          "message_id",
+          "event",
+          "old_text",
+          "new_text",
+          "kind",
+          "is_owner",
+          "edit_kind",
+          "created_at",
+          "old",
+          "new",
+          "media_type",
+          "media_mime",
+          "media_name",
+          "media_status",
+          "media_available"
+        ],
+        "title": "ArchiveEntry",
+        "type": "object"
+      },
+      "ArchiveOptions": {
+        "properties": {
+          "album_style": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Album Style",
+            "type": "array"
+          },
+          "rich_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rich Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "album_style",
+          "rich_kinds"
+        ],
+        "title": "ArchiveOptions",
+        "type": "object"
+      },
+      "ArchivePage": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ArchiveEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "next_before_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Before Id"
+          }
+        },
+        "required": [
+          "entries",
+          "has_more",
+          "next_before_id"
+        ],
+        "title": "ArchivePage",
+        "type": "object"
+      },
+      "ArchivePrefsOut": {
+        "properties": {
+          "album_style": {
+            "title": "Album Style",
+            "type": "string"
+          },
+          "caption_edit_media": {
+            "title": "Caption Edit Media",
+            "type": "boolean"
+          },
+          "collapse_media": {
+            "title": "Collapse Media",
+            "type": "boolean"
+          },
+          "edit_history": {
+            "title": "Edit History",
+            "type": "boolean"
+          },
+          "location_map": {
+            "title": "Location Map",
+            "type": "boolean"
+          },
+          "own_edits": {
+            "title": "Own Edits",
+            "type": "boolean"
+          },
+          "rich": {
+            "title": "Rich",
+            "type": "boolean"
+          },
+          "rich_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rich Kinds",
+            "type": "array"
+          },
+          "voice_transcript": {
+            "title": "Voice Transcript",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rich",
+          "rich_kinds",
+          "album_style",
+          "collapse_media",
+          "edit_history",
+          "caption_edit_media",
+          "location_map",
+          "voice_transcript",
+          "own_edits"
+        ],
+        "title": "ArchivePrefsOut",
+        "type": "object"
+      },
+      "ArchivePrefsPatch": {
+        "description": "Частичное обновление: присылайте только то, что изменилось.",
+        "properties": {
+          "album_style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Album Style"
+          },
+          "caption_edit_media": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption Edit Media"
+          },
+          "collapse_media": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collapse Media"
+          },
+          "edit_history": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edit History"
+          },
+          "location_map": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Map"
+          },
+          "own_edits": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Own Edits"
+          },
+          "rich": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rich"
+          },
+          "rich_kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rich Kinds"
+          },
+          "voice_transcript": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Transcript"
+          }
+        },
+        "title": "ArchivePrefsPatch",
+        "type": "object"
+      },
+      "ArchiveSettingsOut": {
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/ArchiveOptions"
+          },
+          "prefs": {
+            "$ref": "#/components/schemas/ArchivePrefsOut"
+          }
+        },
+        "required": [
+          "prefs",
+          "options"
+        ],
+        "title": "ArchiveSettingsOut",
+        "type": "object"
+      },
+      "AutoresponderBackup": {
+        "properties": {
+          "auto_read_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Read Enabled"
+          },
+          "away_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Enabled"
+          },
+          "away_end_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away End Minutes"
+          },
+          "away_start_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Start Minutes"
+          },
+          "away_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Text"
+          },
+          "greeting_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting Enabled"
+          },
+          "greeting_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting Text"
+          }
+        },
+        "required": [
+          "greeting_enabled",
+          "greeting_text",
+          "away_enabled",
+          "away_text",
+          "away_start_minutes",
+          "away_end_minutes",
+          "auto_read_enabled"
+        ],
+        "title": "AutoresponderBackup",
+        "type": "object"
+      },
+      "AutoresponderState": {
+        "properties": {
+          "auto_read_enabled": {
+            "title": "Auto Read Enabled",
+            "type": "boolean"
+          },
+          "away_active_now": {
+            "title": "Away Active Now",
+            "type": "boolean"
+          },
+          "away_enabled": {
+            "title": "Away Enabled",
+            "type": "boolean"
+          },
+          "away_end_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away End Minutes"
+          },
+          "away_start_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Start Minutes"
+          },
+          "away_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Text"
+          },
+          "greeting_enabled": {
+            "title": "Greeting Enabled",
+            "type": "boolean"
+          },
+          "greeting_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting Text"
+          },
+          "keywords": {
+            "items": {
+              "$ref": "#/components/schemas/KeywordReply"
+            },
+            "title": "Keywords",
+            "type": "array"
+          }
+        },
+        "required": [
+          "greeting_enabled",
+          "greeting_text",
+          "away_enabled",
+          "away_text",
+          "away_start_minutes",
+          "away_end_minutes",
+          "away_active_now",
+          "auto_read_enabled",
+          "keywords"
+        ],
+        "title": "AutoresponderState",
+        "type": "object"
+      },
+      "AutoresponderUpdate": {
+        "properties": {
+          "auto_read_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Read Enabled"
+          },
+          "away_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Enabled"
+          },
+          "away_end_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1439.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away End Minutes"
+          },
+          "away_start_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1439.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Start Minutes"
+          },
+          "away_text": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Away Text"
+          },
+          "greeting_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting Enabled"
+          },
+          "greeting_text": {
+            "anyOf": [
+              {
+                "maxLength": 4096,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Greeting Text"
+          }
+        },
+        "title": "AutoresponderUpdate",
+        "type": "object"
+      },
+      "BackupExport": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/AiCore"
+          },
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/CommandAlias"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "autoresponder": {
+            "$ref": "#/components/schemas/AutoresponderBackup"
+          },
+          "chat_flags": {
+            "items": {
+              "$ref": "#/components/schemas/ChatFlags"
+            },
+            "title": "Chat Flags",
+            "type": "array"
+          },
+          "disabled_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Disabled Modules",
+            "type": "array"
+          },
+          "favorites": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Favorites",
+            "type": "array"
+          },
+          "keywords": {
+            "items": {
+              "$ref": "#/components/schemas/KeywordReply"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          },
+          "reminders": {
+            "$ref": "#/components/schemas/RemindersSettings"
+          },
+          "templates": {
+            "items": {
+              "$ref": "#/components/schemas/Template"
+            },
+            "title": "Templates",
+            "type": "array"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "timezone_offset_minutes": {
+            "title": "Timezone Offset Minutes",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "prefix",
+          "timezone_offset_minutes",
+          "timezone",
+          "disabled_modules",
+          "autoresponder",
+          "keywords",
+          "aliases",
+          "templates",
+          "favorites",
+          "chat_flags",
+          "reminders",
+          "ai"
+        ],
+        "title": "BackupExport",
+        "type": "object"
+      },
+      "BackupImport": {
+        "properties": {
+          "ai": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai"
+          },
+          "aliases": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aliases"
+          },
+          "autoresponder": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autoresponder"
+          },
+          "chat_flags": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Flags"
+          },
+          "disabled_modules": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled Modules"
+          },
+          "favorites": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Favorites"
+          },
+          "keywords": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keywords"
+          },
+          "prefix": {
+            "anyOf": [
+              {
+                "maxLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prefix"
+          },
+          "reminders": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminders"
+          },
+          "templates": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "maxItems": 500,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Templates"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "timezone_offset_minutes": {
+            "anyOf": [
+              {
+                "maximum": 840.0,
+                "minimum": -840.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone Offset Minutes"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "BackupImport",
+        "type": "object"
+      },
+      "BackupImportResult": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "applied",
+          "skipped"
+        ],
+        "title": "BackupImportResult",
+        "type": "object"
+      },
+      "ChatFlags": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "no_ai": {
+            "title": "No Ai",
+            "type": "boolean"
+          },
+          "no_autoreply": {
+            "title": "No Autoreply",
+            "type": "boolean"
+          },
+          "no_remind": {
+            "title": "No Remind",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "no_autoreply",
+          "no_ai",
+          "no_remind",
+          "chat_id"
+        ],
+        "title": "ChatFlags",
+        "type": "object"
+      },
+      "ChatFlagsList": {
+        "properties": {
+          "chats": {
+            "items": {
+              "$ref": "#/components/schemas/ChatFlags"
+            },
+            "title": "Chats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "chats"
+        ],
+        "title": "ChatFlagsList",
+        "type": "object"
+      },
+      "ChatFlagsUpdate": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "no_ai": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Ai"
+          },
+          "no_autoreply": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Autoreply"
+          },
+          "no_remind": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "No Remind"
+          }
+        },
+        "required": [
+          "chat_id"
+        ],
+        "title": "ChatFlagsUpdate",
+        "type": "object"
+      },
+      "ChatInfoOut": {
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "full_name",
+          "username"
+        ],
+        "title": "ChatInfoOut",
+        "type": "object"
+      },
+      "ChatItem": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "favorite": {
+            "title": "Favorite",
+            "type": "boolean"
+          },
+          "last_at": {
+            "title": "Last At",
+            "type": "integer"
+          },
+          "last_incoming_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Incoming At"
+          }
+        },
+        "required": [
+          "chat_id",
+          "last_at",
+          "last_incoming_at",
+          "favorite"
+        ],
+        "title": "ChatItem",
+        "type": "object"
+      },
+      "ChatsOut": {
+        "properties": {
+          "chats": {
+            "items": {
+              "$ref": "#/components/schemas/ChatItem"
+            },
+            "title": "Chats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "chats"
+        ],
+        "title": "ChatsOut",
+        "type": "object"
+      },
+      "CommandAlias": {
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "command": {
+            "title": "Command",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alias",
+          "command"
+        ],
+        "title": "CommandAlias",
+        "type": "object"
+      },
+      "CommandInfo": {
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "long_description": {
+            "title": "Long Description",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_only": {
+            "title": "Owner Only",
+            "type": "boolean"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "usage": {
+            "title": "Usage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "module",
+          "name",
+          "aliases",
+          "title",
+          "description",
+          "long_description",
+          "usage",
+          "owner_only",
+          "scope"
+        ],
+        "title": "CommandInfo",
+        "type": "object"
+      },
+      "CommandsOut": {
+        "properties": {
+          "commands": {
+            "items": {
+              "$ref": "#/components/schemas/CommandInfo"
+            },
+            "title": "Commands",
+            "type": "array"
+          }
+        },
+        "required": [
+          "commands"
+        ],
+        "title": "CommandsOut",
+        "type": "object"
+      },
+      "ConnectionInfo": {
+        "properties": {
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "owner_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Username"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          },
+          "rights": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Rights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "owner_name",
+          "owner_username",
+          "prefix",
+          "rights"
+        ],
+        "title": "ConnectionInfo",
+        "type": "object"
+      },
+      "DayActivity": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "incoming": {
+            "title": "Incoming",
+            "type": "integer"
+          },
+          "outgoing": {
+            "title": "Outgoing",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "incoming",
+          "outgoing"
+        ],
+        "title": "DayActivity",
+        "type": "object"
+      },
+      "Deleted": {
+        "properties": {
+          "deleted": {
+            "const": true,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "Deleted",
+        "type": "object"
+      },
+      "EmojiEnabledOut": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "EmojiEnabledOut",
+        "type": "object"
+      },
+      "EmojiStatusFlags": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "style": {
+            "title": "Style",
+            "type": "string"
+          }
+        },
+        "required": [
+          "granted",
+          "enabled",
+          "style"
+        ],
+        "title": "EmojiStatusFlags",
+        "type": "object"
+      },
+      "EmojiStatusGrant": {
+        "properties": {
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "granted"
+        ],
+        "title": "EmojiStatusGrant",
+        "type": "object"
+      },
+      "EmojiStatusState": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "style": {
+            "title": "Style",
+            "type": "string"
+          },
+          "styles": {
+            "items": {
+              "$ref": "#/components/schemas/EmojiStyle"
+            },
+            "title": "Styles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "granted",
+          "enabled",
+          "style",
+          "styles"
+        ],
+        "title": "EmojiStatusState",
+        "type": "object"
+      },
+      "EmojiStatusStyle": {
+        "properties": {
+          "style": {
+            "title": "Style",
+            "type": "string"
+          }
+        },
+        "required": [
+          "style"
+        ],
+        "title": "EmojiStatusStyle",
+        "type": "object"
+      },
+      "EmojiStatusToggle": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "EmojiStatusToggle",
+        "type": "object"
+      },
+      "EmojiStyle": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "titles": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Titles",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "titles",
+          "available"
+        ],
+        "title": "EmojiStyle",
+        "type": "object"
+      },
+      "EmojiStyleOut": {
+        "properties": {
+          "style": {
+            "title": "Style",
+            "type": "string"
+          }
+        },
+        "required": [
+          "style"
+        ],
+        "title": "EmojiStyleOut",
+        "type": "object"
+      },
+      "ExportRequest": {
+        "properties": {
+          "chat_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Id"
+          },
+          "date_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date From"
+          },
+          "date_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date To"
+          },
+          "event": {
+            "anyOf": [
+              {
+                "enum": [
+                  "edited",
+                  "deleted"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event"
+          },
+          "format": {
+            "default": "html",
+            "enum": [
+              "html",
+              "csv",
+              "json"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "group_by_chat": {
+            "default": true,
+            "title": "Group By Chat",
+            "type": "boolean"
+          },
+          "include_media": {
+            "default": false,
+            "title": "Include Media",
+            "type": "boolean"
+          },
+          "max_entries": {
+            "default": 5000,
+            "maximum": 20000.0,
+            "minimum": 1.0,
+            "title": "Max Entries",
+            "type": "integer"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Search"
+          }
+        },
+        "title": "ExportRequest",
+        "type": "object"
+      },
+      "ExportResult": {
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "photos_embedded": {
+            "title": "Photos Embedded",
+            "type": "integer"
+          },
+          "sent": {
+            "const": true,
+            "title": "Sent",
+            "type": "boolean"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent",
+          "entries",
+          "bytes",
+          "truncated",
+          "photos_embedded"
+        ],
+        "title": "ExportResult",
+        "type": "object"
+      },
+      "FavoriteOut": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "favorite": {
+            "title": "Favorite",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chat_id",
+          "favorite"
+        ],
+        "title": "FavoriteOut",
+        "type": "object"
+      },
+      "FavoriteUpdate": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "favorite": {
+            "title": "Favorite",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chat_id",
+          "favorite"
+        ],
+        "title": "FavoriteUpdate",
+        "type": "object"
+      },
+      "FavoritesOut": {
+        "properties": {
+          "chat_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Chat Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "chat_ids"
+        ],
+        "title": "FavoritesOut",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "db_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Db Ms"
+          },
+          "telegram_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Ms"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "telegram_ms",
+          "db_ms",
+          "uptime_seconds"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "KeywordDeleted": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "KeywordDeleted",
+        "type": "object"
+      },
+      "KeywordReply": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "keyword": {
+            "title": "Keyword",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "reply_text": {
+            "title": "Reply Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "owner_id",
+          "keyword",
+          "reply_text"
+        ],
+        "title": "KeywordReply",
+        "type": "object"
+      },
+      "KeywordReplyCreate": {
+        "properties": {
+          "keyword": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Keyword",
+            "type": "string"
+          },
+          "reply_text": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Reply Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword",
+          "reply_text"
+        ],
+        "title": "KeywordReplyCreate",
+        "type": "object"
+      },
+      "KeywordSaved": {
+        "properties": {
+          "keyword": {
+            "title": "Keyword",
+            "type": "string"
+          },
+          "reply_text": {
+            "title": "Reply Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keyword",
+          "reply_text"
+        ],
+        "title": "KeywordSaved",
+        "type": "object"
+      },
+      "LocaleOut": {
+        "properties": {
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale"
+        ],
+        "title": "LocaleOut",
+        "type": "object"
+      },
+      "LocaleUpdate": {
+        "properties": {
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale"
+        ],
+        "title": "LocaleUpdate",
+        "type": "object"
+      },
+      "MessageCounts": {
+        "properties": {
+          "incoming": {
+            "title": "Incoming",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "incoming"
+        ],
+        "title": "MessageCounts",
+        "type": "object"
+      },
+      "MirrorConnect": {
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "MirrorConnect",
+        "type": "object"
+      },
+      "MirrorDisconnected": {
+        "properties": {
+          "connected": {
+            "const": false,
+            "title": "Connected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connected"
+        ],
+        "title": "MirrorDisconnected",
+        "type": "object"
+      },
+      "MirrorState": {
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "running": {
+            "title": "Running",
+            "type": "boolean"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "connected",
+          "username",
+          "running"
+        ],
+        "title": "MirrorState",
+        "type": "object"
+      },
+      "MirrorStatus": {
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "connected",
+          "username"
+        ],
+        "title": "MirrorStatus",
+        "type": "object"
+      },
+      "ModuleState": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "enabled"
+        ],
+        "title": "ModuleState",
+        "type": "object"
+      },
+      "ModuleToggle": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          }
+        },
+        "required": [
+          "module",
+          "enabled"
+        ],
+        "title": "ModuleToggle",
+        "type": "object"
+      },
+      "OverviewOut": {
+        "properties": {
+          "archive": {
+            "$ref": "#/components/schemas/ArchiveCounts"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayActivity"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "reply_time": {
+            "$ref": "#/components/schemas/ReplyTime"
+          },
+          "top_chats": {
+            "items": {
+              "$ref": "#/components/schemas/TopChat"
+            },
+            "title": "Top Chats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "days",
+          "top_chats",
+          "archive",
+          "reply_time"
+        ],
+        "title": "OverviewOut",
+        "type": "object"
+      },
+      "PingOut": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "server_time_ms": {
+            "title": "Server Time Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok",
+          "server_time_ms"
+        ],
+        "title": "PingOut",
+        "type": "object"
+      },
+      "PrefixOut": {
+        "properties": {
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prefix"
+        ],
+        "title": "PrefixOut",
+        "type": "object"
+      },
+      "PrefixUpdate": {
+        "properties": {
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prefix"
+        ],
+        "title": "PrefixUpdate",
+        "type": "object"
+      },
+      "ReadAllRequest": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "exclude_favorites": {
+            "default": false,
+            "title": "Exclude Favorites",
+            "type": "boolean"
+          },
+          "last_hours": {
+            "anyOf": [
+              {
+                "maximum": 8760.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Hours"
+          },
+          "older_hours": {
+            "anyOf": [
+              {
+                "maximum": 8760.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Older Hours"
+          }
+        },
+        "title": "ReadAllRequest",
+        "type": "object"
+      },
+      "ReadProgress": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "matched": {
+            "title": "Matched",
+            "type": "integer"
+          },
+          "running": {
+            "default": false,
+            "title": "Running",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matched",
+          "done",
+          "failed"
+        ],
+        "title": "ReadProgress",
+        "type": "object"
+      },
+      "RemindersSettings": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "favorites_only": {
+            "title": "Favorites Only",
+            "type": "boolean"
+          },
+          "hours": {
+            "title": "Hours",
+            "type": "integer"
+          },
+          "quiet_end_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet End Minutes"
+          },
+          "quiet_start_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet Start Minutes"
+          }
+        },
+        "required": [
+          "enabled",
+          "hours",
+          "quiet_start_minutes",
+          "quiet_end_minutes",
+          "favorites_only"
+        ],
+        "title": "RemindersSettings",
+        "type": "object"
+      },
+      "RemindersUpdate": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "favorites_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Favorites Only"
+          },
+          "hours": {
+            "anyOf": [
+              {
+                "maximum": 168.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours"
+          },
+          "quiet_end_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1439.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet End Minutes"
+          },
+          "quiet_start_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1439.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet Start Minutes"
+          }
+        },
+        "title": "RemindersUpdate",
+        "type": "object"
+      },
+      "ReplyTime": {
+        "properties": {
+          "median_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Seconds"
+          },
+          "p90_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90 Seconds"
+          },
+          "samples": {
+            "title": "Samples",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "median_seconds",
+          "p90_seconds",
+          "samples"
+        ],
+        "title": "ReplyTime",
+        "type": "object"
+      },
+      "SettingsOut": {
+        "properties": {
+          "modules": {
+            "items": {
+              "$ref": "#/components/schemas/ModuleState"
+            },
+            "title": "Modules",
+            "type": "array"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prefix",
+          "modules"
+        ],
+        "title": "SettingsOut",
+        "type": "object"
+      },
+      "SnapshotView": {
+        "description": "Снимок сообщения для интерфейса (без raw_json и file_id — файл через /media).",
+        "properties": {
+          "entities": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entities"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "file_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size"
+          },
+          "forward": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forward"
+          },
+          "has_file": {
+            "title": "Has File",
+            "type": "boolean"
+          },
+          "has_spoiler": {
+            "title": "Has Spoiler",
+            "type": "boolean"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "media_group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Group Id"
+          },
+          "mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "show_caption_above": {
+            "title": "Show Caption Above",
+            "type": "boolean"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "too_large": {
+            "title": "Too Large",
+            "type": "boolean"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "entities",
+          "show_caption_above",
+          "has_spoiler",
+          "has_file",
+          "file_size",
+          "too_large",
+          "mime",
+          "file_name",
+          "payload",
+          "forward",
+          "media_group_id",
+          "transcript"
+        ],
+        "title": "SnapshotView",
+        "type": "object"
+      },
+      "StatsOut": {
+        "properties": {
+          "today": {
+            "$ref": "#/components/schemas/MessageCounts"
+          },
+          "week": {
+            "$ref": "#/components/schemas/MessageCounts"
+          }
+        },
+        "required": [
+          "today",
+          "week"
+        ],
+        "title": "StatsOut",
+        "type": "object"
+      },
+      "Template": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "text"
+        ],
+        "title": "Template",
+        "type": "object"
+      },
+      "TemplateDeleted": {
+        "properties": {
+          "deleted": {
+            "const": true,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "TemplateDeleted",
+        "type": "object"
+      },
+      "TemplateSave": {
+        "properties": {
+          "name": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "text"
+        ],
+        "title": "TemplateSave",
+        "type": "object"
+      },
+      "TemplatesOut": {
+        "properties": {
+          "templates": {
+            "items": {
+              "$ref": "#/components/schemas/Template"
+            },
+            "title": "Templates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "templates"
+        ],
+        "title": "TemplatesOut",
+        "type": "object"
+      },
+      "TimezoneOut": {
+        "properties": {
+          "offset_minutes": {
+            "title": "Offset Minutes",
+            "type": "integer"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "required": [
+          "offset_minutes",
+          "timezone"
+        ],
+        "title": "TimezoneOut",
+        "type": "object"
+      },
+      "TimezoneUpdate": {
+        "properties": {
+          "offset_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset Minutes"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "title": "TimezoneUpdate",
+        "type": "object"
+      },
+      "TopChat": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "incoming": {
+            "title": "Incoming",
+            "type": "integer"
+          },
+          "outgoing": {
+            "title": "Outgoing",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "chat_id",
+          "incoming",
+          "outgoing"
+        ],
+        "title": "TopChat",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WaitingChat": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "integer"
+          },
+          "since": {
+            "title": "Since",
+            "type": "integer"
+          },
+          "waited_seconds": {
+            "title": "Waited Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "chat_id",
+          "message_id",
+          "since",
+          "waited_seconds"
+        ],
+        "title": "WaitingChat",
+        "type": "object"
+      },
+      "WaitingOut": {
+        "properties": {
+          "chats": {
+            "items": {
+              "$ref": "#/components/schemas/WaitingChat"
+            },
+            "title": "Chats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "chats"
+        ],
+        "title": "WaitingOut",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/account": {
+      "get": {
+        "operationId": "get_account_api_account_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Account"
+      }
+    },
+    "/api/account/timezone": {
+      "post": {
+        "operationId": "update_timezone_api_account_timezone_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimezoneUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimezoneOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Timezone"
+      }
+    },
+    "/api/ai": {
+      "get": {
+        "operationId": "get_ai_api_ai_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ai"
+      },
+      "post": {
+        "operationId": "update_ai_api_ai_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Ai"
+      }
+    },
+    "/api/ai/test": {
+      "post": {
+        "description": "Пробный ответ по текущим инструкциям — без истории и без отправки.",
+        "operationId": "test_ai_api_ai_test_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiTest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Ai"
+      }
+    },
+    "/api/aliases": {
+      "get": {
+        "operationId": "list_aliases_api_aliases_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliasesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Aliases"
+      },
+      "post": {
+        "operationId": "create_alias_api_aliases_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliasCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAlias"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Alias"
+      }
+    },
+    "/api/aliases/{alias}": {
+      "delete": {
+        "operationId": "delete_alias_api_aliases__alias__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alias",
+            "required": true,
+            "schema": {
+              "title": "Alias",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deleted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Alias"
+      }
+    },
+    "/api/archive": {
+      "get": {
+        "operationId": "get_archive_api_archive_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "before_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(edited|deleted)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chat_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Chat Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "pattern": "^(asc|desc)$",
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchivePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Archive"
+      }
+    },
+    "/api/archive/export": {
+      "post": {
+        "operationId": "export_archive_api_archive_export_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Archive"
+      }
+    },
+    "/api/archive/settings": {
+      "get": {
+        "operationId": "get_archive_settings_api_archive_settings_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchiveSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Archive Settings"
+      },
+      "post": {
+        "operationId": "update_archive_settings_api_archive_settings_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchivePrefsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchiveSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Archive Settings"
+      }
+    },
+    "/api/archive/{log_id}/media": {
+      "get": {
+        "operationId": "get_archive_media_api_archive__log_id__media_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "log_id",
+            "required": true,
+            "schema": {
+              "title": "Log Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "which",
+            "required": false,
+            "schema": {
+              "default": "auto",
+              "pattern": "^(auto|old|new)$",
+              "title": "Which",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Archive Media"
+      }
+    },
+    "/api/autoresponder": {
+      "get": {
+        "operationId": "get_settings_api_autoresponder_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresponderState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Settings"
+      },
+      "post": {
+        "operationId": "update_settings_api_autoresponder_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoresponderUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresponderState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Settings"
+      }
+    },
+    "/api/autoresponder/keywords": {
+      "post": {
+        "operationId": "create_keyword_api_autoresponder_keywords_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeywordReplyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeywordSaved"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Keyword"
+      }
+    },
+    "/api/autoresponder/keywords/{keyword}": {
+      "delete": {
+        "operationId": "remove_keyword_api_autoresponder_keywords__keyword__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "keyword",
+            "required": true,
+            "schema": {
+              "title": "Keyword",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeywordDeleted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Keyword"
+      }
+    },
+    "/api/avatar/{target_user_id}": {
+      "get": {
+        "operationId": "get_avatar_api_avatar__target_user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_user_id",
+            "required": true,
+            "schema": {
+              "title": "Target User Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Avatar"
+      }
+    },
+    "/api/backup/export": {
+      "get": {
+        "operationId": "export_backup_api_backup_export_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupExport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Backup"
+      }
+    },
+    "/api/backup/import": {
+      "post": {
+        "description": "Накладывает копию поверх текущих настроек (слияние: совпадающие записи\nперезаписываются, остальные остаются). Некорректные записи пропускаются и\nсчитаются в `skipped`.",
+        "operationId": "import_backup_api_backup_import_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupImportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Backup"
+      }
+    },
+    "/api/chat-flags": {
+      "get": {
+        "operationId": "list_flags_api_chat_flags_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatFlagsList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Flags"
+      },
+      "post": {
+        "operationId": "update_flags_api_chat_flags_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatFlagsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatFlags"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Flags"
+      }
+    },
+    "/api/chat-info/{target_user_id}": {
+      "get": {
+        "operationId": "get_chat_info_api_chat_info__target_user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_user_id",
+            "required": true,
+            "schema": {
+              "title": "Target User Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatInfoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Chat Info"
+      }
+    },
+    "/api/chats": {
+      "get": {
+        "operationId": "list_chats_api_chats_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Chats"
+      }
+    },
+    "/api/commands": {
+      "get": {
+        "operationId": "list_commands_api_commands_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "ru",
+              "title": "Locale",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Commands"
+      }
+    },
+    "/api/emoji-status": {
+      "get": {
+        "operationId": "get_emoji_status_api_emoji_status_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmojiStatusState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Emoji Status"
+      }
+    },
+    "/api/emoji-status/grant": {
+      "post": {
+        "operationId": "grant_emoji_status_api_emoji_status_grant_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmojiStatusGrant"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmojiStatusFlags"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Grant Emoji Status"
+      }
+    },
+    "/api/favorites": {
+      "get": {
+        "operationId": "list_favorites_api_favorites_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Favorites"
+      },
+      "post": {
+        "operationId": "set_favorite_api_favorites_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Favorite"
+      }
+    },
+    "/api/locale": {
+      "get": {
+        "operationId": "get_locale_api_locale_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocaleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Locale"
+      },
+      "post": {
+        "operationId": "update_locale_api_locale_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocaleUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocaleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Locale"
+      }
+    },
+    "/api/mirror": {
+      "get": {
+        "operationId": "get_mirror_status_api_mirror_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MirrorState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Mirror Status"
+      }
+    },
+    "/api/mirror/connect": {
+      "post": {
+        "operationId": "api_connect_mirror_api_mirror_connect_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MirrorConnect"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MirrorStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Connect Mirror"
+      }
+    },
+    "/api/mirror/disconnect": {
+      "post": {
+        "operationId": "api_disconnect_mirror_api_mirror_disconnect_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MirrorDisconnected"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Disconnect Mirror"
+      }
+    },
+    "/api/ping": {
+      "get": {
+        "operationId": "ping_api_ping_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ping"
+      }
+    },
+    "/api/ping/deep": {
+      "get": {
+        "operationId": "ping_deep_api_ping_deep_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ping Deep"
+      }
+    },
+    "/api/readall": {
+      "post": {
+        "operationId": "read_all_api_readall_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadAllRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadProgress"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read All"
+      }
+    },
+    "/api/readall/status": {
+      "get": {
+        "operationId": "read_all_status_api_readall_status_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadProgress"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read All Status"
+      }
+    },
+    "/api/reminders": {
+      "get": {
+        "operationId": "get_reminders_api_reminders_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemindersSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Reminders"
+      },
+      "post": {
+        "operationId": "update_reminders_api_reminders_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemindersUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemindersSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Reminders"
+      }
+    },
+    "/api/reminders/waiting": {
+      "get": {
+        "description": "Кто сейчас ждёт ответа (дольше настроенного порога) — для экрана настроек.\nНапоминания при этом не отправляются и не помечаются.",
+        "operationId": "waiting_now_api_reminders_waiting_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Waiting Now"
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "get_settings_api_settings_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Settings"
+      }
+    },
+    "/api/settings/emoji-status": {
+      "post": {
+        "operationId": "toggle_emoji_status_api_settings_emoji_status_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmojiStatusToggle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmojiEnabledOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Toggle Emoji Status"
+      }
+    },
+    "/api/settings/emoji-status/style": {
+      "post": {
+        "description": "Выбор вида часов. Применяется сразу, если часы уже включены.",
+        "operationId": "set_emoji_status_style_api_settings_emoji_status_style_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmojiStatusStyle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmojiStyleOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Emoji Status Style"
+      }
+    },
+    "/api/settings/module": {
+      "post": {
+        "operationId": "toggle_module_api_settings_module_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModuleToggle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModuleToggle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Toggle Module"
+      }
+    },
+    "/api/settings/prefix": {
+      "post": {
+        "operationId": "update_prefix_api_settings_prefix_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrefixUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrefixOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Prefix"
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "description": "Сообщения за сегодня (по часовому поясу владельца) и за последние 7 суток.\n\nСчитаются сообщения из истории: текст, подписи и сохранённое медиа\n(фото, видео, голосовые, кружки). Стикеры и файлы без подписи сюда не\nпопадают — бот их не сохраняет.",
+        "operationId": "get_stats_api_stats_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Stats"
+      }
+    },
+    "/api/stats/overview": {
+      "get": {
+        "description": "Динамика по дням, топ собеседников, удалённые/изменённые и скорость\nответа за последние `days` суток (по сохранённой истории).",
+        "operationId": "get_overview_api_stats_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 90,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Overview"
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "operationId": "list_templates_api_templates_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Templates"
+      },
+      "post": {
+        "operationId": "save_template_api_templates_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateSave"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Template"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Template"
+      }
+    },
+    "/api/templates/{name}": {
+      "delete": {
+        "operationId": "delete_template_api_templates__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDeleted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Template"
+      }
+    }
+  }
+}

@@ -1,11 +1,13 @@
 """Шаблоны быстрых ответов (команда .t). Подстановки: {name}, {full_name}."""
 
 import re
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from api.deps import require_user
+from api.schemas import Template
 from app.features.templates import service as templates_db
 
 router = APIRouter()
@@ -14,7 +16,15 @@ MAX_TEMPLATES = 50
 _NAME_RE = re.compile(r"^\S{1,32}$")
 
 
-@router.get("/templates")
+class TemplatesOut(BaseModel):
+    templates: list[Template]
+
+
+class TemplateDeleted(BaseModel):
+    deleted: Literal[True]
+
+
+@router.get("/templates", response_model=TemplatesOut)
 async def list_templates(user: dict = Depends(require_user)):
     return {"templates": await templates_db.list_templates(user["id"])}
 
@@ -24,7 +34,7 @@ class TemplateSave(BaseModel):
     text: str = Field(min_length=1, max_length=4096)
 
 
-@router.post("/templates")
+@router.post("/templates", response_model=Template)
 async def save_template(payload: TemplateSave, user: dict = Depends(require_user)):
     name = payload.name.strip().lower()
     if not _NAME_RE.match(name):
@@ -42,7 +52,7 @@ async def save_template(payload: TemplateSave, user: dict = Depends(require_user
     return {"name": name, "text": payload.text}
 
 
-@router.delete("/templates/{name}")
+@router.delete("/templates/{name}", response_model=TemplateDeleted)
 async def delete_template(name: str, user: dict = Depends(require_user)):
     if not await templates_db.delete_template(user["id"], name.strip().lower()):
         raise HTTPException(status_code=404, detail="Template not found")

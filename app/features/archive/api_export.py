@@ -44,6 +44,14 @@ class ExportRequest(BaseModel):
     max_entries: int = Field(default=5000, ge=1, le=20000)
 
 
+class ExportResult(BaseModel):
+    sent: Literal[True]
+    entries: int
+    bytes: int
+    truncated: bool
+    photos_embedded: int
+
+
 async def _collect_entries(connection_id, req: ExportRequest):
     entries, cursor = [], None
     while len(entries) < req.max_entries:
@@ -93,7 +101,7 @@ async def _collect_photos(connection_id, entries):
     return photos
 
 
-@router.post("/archive/export")
+@router.post("/archive/export", response_model=ExportResult)
 async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owner)):
     connection = owner.connection
     owner_id = owner.id

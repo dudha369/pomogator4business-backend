@@ -7,6 +7,7 @@ GET /api/ping/deep  — с авторизацией: задержки БД и Te
 import time
 
 from fastapi import APIRouter, Depends, Response
+from pydantic import BaseModel
 
 from api.deps import require_user
 from core.health import measure_health
@@ -14,13 +15,24 @@ from core.health import measure_health
 router = APIRouter()
 
 
-@router.get("/ping")
+class PingOut(BaseModel):
+    ok: bool
+    server_time_ms: int
+
+
+class HealthOut(BaseModel):
+    telegram_ms: int | None  # None — Telegram не ответил за таймаут
+    db_ms: int | None
+    uptime_seconds: int
+
+
+@router.get("/ping", response_model=PingOut)
 async def ping(response: Response):
     response.headers["Cache-Control"] = "no-store"
     return {"ok": True, "server_time_ms": int(time.time() * 1000)}
 
 
-@router.get("/ping/deep")
+@router.get("/ping/deep", response_model=HealthOut)
 async def ping_deep(response: Response, user: dict = Depends(require_user)):
     from bot_instance import bot
 

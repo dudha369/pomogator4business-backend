@@ -11,6 +11,14 @@ from pydantic import BaseModel, Field
 from api.aliases import MAX_ALIASES_PER_OWNER
 from api.autoresponder import MAX_KEYWORDS
 from api.deps import require_connection, require_user
+from api.schemas import (
+    AiCore,
+    ChatFlags,
+    CommandAlias,
+    KeywordReply,
+    RemindersSettings,
+    Template,
+)
 from app.features.templates.api import MAX_TEMPLATES
 from db.models.ai import get_ai_settings, upsert_ai_settings
 from db.models.autoresponder import (
@@ -55,7 +63,39 @@ FORMAT_VERSION = 1
 _MAX_ITEMS = 500
 
 
-@router.get("/backup/export")
+class AutoresponderBackup(BaseModel):
+    # у владельца без сохранённых настроек все поля null
+    greeting_enabled: bool | None
+    greeting_text: str | None
+    away_enabled: bool | None
+    away_text: str | None
+    away_start_minutes: int | None
+    away_end_minutes: int | None
+    auto_read_enabled: bool | None
+
+
+class BackupExport(BaseModel):
+    version: int
+    prefix: str
+    timezone_offset_minutes: int
+    timezone: str | None
+    disabled_modules: list[str]
+    autoresponder: AutoresponderBackup
+    keywords: list[KeywordReply]
+    aliases: list[CommandAlias]
+    templates: list[Template]
+    favorites: list[int]
+    chat_flags: list[ChatFlags]
+    reminders: RemindersSettings
+    ai: AiCore
+
+
+class BackupImportResult(BaseModel):
+    applied: int
+    skipped: int
+
+
+@router.get("/backup/export", response_model=BackupExport)
 async def export_backup(user: dict = Depends(require_user)):
     owner_id = user["id"]
     connection = await require_connection(owner_id)
@@ -124,7 +164,7 @@ def _text(value, limit):
     return value[:limit] if isinstance(value, str) else None
 
 
-@router.post("/backup/import")
+@router.post("/backup/import", response_model=BackupImportResult)
 async def import_backup(payload: BackupImport, user: dict = Depends(require_user)):
     """Накладывает копию поверх текущих настроек (слияние: совпадающие записи
     перезаписываются, остальные остаются). Некорректные записи пропускаются и

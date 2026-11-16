@@ -4,11 +4,13 @@
 добавил сам. Применяются в app/platform/telegram/dispatch.py."""
 
 import re
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import Owner, current_owner, require_user
+from api.schemas import CommandAlias
 from db.models.command_alias import (
     add_command_alias,
     count_command_aliases,
@@ -32,7 +34,15 @@ def normalize_alias(raw: str, prefix: str) -> str:
     return alias
 
 
-@router.get("/aliases")
+class AliasesOut(BaseModel):
+    aliases: list[CommandAlias]
+
+
+class Deleted(BaseModel):
+    deleted: Literal[True]
+
+
+@router.get("/aliases", response_model=AliasesOut)
 async def list_aliases(user: dict = Depends(require_user)):
     return {"aliases": await list_command_aliases(user["id"])}
 
@@ -42,7 +52,7 @@ class AliasCreate(BaseModel):
     alias: str
 
 
-@router.post("/aliases")
+@router.post("/aliases", response_model=CommandAlias)
 async def create_alias(payload: AliasCreate, owner: Owner = Depends(current_owner)):
     user, connection = owner.user, owner.connection
     owner_id = user["id"]
@@ -68,7 +78,7 @@ async def create_alias(payload: AliasCreate, owner: Owner = Depends(current_owne
     return {"alias": alias, "command": cmd.name}
 
 
-@router.delete("/aliases/{alias}")
+@router.delete("/aliases/{alias}", response_model=Deleted)
 async def delete_alias(alias: str, user: dict = Depends(require_user)):
     if not await delete_command_alias(user["id"], alias.strip().lower()):
         raise HTTPException(status_code=404, detail="Alias not found")

@@ -19,7 +19,26 @@ from core.utils import is_valid_prefix
 router = APIRouter()
 
 
-@router.get("/settings")
+class ModuleState(BaseModel):
+    name: str
+    enabled: bool
+
+
+class SettingsOut(BaseModel):
+    prefix: str
+    modules: list[ModuleState]
+
+
+class ModuleToggle(BaseModel):
+    module: str
+    enabled: bool
+
+
+class PrefixOut(BaseModel):
+    prefix: str
+
+
+@router.get("/settings", response_model=SettingsOut)
 async def get_settings(owner: Owner = Depends(current_owner)):
     connection = owner.connection
     disabled = await list_disabled_modules(connection["connection_id"])
@@ -38,7 +57,7 @@ class PrefixUpdate(BaseModel):
     prefix: str
 
 
-@router.post("/settings/prefix")
+@router.post("/settings/prefix", response_model=PrefixOut)
 async def update_prefix(payload: PrefixUpdate, owner: Owner = Depends(current_owner)):
     if not is_valid_prefix(payload.prefix):
         raise HTTPException(
@@ -51,12 +70,7 @@ async def update_prefix(payload: PrefixUpdate, owner: Owner = Depends(current_ow
     return {"prefix": payload.prefix}
 
 
-class ModuleToggle(BaseModel):
-    module: str
-    enabled: bool
-
-
-@router.post("/settings/module")
+@router.post("/settings/module", response_model=ModuleToggle)
 async def toggle_module(payload: ModuleToggle, owner: Owner = Depends(current_owner)):
     if payload.module not in registry.modules():
         raise HTTPException(status_code=404, detail="Unknown module")

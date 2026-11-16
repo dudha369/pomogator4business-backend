@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_user
+from api.schemas import EmojiStatusState
 from db.models import emoji_status as status_db
 from db.models.clock import get_clock_pack_counts
 from emoji_clock import STYLES, is_valid_style_id
@@ -14,7 +15,21 @@ from core.utils import log_suppressed
 router = APIRouter()
 
 
-async def build_styles_payload():
+class EmojiStatusFlags(BaseModel):
+    granted: bool
+    enabled: bool
+    style: str
+
+
+class EmojiEnabledOut(BaseModel):
+    enabled: bool
+
+
+class EmojiStyleOut(BaseModel):
+    style: str
+
+
+async def build_styles_payload() -> list[dict]:
     """Список стилей для выбора. available=False — паки стиля ещё не загружены."""
     ready = await get_clock_pack_counts()
     return [
@@ -27,7 +42,7 @@ async def build_styles_payload():
     ]
 
 
-@router.get("/emoji-status")
+@router.get("/emoji-status", response_model=EmojiStatusState)
 async def get_emoji_status(user: dict = Depends(require_user)):
     return {
         "granted": await status_db.is_emoji_status_granted(user["id"]),
@@ -41,7 +56,7 @@ class EmojiStatusGrant(BaseModel):
     granted: bool
 
 
-@router.post("/emoji-status/grant")
+@router.post("/emoji-status/grant", response_model=EmojiStatusFlags)
 async def grant_emoji_status(
     payload: EmojiStatusGrant, user: dict = Depends(require_user)
 ):
@@ -61,7 +76,7 @@ class EmojiStatusToggle(BaseModel):
     enabled: bool
 
 
-@router.post("/settings/emoji-status")
+@router.post("/settings/emoji-status", response_model=EmojiEnabledOut)
 async def toggle_emoji_status(
     payload: EmojiStatusToggle, user: dict = Depends(require_user)
 ):
@@ -87,7 +102,7 @@ class EmojiStatusStyle(BaseModel):
     style: str
 
 
-@router.post("/settings/emoji-status/style")
+@router.post("/settings/emoji-status/style", response_model=EmojiStyleOut)
 async def set_emoji_status_style(
     payload: EmojiStatusStyle, user: dict = Depends(require_user)
 ):
