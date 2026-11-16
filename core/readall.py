@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from aiogram.exceptions import TelegramRetryAfter
 
 from db.models.favorite_chat import list_favorite_chat_ids
-from db.models.message_history import list_last_incoming_by_chat
+from app.features.history.service import list_last_incoming_by_chat
 
 logger = logging.getLogger("bot.readall")
 

@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from api.deps import Owner, current_owner
 from db.models.favorite_chat import list_favorite_chat_ids
-from db.models.message_history import list_last_incoming_by_chat, list_recent_chats
+from app.features.history.service import list_last_incoming_by_chat, list_recent_chats
 from core.readall import ReadFilter, find_chats, read_chats
 from app.platform.tasks import spawn
 

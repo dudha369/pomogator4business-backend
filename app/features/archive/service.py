@@ -9,8 +9,9 @@ from dataclasses import dataclass
 
 from app.features.archive.prefs import ArchivePrefs, load_prefs
 from app.features.archive.queries import get_edit_history, log_archive_event
-from app.features.archive.snapshot import edit_kind, entry_snapshot, gift_sticker
-from db.models.message_history import (
+from app.features.archive.snapshot import edit_kind
+from app.features.history.snapshot import entry_snapshot, gift_sticker
+from app.features.history.service import (
     delete_history,
     get_history_entry,
     list_album,

@@ -1,7 +1,7 @@
 """Пользовательские алиасы команд: `.п` → profile и т.п.
 
 Встроенные алиасы (registry) отдаёт /commands; здесь только то, что владелец
-добавил сам. Применяются в handlers/business_messages.py."""
+добавил сам. Применяются в app/platform/telegram/dispatch.py."""
 
 import re
 

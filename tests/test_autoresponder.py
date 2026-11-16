@@ -10,7 +10,7 @@ from db.models.autoresponder import (
     upsert_autoresponder_settings,
 )
 from db.models.favorite_chat import set_favorite_chat
-from db.models.message_history import save_history
+from app.features.history.service import save_history
 from db.models.user_locale import set_timezone_offset
 from core.retention import run_retention_once
 

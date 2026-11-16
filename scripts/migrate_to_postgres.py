@@ -22,6 +22,7 @@ from tortoise import Tortoise
 
 from config import TORTOISE_ORM
 from app.features.archive.models import ArchiveLog
+from app.features.history.models import MessageHistory
 from app.features.mute.models import Mute
 from app.features.profile.models import ProfileBackup
 from db.models import (
@@ -32,7 +33,6 @@ from db.models import (
     EchoChat,
     EmojiStatusSetting,
     KnownChat,
-    MessageHistory,
     MessageLog,
     MirrorBot,
     StoryAutopost,

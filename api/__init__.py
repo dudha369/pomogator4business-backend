@@ -7,7 +7,6 @@ from api.autoresponder import router as autoresponder_router
 from api.commands import router as commands_router
 from api.settings import router as settings_router
 from api.account import router as account_router
-from app.features.archive.api import router as archive_router
 from api.avatar import router as avatar_router
 from api.chat_info import router as chat_info_router
 from api.aliases import router as aliases_router
@@ -15,37 +14,40 @@ from api.stats import router as stats_router
 from api.favorites import router as favorites_router
 from api.chats import router as chats_router
 from api.ping import router as ping_router
-from app.features.archive.api_export import router as archive_export_router
-from app.features.templates.api import router as templates_router
 from api.chat_flags import router as chat_flags_router
 from api.ai import router as ai_router
-from app.features.reminders.api import router as reminders_router
 from api.backup import router as backup_router
+from app.features import FEATURES, feature_module
+
+# общие эндпоинты (пока не переехали в фичи); порядок сохранён
+_COMMON = (
+    locale_router,
+    mirror_router,
+    emoji_status_router,
+    autoresponder_router,
+    commands_router,
+    settings_router,
+    account_router,
+    avatar_router,
+    chat_info_router,
+    aliases_router,
+    stats_router,
+    favorites_router,
+    chats_router,
+    ping_router,
+    chat_flags_router,
+    ai_router,
+    backup_router,
+)
 
 
 def setup_routers() -> APIRouter:
     router = APIRouter()
-
-    router.include_router(locale_router)
-    router.include_router(mirror_router)
-    router.include_router(emoji_status_router)
-    router.include_router(autoresponder_router)
-    router.include_router(commands_router)
-    router.include_router(settings_router)
-    router.include_router(account_router)
-    router.include_router(archive_router)
-    router.include_router(avatar_router)
-    router.include_router(chat_info_router)
-    router.include_router(aliases_router)
-    router.include_router(stats_router)
-    router.include_router(favorites_router)
-    router.include_router(chats_router)
-    router.include_router(ping_router)
-    router.include_router(archive_export_router)
-    router.include_router(templates_router)
-    router.include_router(chat_flags_router)
-    router.include_router(ai_router)
-    router.include_router(reminders_router)
-    router.include_router(backup_router)
-
+    for common in _COMMON:
+        router.include_router(common)
+    # REST фич: `app/features/<f>/api.py` с `router` (необязательно)
+    for feature in FEATURES:
+        module = feature_module(feature, "api")
+        if module:
+            router.include_router(module.router)
     return router

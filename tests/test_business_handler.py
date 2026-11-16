@@ -11,10 +11,10 @@ from db.models.command_alias import add_command_alias
 from db.models.connection import set_prefix, upsert_connection
 from db.models.echo import toggle_echo
 from db.models.known_chat import is_known_chat
-from db.models.message_history import get_history_entry
+from app.features.history.service import get_history_entry
 from db.models.module_settings import disable_module
 from app.platform.telegram.registry import registry
-from handlers.business_messages import on_business_message
+from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, OWNER_ID, make_message
 
@@ -95,7 +95,7 @@ async def test_unknown_command_goes_to_wordle(connection, bot, monkeypatch):
     async def fake_guess(bot_, connection_, message, locale, alias):
         seen.append(alias)
 
-    monkeypatch.setattr("handlers.business_messages.handle_wordle_guess", fake_guess)
+    monkeypatch.setattr("app.features.games.bot.wordle.handle_wordle_guess", fake_guess)
     await on_business_message(make_message(".слово", from_id=OWNER_ID), bot)
     assert seen == ["слово"]
     await disable_module(CONNECTION_ID, "wordle")
@@ -109,7 +109,7 @@ async def test_type_trigger(connection, bot, monkeypatch):
     async def fake_type(bot_, message, connection_, trigger):
         seen.append(trigger)
 
-    monkeypatch.setattr("handlers.business_messages.handle_type_trigger", fake_type)
+    monkeypatch.setattr("commands.type_.handle_type_trigger", fake_type)
     await on_business_message(make_message("_type hello", from_id=OWNER_ID), bot)
     await on_business_message(
         make_message("_type hello", from_id=CHAT), bot
@@ -144,7 +144,7 @@ async def test_autoresponder_failure_does_not_break_pipeline(
     async def boom(*a, **k):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("handlers.business_messages.handle_autoresponder", boom)
+    monkeypatch.setattr("core.autoresponder.handle_incoming", boom)
     msg = make_message("привет", chat_id=CHAT, from_id=CHAT)
     await on_business_message(msg, bot)  # не должно упасть
     assert await get_history_entry(CONNECTION_ID, CHAT, msg.message_id) is not None
@@ -159,7 +159,7 @@ async def test_mute_stops_autoresponder(connection, bot, monkeypatch):
     async def muted(bot_, connection_, message):
         return True
 
-    monkeypatch.setattr("handlers.business_messages.handle_mute_incoming", muted)
+    monkeypatch.setattr("app.features.mute.bot.handle_incoming", muted)
     await on_business_message(make_message("привет", chat_id=CHAT, from_id=CHAT), bot)
     assert bot.sent == []
 

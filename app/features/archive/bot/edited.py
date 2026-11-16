@@ -6,7 +6,7 @@ from aiogram import Bot, Router
 from aiogram.types import Message
 
 from app.features.archive import service
-from app.features.archive.adapter import build_snapshot
+from app.features.history.adapter import build_snapshot
 from app.features.archive.bot import send_classic, send_rich
 from app.features.archive.bot.keyboards import link_keyboard
 from app.features.archive.prefs import defaults

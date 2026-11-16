@@ -7,7 +7,8 @@
 
 Не напоминаем: в «тихие часы», о чатах с флагом no_remind, при favorites_only —
 о неизбранных, о сообщениях старше недели. Бот видит только текст и подписи
-(см. step_history): стикеры и файлы без подписи в историю не попадают."""
+(см. app.features.history.bot.record_history): стикеры и файлы без подписи в историю не попадают.
+"""
 
 from app.features.reminders.models import ReminderSettings
 from app.platform.i18n import t
@@ -15,7 +16,7 @@ from core.autoresponder import in_away_window
 from db.models.autoresponder import last_autoreply_ref
 from db.models.chat_flags import list_chat_flags
 from db.models.favorite_chat import list_favorite_chat_ids
-from db.models.message_history import last_rows_by_chat
+from app.features.history.service import last_rows_by_chat
 
 
 LOOP_INTERVAL_SECONDS = 600

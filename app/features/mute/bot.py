@@ -91,3 +91,12 @@ async def handle_incoming(bot, connection, message) -> bool:
         return False
 
     return False
+
+
+async def mute_gate(handler, message, data):
+    """Middleware: сообщение из замьюченного чата дальше не идёт."""
+    inc = data["inc"]
+    if not inc.is_owner and inc.enabled("mute"):
+        if await handle_incoming(inc.bot, inc.connection, inc.message):
+            return None
+    return await handler(message, data)

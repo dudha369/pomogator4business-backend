@@ -21,6 +21,15 @@ class CommandRegistry:
     def __init__(self):
         self._by_alias = {}
         self._modules = {}
+        # (module, handler): кто получает неизвестный алиас (сейчас — угадывание wordle)
+        self._fallbacks = []
+
+    def add_fallback(self, module: str, handler):
+        """handler(bot, connection, message, locale, alias) вызывается для алиаса без команды."""
+        self._fallbacks.append((module, handler))
+
+    def fallbacks(self):
+        return tuple(self._fallbacks)
 
     def register(self, cmd: Command):
         self._by_alias[cmd.name] = cmd

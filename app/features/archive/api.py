@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from api.deps import Owner, current_owner
+from app.features.archive.api_export import router as export_router
 from app.features.archive.queries import get_archive_page
 from app.features.archive.media import attach_media_info, content_type, load_media
 from app.features.archive.prefs import (
@@ -110,3 +111,8 @@ async def update_archive_settings(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _prefs_response(prefs)
+
+
+router.include_router(
+    export_router
+)  # тот же префикс /archive, после основных маршрутов

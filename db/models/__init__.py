@@ -3,7 +3,6 @@ from .connection import Connection
 from .echo import EchoChat
 from .emoji_status import EmojiStatusSetting
 from .known_chat import KnownChat
-from .message_history import MessageHistory
 from .message_log import MessageLog
 from .mirror_bot import MirrorBot
 from .module_settings import DisabledModule
@@ -20,7 +19,6 @@ __all__ = [
     "EchoChat",
     "EmojiStatusSetting",
     "KnownChat",
-    "MessageHistory",
     "MessageLog",
     "MirrorBot",
     "ScheduledTask",

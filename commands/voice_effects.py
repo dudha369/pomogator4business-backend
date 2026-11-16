@@ -63,3 +63,12 @@ async def handle_voice_message(bot, connection, message) -> bool:
         bot, connection["connection_id"], message.chat.id, [message.message_id]
     )
     return True
+
+
+async def voice_step(handler, message, data):
+    """Middleware: эффект на голосовое владельца; обработанное дальше не идёт."""
+    inc = data["inc"]
+    if inc.is_owner and message.voice and inc.enabled("voice"):
+        if await handle_voice_message(inc.bot, inc.connection, message):
+            return None
+    return await handler(message, data)

@@ -12,7 +12,7 @@ from app.features.archive.render.rich import (
     can_use_rich,
 )
 from app.features.archive.service import edit_versions
-from app.features.archive.snapshot import FILE_KINDS, entry_snapshot
+from app.features.history.snapshot import FILE_KINDS, entry_snapshot
 
 logger = logging.getLogger("bot.archive")
 
