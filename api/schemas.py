@@ -45,9 +45,7 @@ class AiCore(BaseModel):
 
 
 class KeywordReply(BaseModel):
-    # строка таблицы целиком — так отдавалось и раньше (`.values()`)
     id: int
-    owner_id: int
     keyword: str
     reply_text: str
 
