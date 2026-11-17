@@ -409,6 +409,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Home */
+        get: operations["get_home_api_home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locale": {
         parameters: {
             query?: never;
@@ -1334,6 +1351,30 @@ export interface components {
             /** Uptime Seconds */
             uptime_seconds: number;
         };
+        /** HomeOut */
+        HomeOut: {
+            /** Commands Total */
+            commands_total: number;
+            /** Connected */
+            connected: boolean;
+            /** Emoji Status Enabled */
+            emoji_status_enabled: boolean;
+            /** Emoji Status Granted */
+            emoji_status_granted: boolean;
+            /** Mirror Connected */
+            mirror_connected: boolean;
+            /** Modules Enabled */
+            modules_enabled: number;
+            /** Modules Total */
+            modules_total: number;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Owner Username */
+            owner_username: string | null;
+            /** Recent Archive */
+            recent_archive: components["schemas"]["ArchiveEntry"][];
+            stats: components["schemas"]["StatsOut"] | null;
+        };
         /** KeywordDeleted */
         KeywordDeleted: {
             /** Deleted */
@@ -1345,8 +1386,6 @@ export interface components {
             id: number;
             /** Keyword */
             keyword: string;
-            /** Owner Id */
-            owner_id: number;
             /** Reply Text */
             reply_text: string;
         };
@@ -2611,6 +2650,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FavoriteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_home_api_home_get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeOut"];
                 };
             };
             /** @description Validation Error */

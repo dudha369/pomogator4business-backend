@@ -1977,6 +1977,92 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "HomeOut": {
+        "properties": {
+          "commands_total": {
+            "title": "Commands Total",
+            "type": "integer"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "emoji_status_enabled": {
+            "title": "Emoji Status Enabled",
+            "type": "boolean"
+          },
+          "emoji_status_granted": {
+            "title": "Emoji Status Granted",
+            "type": "boolean"
+          },
+          "mirror_connected": {
+            "title": "Mirror Connected",
+            "type": "boolean"
+          },
+          "modules_enabled": {
+            "title": "Modules Enabled",
+            "type": "integer"
+          },
+          "modules_total": {
+            "title": "Modules Total",
+            "type": "integer"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "owner_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Username"
+          },
+          "recent_archive": {
+            "items": {
+              "$ref": "#/components/schemas/ArchiveEntry"
+            },
+            "title": "Recent Archive",
+            "type": "array"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StatsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "connected",
+          "owner_name",
+          "owner_username",
+          "mirror_connected",
+          "commands_total",
+          "modules_enabled",
+          "modules_total",
+          "emoji_status_granted",
+          "emoji_status_enabled",
+          "stats",
+          "recent_archive"
+        ],
+        "title": "HomeOut",
+        "type": "object"
+      },
       "KeywordDeleted": {
         "properties": {
           "deleted": {
@@ -2000,10 +2086,6 @@
             "title": "Keyword",
             "type": "string"
           },
-          "owner_id": {
-            "title": "Owner Id",
-            "type": "integer"
-          },
           "reply_text": {
             "title": "Reply Text",
             "type": "string"
@@ -2011,7 +2093,6 @@
         },
         "required": [
           "id",
-          "owner_id",
           "keyword",
           "reply_text"
         ],
@@ -4365,6 +4446,45 @@
           }
         },
         "summary": "Set Favorite"
+      }
+    },
+    "/api/home": {
+      "get": {
+        "operationId": "get_home_api_home_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Home"
       }
     },
     "/api/locale": {

@@ -17,6 +17,7 @@ from api.ping import router as ping_router
 from api.chat_flags import router as chat_flags_router
 from api.ai import router as ai_router
 from api.backup import router as backup_router
+from api.home import router as home_router
 from app.features import FEATURES, feature_module
 
 # общие эндпоинты (пока не переехали в фичи); порядок сохранён
@@ -38,6 +39,7 @@ _COMMON = (
     chat_flags_router,
     ai_router,
     backup_router,
+    home_router,
 )
 
 
