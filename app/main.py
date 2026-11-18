@@ -7,16 +7,16 @@ from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
-from api import setup_routers
+from app.platform.api import setup_routers
 from bot_instance import bot, dp
 from config import TORTOISE_ORM, settings
-from core.loader import load_commands
-from core.logging_config import configure_logging
-from core.mirror_manager import mirror_dispatcher, mirror_manager
+from app.platform.loader import load_commands
+from app.platform.logging_config import configure_logging
+from app.features.mirror.manager import mirror_dispatcher, mirror_manager
 from app.features.reminders.bot import run_reminders_loop
-from core.retention import run_retention_loop
-from core.scheduled import run_scheduled_loop
-from core.scheduler import run_emoji_clock
+from app.platform.retention import run_retention_loop
+from app.features.scheduled.service import run_scheduled_loop
+from app.features.emoji_clock.bot import run_emoji_clock
 
 logger = logging.getLogger("bot.webhook")
 

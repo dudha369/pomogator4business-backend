@@ -6,8 +6,8 @@ import pytest
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import GetUserProfilePhotos
 
-from api import avatar as avatar_api
-from db.models.known_chat import mark_known_chat
+from app.features.chats.api import avatar as avatar_api
+from app.features.chats.queries import mark_known_chat
 
 from .conftest import OWNER_ID
 

@@ -6,10 +6,10 @@ from app.platform.telegram.context import CommandContext
 from app.features.games.bot.guess_number import cmd_guess
 
 from .conftest import FakeBot, make_message
-from db.models.message_log import log_message, recent_message_log
-from db.models.mirror_bot import get_mirror
+from app.features.history.service import log_message, recent_message_log
+from app.features.mirror.queries import get_mirror
 from app.features.profile.service import get_profile_backup
-from db.models.voice_effect import set_voice_effect
+from app.features.voice_effects.queries import set_voice_effect
 from app.features.games.service import get_game, save_game
 
 
@@ -123,7 +123,7 @@ async def test_spam_and_tr_send_plain_text(connection, monkeypatch):
 async def test_archive_view_escapes_old_text(connection, monkeypatch):
     import types
 
-    from handlers import settings
+    from app.features.settings import bot as settings
 
     async def fake_recent(*_a):
         return [{"event": "deleted", "chat_id": 7, "old_text": EVIL}]
@@ -155,7 +155,7 @@ async def test_archive_view_escapes_old_text(connection, monkeypatch):
     ],
 )
 def test_is_valid_prefix(prefix, ok):
-    from core.utils import is_valid_prefix
+    from app.platform.utils import is_valid_prefix
 
     assert is_valid_prefix(prefix) is ok
 
@@ -164,7 +164,7 @@ async def test_new_prefix_handler_ignores_non_text():
     """Фото/стикер в состоянии ввода префикса: хендлер не должен падать на .text=None."""
     import types
 
-    from handlers.settings import router
+    from app.features.settings.bot import router
 
     handler = next(
         h for h in router.message.handlers if h.callback.__name__ == "on_new_prefix"
@@ -201,7 +201,7 @@ class OrderBot(FakeBot):
 async def _voice_setup(connection, monkeypatch):
     import types
 
-    from commands import voice_effects
+    from app.features.voice_effects import bot as voice_effects
 
     async def fake_filter(data, flt):
         return b"processed"
@@ -246,7 +246,10 @@ async def test_panic_keeps_log_when_delete_fails(connection):
 
 
 async def test_failed_self_delete_does_not_swallow_real_archive_event():
-    from core.self_actions import consume_self_delete, delete_own_messages
+    from app.platform.telegram.self_actions import (
+        consume_self_delete,
+        delete_own_messages,
+    )
 
     bot = OrderBot()
     bot.fail_delete = True
@@ -355,8 +358,8 @@ def types_ns(**kw):
 @pytest.fixture
 def mirror_env(monkeypatch):
     from config import settings
-    from core import mirror_manager as mm
-    from core import mirror_setup
+    from app.features.mirror import manager as mm
+    from app.features.mirror import setup as mirror_setup
 
     MirrorBot.instances, MirrorBot.fail_webhook = [], False
     monkeypatch.setattr(mm, "Bot", MirrorBot)
@@ -371,7 +374,7 @@ def mirror_env(monkeypatch):
 
 async def test_start_mirror_without_base_url_raises(mirror_env, monkeypatch):
     from config import settings
-    from core.mirror_manager import MirrorStartError
+    from app.features.mirror.manager import MirrorStartError
 
     monkeypatch.setattr(settings, "WEBHOOK_BASE_URL", "")
     with pytest.raises(MirrorStartError) as exc:
@@ -380,7 +383,7 @@ async def test_start_mirror_without_base_url_raises(mirror_env, monkeypatch):
 
 
 async def test_start_mirror_webhook_failure_raises_and_closes_session(mirror_env):
-    from core.mirror_manager import MirrorStartError
+    from app.features.mirror.manager import MirrorStartError
 
     MirrorBot.fail_webhook = True
     with pytest.raises(MirrorStartError) as exc:
@@ -405,7 +408,7 @@ async def test_start_mirror_new_token_replaces_old(mirror_env):
 
 
 async def test_failed_replacement_keeps_working_mirror(mirror_env):
-    from core.mirror_manager import MirrorStartError
+    from app.features.mirror.manager import MirrorStartError
 
     await mirror_env.start_mirror(1, GOOD_TOKEN)
     MirrorBot.fail_webhook = True
@@ -423,7 +426,7 @@ async def test_mirror_start_does_not_drop_pending_on_deploy(mirror_env):
 async def test_connect_mirror_saves_nothing_when_start_fails(
     connection, mirror_env, monkeypatch
 ):
-    from core.mirror_setup import MirrorSetupError, connect_mirror
+    from app.features.mirror.setup import MirrorSetupError, connect_mirror
 
     MirrorBot.fail_webhook = True
     with pytest.raises(MirrorSetupError) as exc:
@@ -451,7 +454,7 @@ async def test_api_mirror_connect_reports_start_failure(client, mirror_env):
 
 
 async def test_mirror_handler_deletes_message_with_token(connection, mirror_env):
-    from handlers.mirror import MirrorState, on_token_received
+    from app.features.mirror.bot import MirrorState, on_token_received
 
     deleted, answers = [], []
 

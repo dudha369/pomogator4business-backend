@@ -20,7 +20,7 @@ VOICE_MAX_SECONDS = 120
 async def transcribe_into_history(bot, connection_id, chat_id, message_id, voice):
     """Распознаёт голосовое и дописывает текст в историю."""
     try:
-        from core.stt import transcribe_audio
+        from app.platform.stt import transcribe_audio
 
         connection = await get_connection(connection_id)
         locale = await get_locale(connection["owner_id"]) if connection else "ru"

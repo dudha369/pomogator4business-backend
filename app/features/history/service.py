@@ -1,7 +1,7 @@
 from tortoise import Tortoise
 from tortoise.functions import Max
 
-from app.features.history.models import MessageHistory
+from app.features.history.models import MessageHistory, MessageLog
 from app.features.history.snapshot import (
     FILE_KINDS,
     MAX_DOWNLOAD_BYTES,
@@ -293,3 +293,49 @@ async def list_media_flags(connection_id, pairs):
         }
         for r in rows
     }
+
+
+async def log_message(connection_id, chat_id, message_id):
+    await MessageLog.create(
+        connection_id=connection_id, chat_id=chat_id, message_id=message_id
+    )
+
+
+async def recent_message_log(connection_id, chat_id, count):
+    """Последние `count` записей журнала как [(log_id, message_id)], БЕЗ удаления:
+    стирать журнал можно только после того, как сообщения реально удалены."""
+    rows = (
+        await MessageLog.filter(connection_id=connection_id, chat_id=chat_id)
+        .order_by("-log_id")
+        .limit(count)
+        .values_list("log_id", "message_id")
+    )
+    return [tuple(row) for row in rows]
+
+
+async def forget_message_log(log_ids):
+    if log_ids:
+        await MessageLog.filter(log_id__in=list(log_ids)).delete()
+
+
+async def trim_message_log(keep):
+    """Оставляет по `keep` последних записей журнала НА КАЖДОЕ подключение (он нужен лишь для
+    .del и подобных команд, которым важны свежие сообщения). Возвращает число
+    удалённых строк."""
+    removed = 0
+    connection_ids = (
+        await MessageLog.all().distinct().values_list("connection_id", flat=True)
+    )
+    for connection_id in connection_ids:  # у каждого подключения свой «хвост»
+        rows = (
+            await MessageLog.filter(connection_id=connection_id)
+            .order_by("-log_id")
+            .offset(keep)
+            .limit(1)
+            .values_list("log_id", flat=True)
+        )
+        if rows:
+            removed += await MessageLog.filter(
+                connection_id=connection_id, log_id__lte=rows[0]
+            ).delete()
+    return removed

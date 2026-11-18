@@ -4,7 +4,7 @@ import types
 
 import pytest
 
-from core import mentions
+from app.platform.telegram import mentions
 from app.features.games.bot.checkers import cmd_chk, on_chk_callback
 from app.features.games.bot.ttt import cmd_ttt, on_ttt_callback
 

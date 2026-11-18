@@ -4,7 +4,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
-from api.deps import Owner, current_owner
+from app.platform.api.deps import Owner, current_owner
 from app.features.archive.api_export import router as export_router
 from app.features.archive.queries import get_archive_page
 from app.features.archive.media import attach_media_info, content_type, load_media

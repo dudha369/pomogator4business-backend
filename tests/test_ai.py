@@ -3,14 +3,14 @@ import types
 import pytest
 
 from config import settings
-from core import ai
-from core import autoresponder as ar
-from db.models.ai import create_draft, get_draft, upsert_ai_settings
-from db.models.autoresponder import add_keyword_reply
-from db.models.chat_flags import set_chat_flags
+from app.features.ai import service as ai
+from app.features.autoresponder import bot as ar_bot
+from app.features.ai.queries import create_draft, get_draft, upsert_ai_settings
+from app.features.autoresponder.queries import add_keyword_reply
+from app.features.chats.queries import set_chat_flags
 from app.features.history.service import save_history
 from db.models.user_locale import set_timezone_offset
-from handlers.ai_drafts import on_draft_button
+from app.features.ai.bot import on_draft_button
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 
@@ -38,7 +38,7 @@ async def enable_ai(mode="draft", **extra):
 async def deliver(connection, bot, text, chat=7, now=NOON, **kw):
     msg = make_message(text, chat_id=chat, from_id=chat, **kw)
     await save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
-    reply = await ar.handle_incoming(bot, connection, msg, now=now)
+    reply = await ar_bot.handle_incoming(bot, connection, msg, now=now)
     return reply.kind if reply else None
 
 

@@ -20,25 +20,18 @@ from datetime import datetime, timedelta, timezone
 import aiosqlite
 from tortoise import Tortoise
 
-from config import TORTOISE_ORM
 from app.features.archive.models import ArchiveLog
-from app.features.history.models import MessageHistory
+from app.features.chats.models import KnownChat
+from app.features.echo.models import EchoChat
+from app.features.emoji_clock.models import ClockEmoji, ClockPack, EmojiStatusSetting
+from app.features.history.models import MessageHistory, MessageLog
+from app.features.mirror.models import MirrorBot
 from app.features.mute.models import Mute
 from app.features.profile.models import ProfileBackup
-from db.models import (
-    ClockEmoji,
-    ClockPack,
-    Connection,
-    DisabledModule,
-    EchoChat,
-    EmojiStatusSetting,
-    KnownChat,
-    MessageLog,
-    MirrorBot,
-    StoryAutopost,
-    UserLocale,
-    VoiceEffect,
-)
+from app.features.story.models import StoryAutopost
+from app.features.voice_effects.models import VoiceEffect
+from config import TORTOISE_ORM
+from db.models import Connection, DisabledModule, UserLocale
 
 DEFAULT_DB_PATH = "bot.db"
 

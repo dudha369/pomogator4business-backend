@@ -75,7 +75,7 @@ async def test_home_survives_broken_optional_parts(client, monkeypatch):
     async def boom(*_args, **_kwargs):
         raise RuntimeError("db down")
 
-    monkeypatch.setattr("api.home.get_stats", boom)
+    monkeypatch.setattr("app.features.miniapp.api.home.get_stats", boom)
     r = await client.get("/api/home", headers=client.owner)
     assert r.status_code == 200
     body = r.json()

@@ -21,7 +21,7 @@ from tests import html_guard  # noqa: E402
 from config import TORTOISE_ORM  # noqa: E402
 from db.models.connection import get_connection, upsert_connection
 from app.platform.ttl_cache import clear_all  # noqa: E402
-from core.loader import load_commands  # noqa: E402
+from app.platform.loader import load_commands  # noqa: E402
 
 bot_instance.setup_routes()
 load_commands()
@@ -29,7 +29,7 @@ load_commands()
 
 async def on_business_message(message, bot):
     """Прогоняет сообщение через настоящую цепочку middleware бизнес-сообщений."""
-    from handlers.business_messages import router
+    from app.platform.telegram.pipeline import router
 
     return await router.propagate_event("business_message", message, bot=bot)
 
@@ -253,7 +253,7 @@ import urllib.parse  # noqa: E402
 import httpx  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 
-from api import setup_routers  # noqa: E402
+from app.platform.api import setup_routers  # noqa: E402
 from config import settings  # noqa: E402
 
 

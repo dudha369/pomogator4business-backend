@@ -2,11 +2,11 @@ import types
 
 from app.features.archive.queries import get_archive_page, log_archive_event
 from db.models.connection import get_connection, set_prefix, upsert_connection
-from db.models.echo import is_echo_enabled, toggle_echo
+from app.features.echo.queries import is_echo_enabled, toggle_echo
 from app.features.history.service import get_history_entry, save_history
-from db.models.message_log import log_message
+from app.features.history.service import log_message
 from db.models.module_settings import disable_module, list_disabled_modules
-from handlers.connection import on_business_connection
+from app.features.connection.bot import on_business_connection
 
 from .conftest import OWNER_ID
 

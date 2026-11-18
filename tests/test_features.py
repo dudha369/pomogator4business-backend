@@ -3,7 +3,7 @@
 import types
 
 from app.features.archive.queries import log_archive_event
-from db.models.chat_flags import get_chat_flags
+from app.features.chats.queries import get_chat_flags
 from app.features.history.service import save_history
 from db.models.module_settings import (
     disable_module,
@@ -11,10 +11,10 @@ from db.models.module_settings import (
     list_disabled_modules,
 )
 from app.features.templates.service import save_template
-from core import stats
-from handlers.bot_commands import on_dm_command, split_command
+from app.features.stats import service as stats
+from app.platform.telegram.dm import on_dm_command, split_command
 from commands.readall import cmd_readall
-from core.readall import ReadFilter, parse_filters, select_chats
+from app.features.chats.service import ReadFilter, parse_filters, select_chats
 from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message

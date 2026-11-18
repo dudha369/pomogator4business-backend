@@ -34,3 +34,14 @@ class MessageHistory(Model):
         table = "message_history"
         unique_together = (("connection_id", "chat_id", "message_id"),)
         indexes = (("connection_id", "chat_id", "created_at"),)
+
+
+class MessageLog(Model):
+    log_id = fields.BigIntField(pk=True)
+    connection_id = fields.CharField(max_length=255)
+    chat_id = fields.BigIntField()
+    message_id = fields.BigIntField()
+
+    class Meta:
+        table = "message_log"
+        indexes = (("connection_id", "chat_id", "log_id"),)

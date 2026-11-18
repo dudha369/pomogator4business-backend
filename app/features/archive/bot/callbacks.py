@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from app.platform.i18n import t
-from core.utils import log_suppressed
+from app.platform.utils import log_suppressed
 from db.models.user_locale import get_locale
 
 router = Router(name="archive_callbacks")

@@ -209,7 +209,7 @@ async def test_guest_command_with_right_does_not_report(connection, alerts_bot):
 
 # --- состояния сами исчезают -------------------------------------------------------------
 async def test_emoji_state_resolves_when_access_is_back(client):
-    from db.models.emoji_status import set_emoji_status_granted
+    from app.features.emoji_clock.queries import set_emoji_status_granted
 
     await report(OWNER_ID, "emoji_access_revoked")
     r = (await client.get("/api/alerts", headers=client.owner)).json()
@@ -222,8 +222,8 @@ async def test_emoji_state_resolves_when_access_is_back(client):
 
 
 async def test_ai_state_follows_key_and_setting(client, monkeypatch):
-    from core import ai
-    from db.models.ai import upsert_ai_settings
+    from app.features.ai import service as ai
+    from app.features.ai.queries import upsert_ai_settings
 
     await upsert_ai_settings(OWNER_ID, enabled=True)
     monkeypatch.setattr(ai, "is_configured", lambda: False)
@@ -239,8 +239,8 @@ async def test_ai_state_follows_key_and_setting(client, monkeypatch):
 
 
 async def test_mirror_state_checks_manager(client):
-    from core.mirror_manager import mirror_manager
-    from db.models.mirror_bot import save_mirror
+    from app.features.mirror.manager import mirror_manager
+    from app.features.mirror.queries import save_mirror
 
     await save_mirror(OWNER_ID, b"x", 1, "m", NOW)
     await report(OWNER_ID, "mirror_not_running", reason="webhook_failed")
@@ -257,8 +257,8 @@ async def test_mirror_state_checks_manager(client):
 
 
 async def test_start_all_reports_broken_mirror(database, alerts_bot):
-    from core.mirror_manager import MirrorManager
-    from db.models.mirror_bot import save_mirror
+    from app.features.mirror.manager import MirrorManager
+    from app.features.mirror.queries import save_mirror
 
     await save_mirror(OWNER_ID, b"not-a-token", 1, "m", NOW)
     await MirrorManager().start_all()
@@ -268,7 +268,7 @@ async def test_start_all_reports_broken_mirror(database, alerts_bot):
 
 
 async def test_connect_mirror_resolves_state(database, monkeypatch):
-    from core import mirror_setup
+    from app.features.mirror import setup as mirror_setup
 
     await report(OWNER_ID, "mirror_not_running", reason="x")
 
@@ -300,8 +300,9 @@ async def test_connect_mirror_resolves_state(database, monkeypatch):
 async def test_ai_without_key_is_reported_from_autoresponder(
     connection, alerts_bot, monkeypatch
 ):
-    from core import ai, autoresponder
-    from db.models.ai import upsert_ai_settings
+    from app.features.ai import service as ai
+    from app.features.autoresponder import bot as autoresponder
+    from app.features.ai.queries import upsert_ai_settings
 
     await upsert_ai_settings(OWNER_ID, enabled=True)
     monkeypatch.setattr(ai, "is_configured", lambda: False)

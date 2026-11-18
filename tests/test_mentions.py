@@ -1,7 +1,6 @@
 import pytest
 
-from core import mentions
-
+from app.platform.telegram import mentions
 from .conftest import FakeBot
 
 

@@ -1,7 +1,7 @@
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from core.scheduled import schedule
-from core.utils import parse_duration_loose
+from app.features.scheduled.service import schedule
+from app.platform.utils import parse_duration_loose
 
 _MAX_SECONDS = 24 * 3600
 

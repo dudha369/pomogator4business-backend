@@ -196,7 +196,7 @@ def fake_stt(monkeypatch):
         calls.append(locale)
         return "привет, это расшифровка"
 
-    monkeypatch.setattr("core.stt.transcribe_audio", transcribe)
+    monkeypatch.setattr("app.platform.stt.transcribe_audio", transcribe)
     return calls
 
 
@@ -239,7 +239,7 @@ async def test_failed_recognition_does_not_break_anything(rich, bot, monkeypatch
     async def broken(data, locale="ru"):
         raise RuntimeError("no network")
 
-    monkeypatch.setattr("core.stt.transcribe_audio", broken)
+    monkeypatch.setattr("app.platform.stt.transcribe_audio", broken)
     await prefs(voice_transcript=True)
     msg = await receive(bot, voice=tg_file("vo", duration=5))
     await wait_background()

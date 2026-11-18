@@ -6,11 +6,11 @@ import types
 
 import pytest
 
-from db.models.autoresponder import upsert_autoresponder_settings
+from app.features.autoresponder.queries import upsert_autoresponder_settings
 from db.models.command_alias import add_command_alias
 from db.models.connection import set_prefix, upsert_connection
-from db.models.echo import toggle_echo
-from db.models.known_chat import is_known_chat
+from app.features.echo.queries import toggle_echo
+from app.features.chats.queries import is_known_chat
 from app.features.history.service import get_history_entry
 from db.models.module_settings import disable_module
 from app.platform.telegram.registry import registry
@@ -144,7 +144,7 @@ async def test_autoresponder_failure_does_not_break_pipeline(
     async def boom(*a, **k):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("core.autoresponder.handle_incoming", boom)
+    monkeypatch.setattr("app.features.autoresponder.bot.handle_incoming", boom)
     msg = make_message("привет", chat_id=CHAT, from_id=CHAT)
     await on_business_message(msg, bot)  # не должно упасть
     assert await get_history_entry(CONNECTION_ID, CHAT, msg.message_id) is not None

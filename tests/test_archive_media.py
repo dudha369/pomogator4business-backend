@@ -120,7 +120,7 @@ async def test_retention_frees_bytes_but_file_id_keeps_media_available(
 ):
     """Байты (если их хранили) чистятся по сроку, а файл остаётся доступен по file_id."""
     from config import settings
-    from core.retention import run_retention_once
+    from app.platform.retention import run_retention_once
 
     monkeypatch.setattr(settings, "KEEP_MEDIA_BYTES", True)
     msg = await receive(bot, photo=[tg_file("p")])

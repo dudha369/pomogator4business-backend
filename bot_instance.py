@@ -4,16 +4,16 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
 from app.platform.telegram.middleware import UpdateLoggingMiddleware
-from core.self_actions import install_edit_marker
-from handlers.connection import router as connection_router
-from handlers.business_messages import router as business_messages_router
+from app.platform.telegram.self_actions import install_edit_marker
+from app.features.connection.bot import router as connection_router
+from app.platform.telegram.pipeline import router as business_messages_router
 from app.features.alerts.bot import router as alerts_router
 from app.features.archive.bot import router as archive_router
-from handlers.mirror import router as mirror_router
+from app.features.mirror.bot import router as mirror_router
 from app.features.games.bot import router as games_router
-from handlers.settings import router as settings_router
-from handlers.ai_drafts import router as ai_drafts_router
-from handlers.bot_commands import router as bot_commands_router
+from app.features.settings.bot import router as settings_router
+from app.features.ai.bot import router as ai_drafts_router
+from app.platform.telegram.dm import router as bot_commands_router
 
 # разметку указываем явно (parse_mode="html") там, где она есть; превью ссылок выключены
 # глобально, где оно нужно — LinkPreviewOptions(is_disabled=False)
