@@ -23,6 +23,7 @@ import logging
 import time
 from dataclasses import dataclass
 
+from app.features.alerts.bot import report
 from core import ai
 from db.models.ai import get_ai_settings
 from db.models.autoresponder import (
@@ -204,6 +205,8 @@ async def handle_incoming(bot, connection, message, now=None) -> AutoReply | Non
 
     keywords = await list_keyword_replies(owner_id) if text and not is_command else []
     ai_settings = await get_ai_settings(owner_id)
+    if ai_settings and ai_settings["enabled"] and not ai.is_configured():
+        await report(owner_id, "ai_no_key")
     ai_on = bool(
         ai_settings
         and ai_settings["enabled"]

@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
+from app.features.alerts.bot import report
 from config import settings
 from db.models.mirror_bot import get_all_active_mirrors
 from app.platform.crypto import decrypt_token
@@ -134,10 +135,16 @@ class MirrorManager:
             try:
                 token = decrypt_token(row["token_encrypted"])
                 await self.start_mirror(row["owner_id"], token)
-            except Exception:
+            except Exception as error:
                 logger.exception(
                     "Не удалось запустить зеркало owner_id=%s", row["owner_id"]
                 )
+                reason = (
+                    error.code
+                    if isinstance(error, MirrorStartError)
+                    else "token_invalid"
+                )
+                await report(row["owner_id"], "mirror_not_running", reason=reason)
 
     async def stop_all(self):
         """Закрывает только локальные HTTP-сессии — вебхуки на стороне

@@ -5,6 +5,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.features.alerts import service as alerts_service
 from api.deps import require_user
 from api.schemas import EmojiStatusState
 from db.models import emoji_status as status_db
@@ -64,6 +65,7 @@ async def grant_emoji_status(
     await status_db.set_emoji_status_granted(owner_id, payload.granted)
     if payload.granted:
         await status_db.set_emoji_status_enabled(owner_id, True)
+        await alerts_service.resolve(owner_id, "emoji_access_revoked")
 
     return {
         "granted": await status_db.is_emoji_status_granted(owner_id),

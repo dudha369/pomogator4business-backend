@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from api.deps import Owner, require_user
 from api.stats import StatsOut, get_stats
+from app.features.alerts import service as alerts_service
 from app.features.archive.api import ArchiveEntry
 from app.features.archive.media import attach_media_info
 from app.features.archive.queries import get_archive_page
@@ -37,6 +38,7 @@ class HomeOut(BaseModel):
     modules_total: int
     emoji_status_granted: bool
     emoji_status_enabled: bool  # включён И разрешён — как показывает главная
+    alerts_active: int  # число видимых предупреждений («Проблемы и настройки»)
     stats: StatsOut | None  # необязательная часть: при сбое None
     recent_archive: list[ArchiveEntry]  # необязательная часть: при сбое []
 
@@ -68,7 +70,14 @@ async def get_home(user: dict = Depends(require_user)):
         except Exception:  # счётчики и лента не должны ронять главную
             log.exception("Главная: не удалось собрать счётчики или архив")
 
+    try:
+        alerts_active = len(await alerts_service.list_active(owner_id))
+    except Exception:  # счётчик не должен ронять главную
+        log.exception("Главная: не удалось посчитать предупреждения")
+        alerts_active = 0
+
     return {
+        "alerts_active": alerts_active,
         "connected": connection is not None,
         "owner_name": connection.get("owner_name") if connection else None,
         "owner_username": connection.get("owner_username") if connection else None,

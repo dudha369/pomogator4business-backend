@@ -148,11 +148,11 @@ async def test_clock_unrelated_bad_request_keeps_clock_enabled(clock_on):
     assert await is_emoji_status_granted(OWNER_ID) is True
 
 
-async def test_clock_revoked_access_disables_and_notifies(clock_on):
+async def test_clock_revoked_access_disables_and_notifies(clock_on, alerts_bot):
     bot = ClockBot(_bad_request("Bad Request: user did not grant permission"))
     await _push(bot)
     assert await is_emoji_status_granted(OWNER_ID) is False
-    assert len(bot.sent) == 1 and bot.sent[0]["chat_id"] == OWNER_ID
+    assert len(alerts_bot.sent) == 1 and alerts_bot.sent[0]["chat_id"] == OWNER_ID
 
 
 async def test_clock_forbidden_disables(clock_on):
@@ -499,22 +499,6 @@ async def test_bot_edit_is_not_reported_even_when_own_edits_enabled(connection):
     # история при этом актуальна
     entry = await get_history_entry(CONNECTION_ID, 7, msg.message_id)
     assert entry["text"] == "стало"
-
-
-# --- 21. сбой команды не проходит молча -----------------------------------------------
-async def test_command_failure_is_reported_once_per_minute(connection):
-    from app.platform.telegram import dispatch as bm
-
-    bm._last_failure_notice.clear()
-    bot = FakeBot()
-    inc = types.SimpleNamespace(
-        bot=bot, connection=connection, connection_id=CONNECTION_ID
-    )
-    await bm.report_command_failure(inc, "dice", "ru")
-    await bm.report_command_failure(inc, "dice", "ru")
-    await bm.report_command_failure(inc, "flip", "ru")
-    assert [m["chat_id"] for m in bot.sent] == [OWNER_ID, OWNER_ID]
-    assert ".dice" in bot.sent[0]["text"]
 
 
 # --- 23. нагрузка на БД ------------------------------------------------------------

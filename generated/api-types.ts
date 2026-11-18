@@ -76,6 +76,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Alerts */
+        get: operations["get_alerts_api_alerts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/mutes/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unmute Alert */
+        delete: operations["unmute_alert_api_alerts_mutes__code__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{alert_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss Alert */
+        post: operations["dismiss_alert_api_alerts__alert_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alerts/{alert_id}/mute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mute Alert */
+        post: operations["mute_alert_api_alerts__alert_id__mute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/aliases": {
         parameters: {
             query?: never;
@@ -843,6 +911,54 @@ export interface components {
             /** Mode */
             mode?: ("draft" | "auto") | null;
         };
+        /** AlertDismissed */
+        AlertDismissed: {
+            /**
+             * Dismissed
+             * @constant
+             */
+            dismissed: true;
+        };
+        /** AlertMuted */
+        AlertMuted: {
+            /** Muted */
+            muted: string;
+        };
+        /** AlertOut */
+        AlertOut: {
+            /** Code */
+            code: string;
+            /** Count */
+            count: number;
+            /** Details */
+            details: {
+                [key: string]: string;
+            };
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "event" | "state";
+            /** Last At */
+            last_at: number;
+        };
+        /** AlertUnmuted */
+        AlertUnmuted: {
+            /**
+             * Unmuted
+             * @constant
+             */
+            unmuted: true;
+        };
+        /** AlertsOut */
+        AlertsOut: {
+            /** Alerts */
+            alerts: components["schemas"]["AlertOut"][];
+            /** Muted */
+            muted: string[];
+        };
         /** AliasCreate */
         AliasCreate: {
             /** Alias */
@@ -1353,6 +1469,8 @@ export interface components {
         };
         /** HomeOut */
         HomeOut: {
+            /** Alerts Active */
+            alerts_active: number;
             /** Commands Total */
             commands_total: number;
             /** Connected */
@@ -1849,6 +1967,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_alerts_api_alerts_get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmute_alert_api_alerts_mutes__code__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertUnmuted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_alert_api_alerts__alert_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertDismissed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mute_alert_api_alerts__alert_id__mute_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path: {
+                alert_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertMuted"];
                 };
             };
             /** @description Validation Error */

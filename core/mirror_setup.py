@@ -3,6 +3,7 @@ import time
 
 from aiogram import Bot as AiogramBot
 
+from app.features.alerts import service as alerts
 from db.models.mirror_bot import save_mirror
 from app.platform.crypto import encrypt_token
 from core.mirror_manager import MirrorStartError, mirror_manager
@@ -41,4 +42,5 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     await save_mirror(
         owner_id, encrypt_token(token), me.id, me.username, int(time.time())
     )
+    await alerts.resolve(owner_id, "mirror_not_running")
     return me.username

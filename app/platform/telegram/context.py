@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from aiogram import Bot
 from aiogram.types import Message, ReplyParameters
 
+from app.features.alerts.bot import report
+from app.platform.tasks import spawn
 from db.models.message_log import log_message
 from app.platform.i18n import t
 from core.self_actions import delete_own_messages
@@ -109,7 +111,8 @@ class CommandContext:
                 self.bot, self.connection_id, self.chat_id, [self.message.message_id]
             )
         else:
-            # TODO(alerts): сообщить владельцу через alerts.report(code="no_delete_right")
+            name = self.message.from_user.full_name if self.message.from_user else "?"
+            spawn(report(self.connection["owner_id"], "no_delete_right", name=name))
             logger.info(
                 "Нет права can_delete_all_messages (connection=%s): игра ответом на команду",
                 self.connection_id,

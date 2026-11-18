@@ -10,6 +10,7 @@ from aiogram.exceptions import (
     TelegramServerError,
 )
 
+from app.features.alerts.bot import report
 from db.models.clock import get_clock_emoji
 from db.models.emoji_status import (
     get_active_emoji_status_settings,
@@ -54,20 +55,10 @@ def _is_access_revoked(error: Exception) -> bool:
     return False
 
 
-async def _disable_clock(bot, owner_id):
+async def _disable_clock(owner_id):
     await set_emoji_status_granted(owner_id, False)
     await set_emoji_status_enabled(owner_id, False)
-    try:
-        await bot.send_message(
-            chat_id=owner_id,
-            text=(
-                "⚠️ Доступ к эмодзи-статусу отозван — часы в статусе "
-                "выключены. Включить заново можно в мини-приложении → Аккаунт."
-            ),
-            parse_mode=None,
-        )
-    except Exception:
-        log_suppressed("core/scheduler.py:disable_notice")
+    await report(owner_id, "emoji_access_revoked")
 
 
 async def _push_emoji_status(bot, owner_id, style, time_key, cache):
@@ -92,7 +83,7 @@ async def _push_emoji_status(bot, owner_id, style, time_key, cache):
             logger.warning(
                 "Доступ к эмодзи-статусу отозван для owner_id=%s — выключаю", owner_id
             )
-            await _disable_clock(bot, owner_id)
+            await _disable_clock(owner_id)
         else:
             logger.warning(
                 "Эмодзи-статус owner_id=%s отклонён Telegram: %s", owner_id, error

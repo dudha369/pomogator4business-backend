@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # ограничение доступа к мини-приложению: id через запятую; пусто — доступ у всех
     ALLOWED_USER_IDS: str = ""
 
+    # пауза между одинаковыми предупреждениями владельцу (код из app/features/alerts/catalog.py)
+    ALERT_COOLDOWN_HOURS: float = 6
+
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
     # Какие типы файлов показывать в Rich. Голосовые по умолчанию обычные: на iPhone
@@ -116,6 +119,7 @@ TORTOISE_ORM = {
                 "db.models.voice_effect",
                 "db.models.scheduled_task",
                 "app.features.games.models",
+                "app.features.alerts.models",
                 "aerich.models",
             ],
             "default_connection": "default",
