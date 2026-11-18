@@ -171,6 +171,14 @@ class FakeBot:
         return types.SimpleNamespace(full_name=f"Chat {chat_id}", username=None)
 
 
+@pytest.fixture(autouse=True)
+def alerts_bot(monkeypatch):
+    """Предупреждения владельцу уходят в FakeBot, а не в настоящий Telegram."""
+    fake = FakeBot()
+    monkeypatch.setattr("app.features.alerts.bot._main_bot", lambda: fake)
+    return fake
+
+
 @pytest.fixture
 def bot():
     fake = FakeBot()

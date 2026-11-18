@@ -241,6 +241,116 @@
         "title": "AiUpdate",
         "type": "object"
       },
+      "AlertDismissed": {
+        "properties": {
+          "dismissed": {
+            "const": true,
+            "title": "Dismissed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dismissed"
+        ],
+        "title": "AlertDismissed",
+        "type": "object"
+      },
+      "AlertMuted": {
+        "properties": {
+          "muted": {
+            "title": "Muted",
+            "type": "string"
+          }
+        },
+        "required": [
+          "muted"
+        ],
+        "title": "AlertMuted",
+        "type": "object"
+      },
+      "AlertOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "details": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "event",
+              "state"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_at": {
+            "title": "Last At",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "kind",
+          "details",
+          "count",
+          "last_at"
+        ],
+        "title": "AlertOut",
+        "type": "object"
+      },
+      "AlertUnmuted": {
+        "properties": {
+          "unmuted": {
+            "const": true,
+            "title": "Unmuted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "unmuted"
+        ],
+        "title": "AlertUnmuted",
+        "type": "object"
+      },
+      "AlertsOut": {
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/AlertOut"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "muted": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Muted",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alerts",
+          "muted"
+        ],
+        "title": "AlertsOut",
+        "type": "object"
+      },
       "AliasCreate": {
         "properties": {
           "alias": {
@@ -1979,6 +2089,10 @@
       },
       "HomeOut": {
         "properties": {
+          "alerts_active": {
+            "title": "Alerts Active",
+            "type": "integer"
+          },
           "commands_total": {
             "title": "Commands Total",
             "type": "integer"
@@ -2057,6 +2171,7 @@
           "modules_total",
           "emoji_status_granted",
           "emoji_status_enabled",
+          "alerts_active",
           "stats",
           "recent_archive"
         ],
@@ -3250,6 +3365,189 @@
           }
         },
         "summary": "Test Ai"
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "operationId": "get_alerts_api_alerts_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Alerts"
+      }
+    },
+    "/api/alerts/mutes/{code}": {
+      "delete": {
+        "operationId": "unmute_alert_api_alerts_mutes__code__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertUnmuted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unmute Alert"
+      }
+    },
+    "/api/alerts/{alert_id}/dismiss": {
+      "post": {
+        "operationId": "dismiss_alert_api_alerts__alert_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertDismissed"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Alert"
+      }
+    },
+    "/api/alerts/{alert_id}/mute": {
+      "post": {
+        "operationId": "mute_alert_api_alerts__alert_id__mute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertMuted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mute Alert"
       }
     },
     "/api/aliases": {

@@ -7,6 +7,7 @@ from app.platform.telegram.middleware import UpdateLoggingMiddleware
 from core.self_actions import install_edit_marker
 from handlers.connection import router as connection_router
 from handlers.business_messages import router as business_messages_router
+from app.features.alerts.bot import router as alerts_router
 from app.features.archive.bot import router as archive_router
 from handlers.mirror import router as mirror_router
 from app.features.games.bot import router as games_router
@@ -30,6 +31,7 @@ def setup_routes() -> Dispatcher:
     dp.include_router(connection_router)
     dp.include_router(business_messages_router)
     dp.include_router(archive_router)
+    dp.include_router(alerts_router)
     dp.include_router(mirror_router)
     dp.include_router(games_router)
     dp.include_router(settings_router)

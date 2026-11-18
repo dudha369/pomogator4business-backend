@@ -9,7 +9,16 @@
 from importlib import import_module
 from importlib.util import find_spec
 
-FEATURES = ("archive", "games", "history", "mute", "profile", "reminders", "templates")
+FEATURES = (
+    "alerts",
+    "archive",
+    "games",
+    "history",
+    "mute",
+    "profile",
+    "reminders",
+    "templates",
+)
 
 
 def feature_module(feature: str, part: str):

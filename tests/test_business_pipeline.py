@@ -304,18 +304,15 @@ async def test_new_contact_step_runs_scam_check_for_contact_only(
 
 # --- команды: недоступно собеседнику, сбой сообщается --------------------------------
 async def test_failing_command_notifies_owner_and_chain_ends(
-    connection, bot, monkeypatch
+    connection, bot, alerts_bot, monkeypatch
 ):
-    from app.platform.telegram import dispatch
-
-    dispatch._last_failure_notice.clear()
-
     async def boom(ctx):
         raise RuntimeError("x")
 
     monkeypatch.setattr(registry.find("ping"), "handler", boom)
     await on_business_message(make_message(".ping", from_id=OWNER_ID), bot)
-    assert [m["chat_id"] for m in bot.sent] == [OWNER_ID]
+    assert bot.sent == []
+    assert [m["chat_id"] for m in alerts_bot.sent] == [OWNER_ID]
 
 
 def test_registry_fallbacks_contain_wordle():

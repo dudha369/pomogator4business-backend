@@ -2,20 +2,15 @@
 бизнес-сообщений (все middleware до него могли сообщение остановить)."""
 
 import logging
-import time
 
-from app.platform.i18n import t
+from app.features.alerts.bot import report
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.incoming import Incoming
 from app.platform.telegram.registry import registry
 from db.models.command_alias import get_command_alias
 from db.models.user_locale import get_locale
-from core.utils import log_suppressed
 
 logger = logging.getLogger("bot.dispatch")
-
-_FAILURE_NOTICE_INTERVAL = 60
-_last_failure_notice: dict[tuple[str, str], float] = {}
 
 
 async def dispatch_command(message, inc: Incoming):
@@ -57,7 +52,9 @@ async def dispatch_command(message, inc: Incoming):
     except Exception:
         # команду часто удаляют ДО выполнения: без этого при сбое она исчезает молча
         logger.exception("Сбой команды %s", cmd.name)
-        await report_command_failure(inc, cmd.name, ctx.locale)
+        await report(
+            inc.connection["owner_id"], f"command_failed:{cmd.name}", name=cmd.name
+        )
 
 
 async def _run_fallbacks(inc: Incoming, alias: str):
@@ -65,22 +62,3 @@ async def _run_fallbacks(inc: Incoming, alias: str):
         if inc.enabled(module):
             locale = await get_locale(inc.connection["owner_id"])
             await handler(inc.bot, inc.connection, inc.message, locale, alias)
-
-
-async def report_command_failure(inc: Incoming, name: str, locale: str) -> None:
-    """Сообщить владельцу, что команда не выполнилась (не чаще раза в минуту на команду)."""
-    key, now = (inc.connection_id, name), time.monotonic()
-    if (
-        now - _last_failure_notice.get(key, -_FAILURE_NOTICE_INTERVAL)
-        < _FAILURE_NOTICE_INTERVAL
-    ):
-        return
-    _last_failure_notice[key] = now
-    try:
-        await inc.bot.send_message(
-            chat_id=inc.connection["owner_chat_id"],
-            text=t("cmd.failed", locale, name=name),
-            parse_mode=None,
-        )
-    except Exception:
-        log_suppressed("platform/telegram/dispatch.py:report_failure", benign=True)
