@@ -1,16 +1,16 @@
-"""Персистентные .timer / .bomb (core/scheduled.py)."""
+"""Персистентные .timer / .bomb (app/features/scheduled/service.py)."""
 
 import asyncio
 import time
 
 import pytest
 
-from db.models.scheduled_task import (
+from app.features.scheduled.queries import (
     add_scheduled_task,
     claim_scheduled_task,
     list_due_scheduled_tasks,
 )
-from core import scheduled
+from app.features.scheduled import service as scheduled
 from app.platform.telegram.context import CommandContext
 from commands.bomb import cmd_bomb
 from commands.timer import cmd_timer

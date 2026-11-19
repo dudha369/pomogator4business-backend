@@ -5,7 +5,7 @@
 (только владельцу в личку — собеседник его не увидит)."""
 
 from app.features.templates.service import get_template, list_templates
-from core.autoresponder import render
+from app.features.autoresponder.service import render
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 

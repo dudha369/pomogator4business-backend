@@ -1,6 +1,6 @@
 """Режим «не беспокоить» для конкретного чата: .noauto, .noai и .noremind."""
 
-from db.models.chat_flags import get_chat_flags, set_chat_flags
+from app.features.chats.queries import get_chat_flags, set_chat_flags
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 

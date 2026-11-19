@@ -13,9 +13,9 @@ from aiogram.exceptions import (
 )
 
 from app.features.archive.queries import save_archive_prefs_data
-from db.models.autoresponder import add_keyword_reply, list_keyword_replies
+from app.features.autoresponder.queries import add_keyword_reply, list_keyword_replies
 from db.models.connection import get_connection, set_prefix
-from db.models.emoji_status import (
+from app.features.emoji_clock.queries import (
     is_emoji_status_granted,
     set_emoji_status_enabled,
     set_emoji_status_granted,
@@ -28,7 +28,11 @@ from app.features.history.service import (
     list_history_rows_since,
     save_history,
 )
-from db.models.message_log import log_message, recent_message_log, trim_message_log
+from app.features.history.service import (
+    log_message,
+    recent_message_log,
+    trim_message_log,
+)
 from db.models.module_settings import (
     disable_module,
     enable_module,
@@ -36,7 +40,7 @@ from db.models.module_settings import (
 )
 from app.features.templates.service import count_templates
 from db.models.user_locale import get_timezone_name, get_timezone_offset
-from core import scheduler
+from app.features.emoji_clock import bot as scheduler
 from app.platform.telegram.context import CommandContext
 from db.models.user_locale import effective_offset, is_valid_timezone
 
@@ -184,7 +188,7 @@ async def test_update_logging_hides_message_text(caplog):
 
 # --- 16. импорт бэкапа соблюдает квоты ------------------------------------------
 async def test_backup_import_respects_quotas(client):
-    from api.autoresponder import MAX_KEYWORDS
+    from app.features.autoresponder.api import MAX_KEYWORDS
     from app.features.templates.api import MAX_TEMPLATES
 
     h = client.owner
@@ -206,7 +210,7 @@ async def test_backup_import_respects_quotas(client):
 
 
 async def test_backup_import_existing_keyword_is_replaced_at_quota(client):
-    from api.autoresponder import MAX_KEYWORDS
+    from app.features.autoresponder.api import MAX_KEYWORDS
 
     h = client.owner
     for i in range(MAX_KEYWORDS):
@@ -410,7 +414,7 @@ async def test_ttt_callback_answered_once(connection):
 async def test_bot_edit_marker_marks_and_expires(monkeypatch):
     from aiogram.methods import EditMessageText
 
-    from core import self_actions as sa
+    from app.platform.telegram import self_actions as sa
 
     sa._bot_edits.clear()
     called = []
@@ -432,7 +436,7 @@ async def test_bot_edit_marker_marks_and_expires(monkeypatch):
 async def test_bot_edit_marker_ignores_non_business_edits():
     from aiogram.methods import EditMessageText
 
-    from core import self_actions as sa
+    from app.platform.telegram import self_actions as sa
 
     sa._bot_edits.clear()
 
@@ -488,7 +492,7 @@ async def test_own_edit_notifies_when_enabled_and_marks_owner(connection):
 
 
 async def test_bot_edit_is_not_reported_even_when_own_edits_enabled(connection):
-    from core import self_actions as sa
+    from app.platform.telegram import self_actions as sa
 
     await save_archive_prefs_data(CONNECTION_ID, {"own_edits": True})
     bot = FakeBot()
@@ -515,7 +519,7 @@ async def _seed_history():
 
 
 async def test_sql_aggregates_match_python(connection):
-    from core import stats
+    from app.features.stats import service as stats
 
     await _seed_history()
     since = NOW - 5 * 86400
@@ -607,7 +611,7 @@ async def test_ttl_cache_returns_independent_copies(connection):
 
 # --- 24. /readall в фоне ----------------------------------------------------------
 async def test_readall_status_idle(client):
-    from api import chats
+    from app.features.chats.api import chats
 
     chats._jobs.clear()
     r = await client.get("/api/readall/status", headers=client.owner)
@@ -615,7 +619,7 @@ async def test_readall_status_idle(client):
 
 
 async def test_readall_returns_progress_when_slow(client, api_bot, monkeypatch):
-    from api import chats
+    from app.features.chats.api import chats
 
     await _seed_history()
     monkeypatch.setattr(chats, "_WAIT_SECONDS", 0.05)

@@ -4,9 +4,9 @@
 .fav — только в бизнес-чате, так как помечает текущий чат. Те же действия
 доступны в мини-приложении (страница «Чаты»)."""
 
-from db.models.favorite_chat import toggle_favorite_chat
+from app.features.chats.queries import toggle_favorite_chat
 from app.platform.telegram.context import CommandContext
-from core.readall import parse_filters, read_chats
+from app.features.chats.service import parse_filters, read_chats
 from app.platform.telegram.registry import command
 
 

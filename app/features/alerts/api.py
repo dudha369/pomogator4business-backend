@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.deps import require_user
+from app.platform.api.deps import require_user
 from app.features.alerts import service
 
 router = APIRouter()

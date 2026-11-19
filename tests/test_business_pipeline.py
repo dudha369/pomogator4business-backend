@@ -9,9 +9,9 @@ import pytest
 
 from app.features.history.service import get_history_entry
 from app.platform.telegram.registry import registry
-from db.models.echo import toggle_echo
+from app.features.echo.queries import toggle_echo
 from db.models.module_settings import disable_module
-from handlers.business_messages import STEPS, build_router, router
+from app.platform.telegram.pipeline import STEPS, build_router, router
 
 from .conftest import (
     CONNECTION_ID,
@@ -65,7 +65,7 @@ async def test_unknown_connection_stops_chain(database, bot):
 
 
 async def test_owner_message_goes_to_message_log(connection, bot):
-    from db.models.message_log import recent_message_log
+    from app.features.history.service import recent_message_log
 
     msg = make_message("привет", chat_id=CHAT, from_id=OWNER_ID)
     await on_business_message(msg, bot)
@@ -74,7 +74,7 @@ async def test_owner_message_goes_to_message_log(connection, bot):
 
 
 async def test_contact_message_not_in_message_log(connection, bot):
-    from db.models.message_log import recent_message_log
+    from app.features.history.service import recent_message_log
 
     msg = make_message("привет", chat_id=CHAT, from_id=CHAT)
     await on_business_message(msg, bot)
@@ -197,7 +197,7 @@ async def test_voice_step_handled_stops_chain(connection, bot, monkeypatch, spy_
         seen.append(1)
         return True
 
-    monkeypatch.setattr("commands.voice_effects.handle_voice_message", handled)
+    monkeypatch.setattr("app.features.voice_effects.bot.handle_voice_message", handled)
     msg = make_message(".ping", from_id=OWNER_ID)
     msg.voice = types.SimpleNamespace(file_id="v", duration=3)
     await on_business_message(msg, bot)
@@ -210,7 +210,9 @@ async def test_voice_step_not_handled_falls_through_to_command(
     async def unhandled(*a):
         return False
 
-    monkeypatch.setattr("commands.voice_effects.handle_voice_message", unhandled)
+    monkeypatch.setattr(
+        "app.features.voice_effects.bot.handle_voice_message", unhandled
+    )
     msg = make_message(".ping", from_id=OWNER_ID)
     msg.voice = types.SimpleNamespace(file_id="v", duration=3)
     await on_business_message(msg, bot)
@@ -226,7 +228,7 @@ async def test_voice_step_only_for_owner_and_enabled_module(
         seen.append(1)
         return True
 
-    monkeypatch.setattr("commands.voice_effects.handle_voice_message", handled)
+    monkeypatch.setattr("app.features.voice_effects.bot.handle_voice_message", handled)
     await disable_module(CONNECTION_ID, "scam")
     contact = make_message("x", chat_id=CHAT, from_id=CHAT)
     contact.voice = types.SimpleNamespace(file_id="v", duration=3)
@@ -356,7 +358,7 @@ def test_history_feature_registered_without_locales():
 
 
 def test_old_names_are_gone():
-    for rel in ("handlers/business_messages.py",):
+    for rel in ("app/platform/telegram/pipeline.py",):
         src = (ROOT / rel).read_text(encoding="utf-8")
         for old in ("PIPELINE", "run_pipeline", "step_history", "Incoming("):
             assert old not in src, old
@@ -368,7 +370,7 @@ def test_old_names_are_gone():
 def test_api_routes_include_every_feature_router():
     from fastapi import FastAPI
 
-    from api import setup_routers
+    from app.platform.api import setup_routers
 
     app = FastAPI()
     app.include_router(setup_routers(), prefix="/api")

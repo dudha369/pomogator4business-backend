@@ -4,20 +4,34 @@
 (команды, роутеры, middleware; пакет `bot/`, если файлов много), `api.py` и `locales/`.
 Все части, кроме `models.py`, необязательны (у `history` нет ни команд, ни текстов).
 Простые команды без состояния живут в `commands/`.
+REST — только в `<фича>/api.py` (или пакет `api/`, если роутеров несколько); общий код REST — `app/platform/api/`.
 """
 
 from importlib import import_module
 from importlib.util import find_spec
 
 FEATURES = (
+    "ai",
     "alerts",
     "archive",
+    "autoresponder",
+    "chats",
+    "connection",
+    "echo",
+    "emoji_clock",
     "games",
     "history",
+    "miniapp",
+    "mirror",
     "mute",
     "profile",
     "reminders",
+    "scheduled",
+    "settings",
+    "stats",
+    "story",
     "templates",
+    "voice_effects",
 )
 
 

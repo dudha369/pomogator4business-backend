@@ -7,7 +7,7 @@ from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from aiogram.methods import GetStickerSet
 from PIL import Image, ImageChops
 
-from db.models.clock import (
+from app.features.emoji_clock.queries import (
     count_clock_emojis,
     get_clock_emoji,
     get_clock_pack_counts,
@@ -16,10 +16,16 @@ from db.models.clock import (
     swap_clock_style,
     upsert_clock_pack,
 )
-from db.models import clock as clock_db
-from emoji_clock import STYLES, ClockStyle, all_time_keys, get_style, pack_revision
-from emoji_clock.sync import runner
-from emoji_clock.sync.builder import emoji_rows
+from app.features.emoji_clock import queries as clock_db
+from app.features.emoji_clock import (
+    STYLES,
+    ClockStyle,
+    all_time_keys,
+    get_style,
+    pack_revision,
+)
+from app.features.emoji_clock.sync import runner
+from app.features.emoji_clock.sync.builder import emoji_rows
 
 # ----------------------------- стили и рендер -------------------------------
 

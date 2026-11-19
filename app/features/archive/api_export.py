@@ -12,7 +12,7 @@ from aiogram.types import BufferedInputFile
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from api.deps import Owner, current_owner
+from app.platform.api.deps import Owner, current_owner
 from app.features.archive import export as export
 from app.features.archive.media import attach_media_info, load_media
 from app.features.archive.queries import get_archive_page

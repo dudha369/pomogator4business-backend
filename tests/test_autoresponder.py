@@ -2,17 +2,18 @@ import types
 
 import pytest
 
-from core import autoresponder as ar
-from db.models.autoresponder import (
+from app.features.autoresponder import bot as ar_bot
+from app.features.autoresponder import service as ar
+from app.features.autoresponder.queries import (
     add_keyword_reply,
     last_autoreply_at,
     log_autoreply,
     upsert_autoresponder_settings,
 )
-from db.models.favorite_chat import set_favorite_chat
+from app.features.chats.queries import set_favorite_chat
 from app.features.history.service import save_history
 from db.models.user_locale import set_timezone_offset
-from core.retention import run_retention_once
+from app.platform.retention import run_retention_once
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 
@@ -81,7 +82,7 @@ async def configured(connection):
 async def deliver(connection, bot, text, chat=7, now=NOON, **kw):
     msg = make_message(text, chat_id=chat, from_id=kw.pop("from_id", chat), **kw)
     await save_history(CONNECTION_ID, chat, msg.message_id, False, text, now)
-    reply = await ar.handle_incoming(bot, connection, msg, now=now)
+    reply = await ar_bot.handle_incoming(bot, connection, msg, now=now)
     return reply.kind if reply else None
 
 
@@ -134,7 +135,7 @@ async def test_away_silent_when_owner_recently_wrote(configured, bot):
 )
 async def test_ignores_commands_bots_and_groups(configured, bot, kwargs):
     msg = make_message(chat_id=11, from_id=11, **kwargs)
-    assert await ar.handle_incoming(bot, configured, msg, now=NOON) is None
+    assert await ar_bot.handle_incoming(bot, configured, msg, now=NOON) is None
     assert bot.sent == []
 
 

@@ -11,9 +11,9 @@ from app.features.archive.bot import send_classic, send_rich
 from app.features.archive.bot.keyboards import link_keyboard
 from app.features.archive.prefs import defaults
 from app.features.archive.service import TEXT_EDITS
-from core.mentions import format_mention
-from core.self_actions import is_bot_edit
-from core.utils import log_suppressed
+from app.platform.telegram.mentions import format_mention
+from app.platform.telegram.self_actions import is_bot_edit
+from app.platform.utils import log_suppressed
 from db.models.connection import get_connection
 from db.models.user_locale import get_locale
 

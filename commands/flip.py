@@ -3,7 +3,7 @@ import random
 
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from core.utils import log_suppressed
+from app.platform.utils import log_suppressed
 
 
 @command(name="flip", module="flip")

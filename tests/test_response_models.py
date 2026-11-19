@@ -5,7 +5,6 @@ from pathlib import Path
 
 from fastapi.routing import APIRoute
 
-from api import _COMMON
 from app.features import FEATURES, feature_module
 from app.main import app
 
@@ -21,8 +20,8 @@ BINARY_ENDPOINTS = {
 
 def _routers():
     # FastAPI оборачивает include_router лениво, поэтому app.routes эндпоинтов не покажет:
-    # идём по тем же роутерам, что собирает api.setup_routers()
-    routers = list(_COMMON)
+    # идём по тем же роутерам, что собирает app.platform.api.setup_routers()
+    routers = []
     for feature in FEATURES:
         module = feature_module(feature, "api")
         if module:

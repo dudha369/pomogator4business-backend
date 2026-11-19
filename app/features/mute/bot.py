@@ -2,8 +2,8 @@ import time
 
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from core.utils import parse_duration
-from core.self_actions import delete_own_messages
+from app.platform.utils import parse_duration
+from app.platform.telegram.self_actions import delete_own_messages
 from app.features.mute.service import (
     activate_from_warn,
     bump_warn_count,

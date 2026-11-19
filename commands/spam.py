@@ -4,8 +4,8 @@ from aiogram.exceptions import TelegramForbiddenError
 
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from core.spam_control import clamp, is_spam_active, start_spam, stop_spam
-from core.utils import log_suppressed
+from app.platform.spam_control import clamp, is_spam_active, start_spam, stop_spam
+from app.platform.utils import log_suppressed
 
 _LIMIT = 100
 # Задержка чуть больше, чем в зеркале: сообщения тут уходят от РЕАЛЬНОГО

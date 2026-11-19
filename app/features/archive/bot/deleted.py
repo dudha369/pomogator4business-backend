@@ -7,9 +7,9 @@ from app.features.archive import service
 from app.features.archive.bot import send_classic, send_rich
 from app.features.archive.bot.keyboards import delete_keyboard
 from app.features.archive.prefs import load_prefs
-from core.mentions import format_mention
-from core.self_actions import consume_self_delete
-from core.utils import log_suppressed
+from app.platform.telegram.mentions import format_mention
+from app.platform.telegram.self_actions import consume_self_delete
+from app.platform.utils import log_suppressed
 from db.models.connection import get_connection
 from db.models.user_locale import get_locale
 

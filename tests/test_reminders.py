@@ -1,7 +1,7 @@
 import pytest
 
-from db.models.chat_flags import set_chat_flags
-from db.models.favorite_chat import set_favorite_chat
+from app.features.chats.queries import set_chat_flags
+from app.features.chats.queries import set_favorite_chat
 from app.features.history.service import save_history
 from app.features.reminders import bot as rem_bot
 from app.features.reminders import service as rem

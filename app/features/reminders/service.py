@@ -12,10 +12,10 @@
 
 from app.features.reminders.models import ReminderSettings
 from app.platform.i18n import t
-from core.autoresponder import in_away_window
-from db.models.autoresponder import last_autoreply_ref
-from db.models.chat_flags import list_chat_flags
-from db.models.favorite_chat import list_favorite_chat_ids
+from app.features.autoresponder.service import in_away_window
+from app.features.autoresponder.queries import last_autoreply_ref
+from app.features.chats.queries import list_chat_flags
+from app.features.chats.queries import list_favorite_chat_ids
 from app.features.history.service import last_rows_by_chat
 
 

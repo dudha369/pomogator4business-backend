@@ -1,8 +1,8 @@
 import importlib
 import pkgutil
 
-import core.locales.themes as themes_pkg
 import commands.locales as commands_locales_pkg
+import app.platform.locales as platform_locales_pkg
 from app.features import FEATURES, feature_module
 
 DEFAULT_LOCALE = "ru"
@@ -12,7 +12,7 @@ _LANG_ATTR = {"ru": "RU", "en": "EN", "uk": "UK"}
 
 def _merge_all():
     merged = {"ru": {}, "en": {}, "uk": {}}
-    packages = [themes_pkg, commands_locales_pkg]
+    packages = [platform_locales_pkg, commands_locales_pkg]
     packages += [m for m in (feature_module(n, "locales") for n in FEATURES) if m]
     for package in packages:
         for info in pkgutil.iter_modules(package.__path__):

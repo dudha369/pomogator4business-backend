@@ -11,7 +11,7 @@
 действием переключает на них базу и удаляет старые. Прервали — запустите ещё
 раз, продолжит с того же места. Если всё актуально, ничего не делает.
 
-Изменили дизайн стиля? Увеличьте revision в emoji_clock/styles/<стиль>.py и
+Изменили дизайн стиля? Увеличьте revision в app/features/emoji_clock/styles/<стиль>.py и
 запустите команду. Остальное она сделает сама.
 """
 
@@ -23,7 +23,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from emoji_clock import STYLE_IDS, STYLES  # noqa: E402
+from app.features.emoji_clock import STYLE_IDS, STYLES  # noqa: E402
 
 
 def parse_args():
@@ -68,8 +68,8 @@ async def sync(styles, args):
     from tortoise import Tortoise
 
     from config import TORTOISE_ORM, settings
-    from db.models import clock as clock_db
-    from emoji_clock.sync import runner
+    from app.features.emoji_clock import queries as clock_db
+    from app.features.emoji_clock.sync import runner
 
     await Tortoise.init(config=TORTOISE_ORM)
     bot = Bot(token=settings.BOT_TOKEN)
@@ -99,7 +99,7 @@ def main():
     styles = [s for s in STYLES if not args.style or s.id in args.style]
 
     if args.preview or args.export_samples:
-        from emoji_clock.sync import preview
+        from app.features.emoji_clock.sync import preview
 
         if args.preview:
             preview.save_contact_sheet(styles, args.preview)

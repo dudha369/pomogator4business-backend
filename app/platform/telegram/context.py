@@ -7,10 +7,10 @@ from aiogram.types import Message, ReplyParameters
 
 from app.features.alerts.bot import report
 from app.platform.tasks import spawn
-from db.models.message_log import log_message
+from app.features.history.service import log_message
 from app.platform.i18n import t
-from core.self_actions import delete_own_messages
-from core.utils import log_suppressed
+from app.platform.telegram.self_actions import delete_own_messages
+from app.platform.utils import log_suppressed
 
 logger = logging.getLogger("bot.context")
 
@@ -74,7 +74,7 @@ class CommandContext:
                 **kwargs,
             )
         except Exception:
-            log_suppressed("core/context.py:54", benign=True)
+            log_suppressed("app/platform/telegram/context.py:54", benign=True)
             return False
         return True
 
@@ -132,4 +132,4 @@ class CommandContext:
                 **kwargs,
             )
         except Exception:
-            log_suppressed("core/context.py:65", benign=True)
+            log_suppressed("app/platform/telegram/context.py:65", benign=True)
