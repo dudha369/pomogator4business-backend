@@ -45,11 +45,11 @@ async def api_connect_mirror(
         username = await connect_mirror(user["id"], payload.token)
     except MirrorSetupError as exc:
         if exc.code == "start_failed":
-            raise HTTPException(status_code=503, detail="start_failed")
+            raise HTTPException(status_code=503, detail="start_failed") from exc
         detail = (
             "invalid_format" if exc.code == "invalid_format" else "connection_failed"
         )
-        raise HTTPException(status_code=400, detail=detail)
+        raise HTTPException(status_code=400, detail=detail) from exc
 
     return {"connected": True, "username": username}
 

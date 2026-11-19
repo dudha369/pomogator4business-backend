@@ -41,7 +41,7 @@ PAYLOAD_FIELDS = (
     ("live_photo", "live_photo"),
 )
 
-KINDS = ("text",) + FILE_KINDS + tuple(k for k, _ in PAYLOAD_FIELDS) + ("other",)
+KINDS = ("text", *FILE_KINDS, *(k for k, _ in PAYLOAD_FIELDS), "other")
 
 # колонки message_history, которые заполняет снимок
 SNAPSHOT_COLUMNS = (

@@ -2,18 +2,16 @@
 результат шагов (история → голос → scam/known → mute → автоответчик → эхо →
 type-триггеры → команды). Должны проходить и до, и после рефакторинга."""
 
-import types
-
 import pytest
 
 from app.features.autoresponder.queries import upsert_autoresponder_settings
+from app.features.chats.queries import is_known_chat
+from app.features.echo.queries import toggle_echo
+from app.features.history.service import get_history_entry
+from app.platform.telegram.registry import registry
 from db.models.command_alias import add_command_alias
 from db.models.connection import set_prefix, upsert_connection
-from app.features.echo.queries import toggle_echo
-from app.features.chats.queries import is_known_chat
-from app.features.history.service import get_history_entry
 from db.models.module_settings import disable_module
-from app.platform.telegram.registry import registry
 from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, OWNER_ID, make_message

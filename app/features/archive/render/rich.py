@@ -39,13 +39,13 @@ from aiogram.types import (
     RichBlockCaption,
 )
 
-from app.features.archive.render.classic import EMPTY, format_forward, render_text
 from app.features.archive.prefs import ArchivePrefs, defaults
-from app.platform.i18n import t
+from app.features.archive.render.classic import EMPTY, format_forward, render_text
 from app.features.archive.render.rich_text import html_to_rich
+from app.platform.i18n import t
 
 VISUAL = ("photo", "video", "animation")
-ALL_KINDS = VISUAL + ("audio", "voice", "document")
+ALL_KINDS = (*VISUAL, "audio", "voice", "document")
 
 _MAX_TEXT = 20000  # лимит Rich — 32768 символов на всё сообщение
 

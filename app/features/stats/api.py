@@ -5,7 +5,6 @@ import time
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from app.platform.api.deps import Owner, current_owner
 from app.features.archive.queries import count_archive_events_since
 from app.features.history.service import (
     count_by_chat,
@@ -13,8 +12,9 @@ from app.features.history.service import (
     count_messages_since,
     list_history_rows_since,
 )
-from db.models.user_locale import get_timezone_offset
 from app.features.stats import service as stats_calc
+from app.platform.api.deps import Owner, current_owner
+from db.models.user_locale import get_timezone_offset
 
 router = APIRouter()
 

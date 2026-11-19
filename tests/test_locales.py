@@ -37,11 +37,14 @@ def test_placeholders_match_across_languages():
     for key, template in LOCALES["ru"].items():
         for lang in ("en", "uk"):
             other = LOCALES[lang].get(key)
-            if isinstance(template, str) and isinstance(other, str):
-                if placeholders(template) != placeholders(other):
-                    mismatches.append(
-                        (key, lang, placeholders(template), placeholders(other))
-                    )
+            if (
+                isinstance(template, str)
+                and isinstance(other, str)
+                and placeholders(template) != placeholders(other)
+            ):
+                mismatches.append(
+                    (key, lang, placeholders(template), placeholders(other))
+                )
     assert mismatches == []
 
 

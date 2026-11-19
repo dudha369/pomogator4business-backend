@@ -11,12 +11,15 @@ import asyncio
 import logging
 import time
 
-from config import settings
 from app.features.ai.queries import purge_old_drafts
 from app.features.archive.queries import expire_archive_media, purge_archive
 from app.features.autoresponder.queries import purge_autoresponder_log
-from app.features.history.service import expire_history_media, purge_history
-from app.features.history.service import trim_message_log
+from app.features.history.service import (
+    expire_history_media,
+    purge_history,
+    trim_message_log,
+)
+from config import settings
 
 logger = logging.getLogger("bot.retention")
 

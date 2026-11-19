@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from tortoise import fields
@@ -51,7 +51,7 @@ def is_valid_timezone(name) -> bool:
 def effective_offset(timezone_name, fallback_minutes, now=None) -> int:
     """Текущее смещение от UTC в минутах: из IANA-имени (DST), иначе фиксированное."""
     if timezone_name and is_valid_timezone(timezone_name):
-        moment = now or datetime.now(timezone.utc)
+        moment = now or datetime.now(UTC)
         delta = moment.astimezone(ZoneInfo(timezone_name)).utcoffset()
         return int(delta.total_seconds() // 60)
     return fallback_minutes

@@ -11,13 +11,13 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.types import Message
 
+from app.platform.i18n import t
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import registry
 from db.models.command_alias import get_command_alias
 from db.models.connection import get_connection_by_owner
 from db.models.module_settings import list_disabled_modules
 from db.models.user_locale import get_locale
-from app.platform.telegram.context import CommandContext
-from app.platform.i18n import t
-from app.platform.telegram.registry import registry
 
 logger = logging.getLogger("bot.dm_commands")
 router = Router(name="bot_commands")

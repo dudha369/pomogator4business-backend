@@ -6,11 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.features.alerts import service as alerts_service
-from app.platform.api.deps import require_user
-from app.platform.api.schemas import EmojiStatusState
+from app.features.emoji_clock import STYLES, is_valid_style_id
 from app.features.emoji_clock import queries as status_db
 from app.features.emoji_clock.queries import get_clock_pack_counts
-from app.features.emoji_clock import STYLES, is_valid_style_id
+from app.platform.api.deps import require_user
+from app.platform.api.schemas import EmojiStatusState
 from app.platform.utils import log_suppressed
 
 router = APIRouter()
@@ -124,8 +124,8 @@ async def set_emoji_status_style(
     if await status_db.is_emoji_status_enabled(
         owner_id
     ) and await status_db.is_emoji_status_granted(owner_id):
-        from bot_instance import bot
         from app.features.emoji_clock.bot import refresh_emoji_status
+        from bot_instance import bot
 
         try:
             await refresh_emoji_status(bot, owner_id)

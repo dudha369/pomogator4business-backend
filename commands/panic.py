@@ -1,7 +1,7 @@
+from app.features.history.service import forget_message_log, recent_message_log
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 from app.platform.telegram.self_actions import delete_own_messages
-from app.features.history.service import forget_message_log, recent_message_log
 
 _MAX_COUNT = 1000
 _CHUNK_SIZE = 100

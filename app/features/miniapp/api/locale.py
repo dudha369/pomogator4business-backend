@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.platform.api.deps import require_user
-from db.models import user_locale as locale_db
 from app.platform.i18n import LANGUAGE_NAMES
+from db.models import user_locale as locale_db
 
 router = APIRouter()
 

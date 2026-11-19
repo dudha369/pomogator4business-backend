@@ -23,6 +23,6 @@ async def get_chat_info(target_user_id: int, user: dict = Depends(require_user))
     try:
         chat = await bot.get_chat(target_user_id)
     except Exception:
-        raise HTTPException(status_code=404, detail="Chat not found")
+        raise HTTPException(status_code=404, detail="Chat not found") from None
 
     return {"full_name": chat.full_name, "username": chat.username}

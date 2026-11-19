@@ -1,12 +1,12 @@
 import asyncio
 import io
 
-from PIL import Image, ImageDraw
 from aiogram.types import BufferedInputFile
+from PIL import Image, ImageDraw
 
-from app.platform.telegram.context import CommandContext
 from app.platform.imaging import draw_outlined_text, load_font, to_bytes, wrap_text
 from app.platform.media import download_message_photo
+from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 
 
@@ -21,7 +21,6 @@ def render_meme_text(image_bytes, text):
     lines = wrap_text(draw, text.upper(), font, max_width)
 
     line_height = font_size * 1.2
-    total_height = line_height * len(lines)
     y = image.height * 0.03
 
     for line in lines:

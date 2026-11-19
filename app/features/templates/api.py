@@ -6,9 +6,9 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from app.features.templates import service as templates_db
 from app.platform.api.deps import require_user
 from app.platform.api.schemas import Template
-from app.features.templates import service as templates_db
 
 router = APIRouter()
 

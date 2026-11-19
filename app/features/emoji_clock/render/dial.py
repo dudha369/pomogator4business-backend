@@ -17,7 +17,7 @@ def polar(angle, radius, cx=CX, cy=CY):
 def stroke(pen, p0, p1, width):
     """Линия с круглыми концами (width в px)."""
     w = width * SS
-    pen.line([p0, p1], fill=255, width=int(round(w)))
+    pen.line([p0, p1], fill=255, width=round(w))
     for x, y in (p0, p1):
         pen.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=255)
 

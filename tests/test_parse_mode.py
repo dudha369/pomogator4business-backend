@@ -47,9 +47,11 @@ def test_guard_flags_unescaped_text_in_html_mode():
 async def test_archive_notices_escape_user_text(bot, connection):
     from app.features.archive.render.classic import (
         before_after as _before_after,
+    )
+    from app.features.archive.render.classic import (
+        build_notice,
         highlight_changes,
     )
-    from app.features.archive.render.classic import build_notice
 
     evil = "<b>1</b> & <tg-emoji emoji-id='1'>x</tg-emoji> </blockquote>"
     snap = {"kind": "text", "text": evil, "forward": {"name": "<i>X</i> & Y"}}
@@ -139,7 +141,7 @@ class _Scanner(ast.NodeVisitor):
                         return True
             elif isinstance(node, ast.Name) and node.id not in seen:
                 for value in self._assigned[-1].get(node.id, []):
-                    if self._html_like(value, seen + (node.id,)):
+                    if self._html_like(value, (*seen, node.id)):
                         return True
         return False
 
@@ -148,9 +150,12 @@ class _Scanner(ast.NodeVisitor):
         fn = node.func
         if not isinstance(fn, ast.Attribute) or fn.attr not in _TEXT_ARG:
             return
-        if fn.attr == "answer" and isinstance(fn.value, ast.Name):
-            if fn.value.id in _TOAST:
-                return
+        if (
+            fn.attr == "answer"
+            and isinstance(fn.value, ast.Name)
+            and fn.value.id in _TOAST
+        ):
+            return
         kwargs = {k.arg for k in node.keywords}
         if None in kwargs or {"parse_mode", "entities", "caption_entities"} & kwargs:
             return  # parse_mode задан явно (в т.ч. None) либо **kwargs

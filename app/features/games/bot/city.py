@@ -1,8 +1,8 @@
 import json
 
 from app.features.games.lock import serialized_command
-from app.platform.telegram.registry import command
 from app.features.games.service import get_game, save_game
+from app.platform.telegram.registry import command
 
 _SKIP_LETTERS = "ЬЪЫЙ"
 

@@ -4,12 +4,12 @@ import types
 
 import pytest
 
-from app.platform.telegram import mentions
 from app.features.games.bot.checkers import cmd_chk, on_chk_callback
 from app.features.games.bot.ttt import cmd_ttt, on_ttt_callback
-
-from .conftest import CONNECTION_ID, FakeBot, make_message
 from app.features.games.service import get_game
+from app.platform.telegram import mentions
+
+from .conftest import CONNECTION_ID, make_message
 
 CHAT = 7
 ANYA, BORIS = 7, 8
@@ -80,7 +80,7 @@ async def start_ttt(bot, connection):
 
 
 async def test_ttt_full_game_with_mentions(connection, bot):
-    ctx = await start_ttt(bot, connection)
+    await start_ttt(bot, connection)
     # приглашение: упоминание стартера, parse_mode=html, в БД только id
     sent = bot.edited[-1]
     assert (
@@ -160,7 +160,7 @@ async def test_ttt_restart_uses_same_placeholder_in_every_locale(connection, bot
     await start_ttt(bot, connection)
     await on_ttt_callback(Call("ttt:accept", BORIS, "Боря"), bot)
     for cell, (user, name) in zip(
-        (0, 3, 1, 4, 2), [(ANYA, "Аня"), (BORIS, "Боря")] * 3
+        (0, 3, 1, 4, 2), [(ANYA, "Аня"), (BORIS, "Боря")] * 3, strict=False
     ):
         await on_ttt_callback(Call(f"ttt:{cell}", user, name), bot)
     restart = Call("ttt:restart", BORIS, "Боря")

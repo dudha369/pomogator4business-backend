@@ -7,6 +7,9 @@ import asyncio
 import logging
 import time
 
+from app.features.autoresponder.queries import log_autoreply
+from app.features.chats.service import parse_filters
+from app.features.history.service import get_history_entry
 from app.features.reminders.service import (
     LOOP_INTERVAL_SECONDS,
     MAX_LINES,
@@ -19,12 +22,9 @@ from app.features.reminders.service import (
 )
 from app.platform.i18n import t
 from app.platform.telegram.context import CommandContext
-from app.platform.telegram.registry import command
 from app.platform.telegram.mentions import escape, mention
-from app.features.chats.service import parse_filters
-from app.features.autoresponder.queries import log_autoreply
+from app.platform.telegram.registry import command
 from db.models.connection import get_connection_by_owner
-from app.features.history.service import get_history_entry
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.reminders")

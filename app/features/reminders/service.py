@@ -10,14 +10,12 @@
 (см. app.features.history.bot.record_history): стикеры и файлы без подписи в историю не попадают.
 """
 
+from app.features.autoresponder.queries import last_autoreply_ref
+from app.features.autoresponder.service import in_away_window
+from app.features.chats.queries import list_chat_flags, list_favorite_chat_ids
+from app.features.history.service import last_rows_by_chat
 from app.features.reminders.models import ReminderSettings
 from app.platform.i18n import t
-from app.features.autoresponder.service import in_away_window
-from app.features.autoresponder.queries import last_autoreply_ref
-from app.features.chats.queries import list_chat_flags
-from app.features.chats.queries import list_favorite_chat_ids
-from app.features.history.service import last_rows_by_chat
-
 
 LOOP_INTERVAL_SECONDS = 600
 MAX_AGE_SECONDS = 7 * 86400

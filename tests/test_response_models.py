@@ -68,7 +68,7 @@ def test_endpoint_walk_matches_openapi():
 
 
 def test_binary_allowlist_is_not_stale():
-    assert BINARY_ENDPOINTS <= {(method, path) for method, path, _ in _endpoints()}
+    assert {(method, path) for method, path, _ in _endpoints()} >= BINARY_ENDPOINTS
 
 
 def test_binary_endpoints_describe_their_content():

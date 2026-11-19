@@ -7,7 +7,6 @@ from aiogram.types import BufferedInputFile
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 
-
 # QR версии 40 вмещает ~2300 байт; в UTF-8 кириллица занимает по 2 байта
 _MAX_TEXT = 1000
 

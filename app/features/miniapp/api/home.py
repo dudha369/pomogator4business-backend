@@ -10,19 +10,19 @@ import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.platform.api.deps import Owner, require_user
-from app.features.stats.api import StatsOut, get_stats
 from app.features.alerts import service as alerts_service
 from app.features.archive.api import ArchiveEntry
 from app.features.archive.media import attach_media_info
 from app.features.archive.queries import get_archive_page
-from app.platform.telegram.registry import registry
-from db.models.connection import get_connection_by_owner
 from app.features.emoji_clock.queries import (
     is_emoji_status_enabled,
     is_emoji_status_granted,
 )
 from app.features.mirror.queries import get_mirror
+from app.features.stats.api import StatsOut, get_stats
+from app.platform.api.deps import Owner, require_user
+from app.platform.telegram.registry import registry
+from db.models.connection import get_connection_by_owner
 from db.models.module_settings import list_disabled_modules
 
 router = APIRouter()

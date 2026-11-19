@@ -4,12 +4,12 @@ import logging
 from aiogram import Bot, Router
 from aiogram.types import BusinessConnection
 
-from db.models.connection import get_connection, upsert_connection
-from db.models.user_locale import get_locale
 from app.features.connection.service import adopt_previous_connection
 from app.platform.i18n import t
 from app.platform.telegram.webapp import webapp_keyboard
 from app.platform.utils import log_suppressed
+from db.models.connection import get_connection, upsert_connection
+from db.models.user_locale import get_locale
 
 logger = logging.getLogger("bot.connection")
 router = Router(name="connection")

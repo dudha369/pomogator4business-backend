@@ -3,14 +3,14 @@ import time
 
 from aiogram.types import BufferedInputFile, InputProfilePhotoStatic
 
-from app.platform.telegram.context import CommandContext
-from app.platform.media import download_user_avatar
-from app.platform.telegram.registry import command
 from app.features.profile.service import (
     delete_profile_backup,
     get_profile_backup,
     save_profile_backup,
 )
+from app.platform.media import download_user_avatar
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 
 logger = logging.getLogger("bot.profile")
 

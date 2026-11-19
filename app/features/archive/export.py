@@ -74,9 +74,7 @@ def labels(locale: str) -> dict:
 
 def format_ts(ts: int, offset_minutes: int) -> str:
     """Время в часовом поясе владельца: 2026-10-10 14:03:22."""
-    moment = datetime.datetime.fromtimestamp(
-        ts + offset_minutes * 60, datetime.timezone.utc
-    )
+    moment = datetime.datetime.fromtimestamp(ts + offset_minutes * 60, datetime.UTC)
     return moment.strftime("%Y-%m-%d %H:%M:%S")
 
 

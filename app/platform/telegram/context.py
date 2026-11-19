@@ -6,9 +6,9 @@ from aiogram import Bot
 from aiogram.types import Message, ReplyParameters
 
 from app.features.alerts.bot import report
-from app.platform.tasks import spawn
 from app.features.history.service import log_message
 from app.platform.i18n import t
+from app.platform.tasks import spawn
 from app.platform.telegram.self_actions import delete_own_messages
 from app.platform.utils import log_suppressed
 

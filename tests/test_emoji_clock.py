@@ -7,6 +7,14 @@ from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from aiogram.methods import GetStickerSet
 from PIL import Image, ImageChops
 
+from app.features.emoji_clock import (
+    STYLES,
+    ClockStyle,
+    all_time_keys,
+    get_style,
+    pack_revision,
+)
+from app.features.emoji_clock import queries as clock_db
 from app.features.emoji_clock.queries import (
     count_clock_emojis,
     get_clock_emoji,
@@ -15,14 +23,6 @@ from app.features.emoji_clock.queries import (
     save_clock_emoji,
     swap_clock_style,
     upsert_clock_pack,
-)
-from app.features.emoji_clock import queries as clock_db
-from app.features.emoji_clock import (
-    STYLES,
-    ClockStyle,
-    all_time_keys,
-    get_style,
-    pack_revision,
 )
 from app.features.emoji_clock.sync import runner
 from app.features.emoji_clock.sync.builder import emoji_rows
@@ -216,7 +216,7 @@ def tiny_style(style_id, hours, revision=1):
 
 
 async def sync(bot, styles, **kwargs):
-    options = dict(delete_delay=0, retry_padding=0.0, log=lambda *_: None)
+    options = {"delete_delay": 0, "retry_padding": 0.0, "log": lambda *_: None}
     options.update(kwargs)
     return await runner.run(bot, clock_db, styles, **options)
 
@@ -343,9 +343,7 @@ def test_emoji_rows_cover_all_minutes():
     ids = [[f"p0-{i}" for i in range(180)], [f"p1-{i}" for i in range(60)]]
     rows = emoji_rows(style, ids)
     assert len(rows) == 1440 and rows[0] == ("00:00", 0, "p0-0")
-    assert (
-        dict((r[0], r[2]) for r in rows)["03:59"] == "p1-59"
-    )  # слот 03:59 — последний
+    assert {r[0]: r[2] for r in rows}["03:59"] == "p1-59"  # слот 03:59 — последний
 
 
 # ----------------------------------- API ------------------------------------

@@ -9,9 +9,7 @@ MAX_REPLY_GAP_SECONDS = 24 * 3600  # ответ позже суток уже н�
 
 
 def local_date(ts: int, offset_minutes: int) -> str:
-    moment = datetime.datetime.fromtimestamp(
-        ts + offset_minutes * 60, datetime.timezone.utc
-    )
+    moment = datetime.datetime.fromtimestamp(ts + offset_minutes * 60, datetime.UTC)
     return moment.strftime("%Y-%m-%d")
 
 
@@ -19,7 +17,7 @@ def daily_from_counts(counts, now: int, offset_minutes: int, days: int):
     """counts: [{day, is_owner, n}] (day — число суток с 1970-01-01 по локальному времени).
     Возвращает [{date, incoming, outgoing}] за `days` суток, пустые дни — нули."""
     today = datetime.datetime.fromtimestamp(
-        now + offset_minutes * 60, datetime.timezone.utc
+        now + offset_minutes * 60, datetime.UTC
     ).date()
     buckets = {
         (today - datetime.timedelta(days=i)).isoformat(): {"incoming": 0, "outgoing": 0}

@@ -29,6 +29,7 @@ dev = [
     "httpx>=0.27",
     "pytest>=8",
     "pytest-asyncio>=0.24",
+    "ruff>=0.17,<0.18",
 ]
 
 [tool.aerich]
@@ -45,3 +46,26 @@ src_folder = "./."
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = ["db/migrations", "generated"]
+
+[tool.ruff.lint]
+# Явный набор: результат не зависит от версии ruff.
+# E4/E7/E9 + F — ошибки, I — порядок импортов, B — типичные баги, UP — устаревший синтаксис,
+# SIM — упрощения, ASYNC — блокирующие вызовы в async, C4 — лишние коллекции, RUF — прочее.
+# BLE и S намеренно не включены: широкий `except Exception` — осознанное правило проекта
+# (хендлер бота не должен падать, сбой уходит в лог / alerts), а не ошибка.
+select = ["E4", "E7", "E9", "F", "I", "B", "UP", "SIM", "ASYNC", "C4", "RUF", "PLC0414"]
+# RUF001-003 ищут кириллицу, похожую на латиницу: тексты и комментарии проекта русские, правило не применимо
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# в тестах часто «лишние» аргументы фикстур и неиспользуемые распаковки
+"tests/*" = ["RUF059"]
+
+[tool.ruff.lint.flake8-bugbear]
+# aiogram/FastAPI: Depends(), Query() и т.п. в значениях по умолчанию — штатный приём
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body", "fastapi.Path"]

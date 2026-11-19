@@ -8,15 +8,15 @@
 from aiogram import Router
 
 from app.features.archive.bot.transcript import voice_transcript
+from app.features.autoresponder.bot import autoresponder_step
+from app.features.echo.bot import echo_step
 from app.features.history.bot import record_history, rescue_replied_media
 from app.features.mute.bot import mute_gate
+from app.features.voice_effects.bot import voice_step
 from app.platform.telegram.dispatch import dispatch_command
 from app.platform.telegram.incoming import load_incoming, owner_journal
-from app.features.echo.bot import echo_step
 from commands.scam import new_contact_step
 from commands.type_ import type_trigger_step
-from app.features.voice_effects.bot import voice_step
-from app.features.autoresponder.bot import autoresponder_step
 
 STEPS = (
     owner_journal,

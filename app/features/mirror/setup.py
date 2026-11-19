@@ -28,8 +28,8 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     test_bot = AiogramBot(token=token)
     try:
         me = await test_bot.get_me()
-    except Exception:
-        raise MirrorSetupError("connection_failed")
+    except Exception as exc:
+        raise MirrorSetupError("connection_failed") from exc
     finally:
         await test_bot.session.close()
 
@@ -37,8 +37,8 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     # зеркала, которого на деле нет, а прежнее рабочее зеркало не затрагивается
     try:
         await mirror_manager.start_mirror(owner_id, token, drop_pending=True)
-    except MirrorStartError:
-        raise MirrorSetupError("start_failed")
+    except MirrorStartError as exc:
+        raise MirrorSetupError("start_failed") from exc
     await save_mirror(
         owner_id, encrypt_token(token), me.id, me.username, int(time.time())
     )

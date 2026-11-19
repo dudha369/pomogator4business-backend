@@ -2,7 +2,7 @@
 
 import asyncio
 import types
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,38 +14,40 @@ from aiogram.exceptions import (
 
 from app.features.archive.queries import save_archive_prefs_data
 from app.features.autoresponder.queries import add_keyword_reply, list_keyword_replies
-from db.models.connection import get_connection, set_prefix
+from app.features.emoji_clock import bot as scheduler
 from app.features.emoji_clock.queries import (
     is_emoji_status_granted,
     set_emoji_status_enabled,
     set_emoji_status_granted,
 )
+from app.features.games.service import get_game
 from app.features.history.service import (
     count_by_chat,
     count_by_day,
     get_history_entry,
     last_rows_by_chat,
     list_history_rows_since,
-    save_history,
-)
-from app.features.history.service import (
     log_message,
     recent_message_log,
+    save_history,
     trim_message_log,
 )
+from app.features.templates.service import count_templates
+from app.platform.telegram.context import CommandContext
+from db.models.connection import get_connection, set_prefix
 from db.models.module_settings import (
     disable_module,
     enable_module,
     list_disabled_modules,
 )
-from app.features.templates.service import count_templates
-from db.models.user_locale import get_timezone_name, get_timezone_offset
-from app.features.emoji_clock import bot as scheduler
-from app.platform.telegram.context import CommandContext
-from db.models.user_locale import effective_offset, is_valid_timezone
+from db.models.user_locale import (
+    effective_offset,
+    get_timezone_name,
+    get_timezone_offset,
+    is_valid_timezone,
+)
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, FakeBot, make_message
-from app.features.games.service import get_game
 
 
 def make_ctx(bot, connection, args="", from_id=OWNER_ID, text=".x"):
@@ -55,8 +57,8 @@ def make_ctx(bot, connection, args="", from_id=OWNER_ID, text=".x"):
 
 # --- 12. таймзона: IANA-имя учитывает переход на летнее время ------------------
 def test_effective_offset_follows_dst():
-    winter = datetime(2026, 1, 15, 12, tzinfo=timezone.utc)
-    summer = datetime(2026, 7, 15, 12, tzinfo=timezone.utc)
+    winter = datetime(2026, 1, 15, 12, tzinfo=UTC)
+    summer = datetime(2026, 7, 15, 12, tzinfo=UTC)
     assert effective_offset("Europe/Kyiv", 999, now=winter) == 120
     assert effective_offset("Europe/Kyiv", 999, now=summer) == 180
 
@@ -666,8 +668,8 @@ async def test_allowlist_blocks_other_users(client, monkeypatch):
 
 # --- 20. мелочи ---------------------------------------------------------------------
 def test_city_skips_yery_and_split_has_words_alias():
-    from app.platform.telegram.registry import registry
     from app.features.games.bot import city
+    from app.platform.telegram.registry import registry
 
     assert "Ы" in city._SKIP_LETTERS
     assert registry.find("words") is not None

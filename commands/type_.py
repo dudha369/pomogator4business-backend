@@ -1,8 +1,8 @@
 import asyncio
 
+from app.features.history.service import log_message
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from app.features.history.service import log_message
 from app.platform.utils import log_suppressed
 
 TYPE_TRIGGERS = ["_type", "=type", "-type", "#type", ">type", "|type"]

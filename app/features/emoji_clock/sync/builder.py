@@ -50,7 +50,8 @@ async def build_pack(tg, owner_id, bot_username, style, index, progress, log=pri
 
     if uploaded == 0:
         first = [
-            input_sticker(slot, png) for slot, png in zip(slots[:FIRST_BATCH], images)
+            input_sticker(slot, png)
+            for slot, png in zip(slots[:FIRST_BATCH], images, strict=False)
         ]
         await tg.create_set(owner_id, name, style.pack_title(index), first)
         uploaded = len(first)

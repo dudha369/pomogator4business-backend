@@ -5,11 +5,11 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.features.games.lock import serialized_game
-from db.models.connection import get_connection
-from db.models.user_locale import get_locale
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.registry import command
-from app.features.games.service import get_game, save_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
 
 router = Router(name="ms")
 
@@ -244,10 +244,12 @@ async def on_ms_callback(call: CallbackQuery):
     connection = await get_connection(business_connection_id)
     locale = await get_locale(connection["owner_id"]) if connection else "ru"
 
-    if action in ("size", "bombs", "coop", "start", "stop", "mode"):
-        if call.from_user.id != game["starter_id"]:
-            await call.answer(t("ms.not_starter", locale), show_alert=True)
-            return
+    if (
+        action in ("size", "bombs", "coop", "start", "stop", "mode")
+        and call.from_user.id != game["starter_id"]
+    ):
+        await call.answer(t("ms.not_starter", locale), show_alert=True)
+        return
 
     if game["phase"] == "settings":
         if action == "size":

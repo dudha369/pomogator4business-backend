@@ -103,7 +103,8 @@ async def read_all(payload: ReadAllRequest, owner: Owner = Depends(current_owner
     # На 1000+ чатов прочтение занимает минуты, а у клиента таймаут 30 с: ждём
     # недолго, а если не уложились — отдаём прогресс, работа идёт в фоне.
     deadline = time.monotonic() + _WAIT_SECONDS
-    while job["running"] and time.monotonic() < deadline:
+    # job — словарь, который целиком уходит в ответ; Event потребовал бы менять его форму
+    while job["running"] and time.monotonic() < deadline:  # noqa: ASYNC110
         await asyncio.sleep(0.2)
     return dict(job)
 

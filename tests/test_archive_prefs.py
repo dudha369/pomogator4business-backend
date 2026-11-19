@@ -2,22 +2,21 @@
 история правок, расшифровка голосовых."""
 
 import asyncio
-
-from app.platform import tasks
 import types
 
 import pytest
 
-from config import settings
-from app.features.archive.queries import save_archive_prefs_data
-from db.models.module_settings import disable_module
-from app.features.archive.prefs import defaults, parse, validate_patch
-from tests.conftest import on_business_message
 from app.features.archive.bot.deleted import on_business_deleted
 from app.features.archive.bot.edited import on_business_edited
+from app.features.archive.prefs import defaults, parse, validate_patch
+from app.features.archive.queries import save_archive_prefs_data
+from app.platform import tasks
+from config import settings
+from db.models.module_settings import disable_module
+from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
-from .test_archive_snapshot import block_text, kinds, media_of, photo, texts
+from .test_archive_snapshot import block_text, kinds, photo, texts
 
 CHAT = 7
 

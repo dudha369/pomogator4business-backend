@@ -58,7 +58,7 @@ def rounded_rect(width, height, radius, stroke=None, cy=CY):
         draw(mask).rounded_rectangle(box, radius=radius * SS, fill=255)
     else:
         draw(mask).rounded_rectangle(
-            box, radius=radius * SS, outline=255, width=int(round(stroke * SS))
+            box, radius=radius * SS, outline=255, width=round(stroke * SS)
         )
     return mask
 
@@ -71,7 +71,7 @@ def circle(radius, stroke=None, cy=CY):
     if stroke is None:
         draw(mask).ellipse(box, fill=255)
     else:
-        draw(mask).ellipse(box, outline=255, width=int(round(stroke * SS)))
+        draw(mask).ellipse(box, outline=255, width=round(stroke * SS))
     return mask
 
 

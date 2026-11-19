@@ -35,9 +35,10 @@ def problems(method: str, kwargs: dict) -> list[str]:
             continue
         if mode is None and (_TAG.search(value) or _ENTITY.search(value)):
             found.append(f"{method}.{field} без parse_mode, но с HTML: {value[:80]!r}")
-        elif mode and mode.lower() == "html":
-            if _BAD_LT.search(value) or _BAD_AMP.search(value):
-                found.append(
-                    f"{method}.{field}: не экранирован `<`/`&`: {value[:80]!r}"
-                )
+        elif (
+            mode
+            and mode.lower() == "html"
+            and (_BAD_LT.search(value) or _BAD_AMP.search(value))
+        ):
+            found.append(f"{method}.{field}: не экранирован `<`/`&`: {value[:80]!r}")
     return found

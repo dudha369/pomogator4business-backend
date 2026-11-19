@@ -12,8 +12,8 @@ from app.features.autoresponder.queries import (
 )
 from app.features.chats.queries import set_favorite_chat
 from app.features.history.service import save_history
-from db.models.user_locale import set_timezone_offset
 from app.platform.retention import run_retention_once
+from db.models.user_locale import set_timezone_offset
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 

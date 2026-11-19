@@ -3,9 +3,9 @@ import hashlib
 
 import aiohttp
 
-from config import settings
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
+from config import settings
 
 _MAX_SIZE = 20 * 1024 * 1024
 _API_BASE = "https://www.virustotal.com/api/v3"

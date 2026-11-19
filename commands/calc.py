@@ -47,9 +47,13 @@ def _eval_node(node):
             if abs(right) > _MAX_POWER_EXPONENT:
                 raise CalcError("exponent too large")
             # размер степени оцениваем ДО вычисления
-            if isinstance(left, int) and isinstance(right, int) and right > 0:
-                if left.bit_length() * right > _MAX_RESULT_BITS:
-                    raise CalcError("result too large")
+            if (
+                isinstance(left, int)
+                and isinstance(right, int)
+                and right > 0
+                and left.bit_length() * right > _MAX_RESULT_BITS
+            ):
+                raise CalcError("result too large")
         return _check_size(_OPS[op_type](left, right))
 
     if isinstance(node, ast.UnaryOp):

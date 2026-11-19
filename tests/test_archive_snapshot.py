@@ -4,17 +4,17 @@ import types
 
 import pytest
 
-from config import settings
-from app.features.archive.queries import get_edit_history, get_recent_archive
-from app.features.history.service import get_history_entry, save_history
-from db.models.module_settings import disable_module
-from app.features.archive.render.classic import CAPTION_LIMIT, build_notice, visible_len
-from app.features.history.adapter import build_snapshot
-from app.features.archive.snapshot import edit_kind, public_view
-from app.features.history.snapshot import entry_snapshot
-from tests.conftest import on_business_message
 from app.features.archive.bot.deleted import on_business_deleted
 from app.features.archive.bot.edited import on_business_edited
+from app.features.archive.queries import get_edit_history, get_recent_archive
+from app.features.archive.render.classic import CAPTION_LIMIT, build_notice, visible_len
+from app.features.archive.snapshot import edit_kind, public_view
+from app.features.history.adapter import build_snapshot
+from app.features.history.service import get_history_entry, save_history
+from app.features.history.snapshot import entry_snapshot
+from config import settings
+from db.models.module_settings import disable_module
+from tests.conftest import on_business_message
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 
