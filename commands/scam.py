@@ -1,11 +1,11 @@
 from aiogram.types import Message
 
-from app.platform.i18n import t
-from app.platform.telegram.registry import registry
 from app.features.chats.queries import is_known_chat, mark_known_chat
 from app.features.history.service import has_other_messages
-from db.models.user_locale import get_locale
+from app.platform.i18n import t
+from app.platform.telegram.registry import registry
 from app.platform.utils import log_suppressed
+from db.models.user_locale import get_locale
 
 registry.register_passive_module("scam")
 

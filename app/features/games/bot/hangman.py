@@ -1,12 +1,12 @@
 import json
 import random
 
+from app.features.games.bot.wordle_dictionary import WORDS
 from app.features.games.lock import serialized_command
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.registry import command
-from app.features.games.bot.wordle_dictionary import WORDS
 from app.platform.utils import log_suppressed
-from app.features.games.service import get_game, save_game
 
 _MAX_MISTAKES = 6
 

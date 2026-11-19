@@ -11,8 +11,8 @@
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 CLOCK_PACK_SIZE = 180  # эмодзи в одном паке (лимит Telegram — 200)
 

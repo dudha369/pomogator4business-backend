@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from app.features.history.service import get_history_entry
-from app.platform.telegram.registry import registry
 from app.features.echo.queries import toggle_echo
-from db.models.module_settings import disable_module
+from app.features.history.service import get_history_entry
 from app.platform.telegram.pipeline import STEPS, build_router, router
+from app.platform.telegram.registry import registry
+from db.models.module_settings import disable_module
 
 from .conftest import (
     CONNECTION_ID,

@@ -4,9 +4,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
-from app.platform.api.deps import Owner, current_owner
 from app.features.archive.api_export import router as export_router
-from app.features.archive.queries import get_archive_page
 from app.features.archive.media import attach_media_info, content_type, load_media
 from app.features.archive.prefs import (
     ALBUM_STYLES,
@@ -14,6 +12,8 @@ from app.features.archive.prefs import (
     load_prefs,
     update_prefs,
 )
+from app.features.archive.queries import get_archive_page
+from app.platform.api.deps import Owner, current_owner
 
 router = APIRouter()
 

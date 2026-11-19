@@ -12,10 +12,10 @@ from aiogram.types import BufferedInputFile
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.platform.api.deps import Owner, current_owner
-from app.features.archive import export as export
+from app.features.archive import export
 from app.features.archive.media import attach_media_info, load_media
 from app.features.archive.queries import get_archive_page
+from app.platform.api.deps import Owner, current_owner
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.archive_export")
@@ -162,7 +162,9 @@ async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owne
             )
         except Exception:
             logger.exception("Не удалось отправить экспорт")
-            raise HTTPException(status_code=502, detail="Telegram request failed")
+            raise HTTPException(
+                status_code=502, detail="Telegram request failed"
+            ) from None
 
         return {
             "sent": True,

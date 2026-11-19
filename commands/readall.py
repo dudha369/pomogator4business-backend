@@ -5,8 +5,8 @@
 доступны в мини-приложении (страница «Чаты»)."""
 
 from app.features.chats.queries import toggle_favorite_chat
-from app.platform.telegram.context import CommandContext
 from app.features.chats.service import parse_filters, read_chats
+from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 
 

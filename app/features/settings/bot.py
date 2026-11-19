@@ -12,6 +12,10 @@ from aiogram.types import (
 )
 
 from app.features.archive.queries import get_recent_archive
+from app.platform.i18n import LANGUAGE_NAMES, t
+from app.platform.telegram.registry import registry
+from app.platform.telegram.webapp import webapp_keyboard
+from app.platform.utils import is_valid_prefix
 from db.models.connection import get_connection_by_owner, set_prefix
 from db.models.module_settings import (
     disable_module,
@@ -19,10 +23,6 @@ from db.models.module_settings import (
     list_disabled_modules,
 )
 from db.models.user_locale import get_locale, has_chosen_locale, set_locale
-from app.platform.i18n import LANGUAGE_NAMES, t
-from app.platform.telegram.registry import registry
-from app.platform.utils import is_valid_prefix
-from app.platform.telegram.webapp import webapp_keyboard
 
 router = Router(name="settings")
 

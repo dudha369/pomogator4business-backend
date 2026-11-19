@@ -1,8 +1,8 @@
 import importlib
 import pkgutil
 
-import commands.locales as commands_locales_pkg
 import app.platform.locales as platform_locales_pkg
+import commands.locales as commands_locales_pkg
 from app.features import FEATURES, feature_module
 
 DEFAULT_LOCALE = "ru"

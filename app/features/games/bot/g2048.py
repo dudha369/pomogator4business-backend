@@ -4,11 +4,11 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.features.games.lock import serialized_game
-from db.models.connection import get_connection
-from db.models.user_locale import get_locale
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.registry import command
-from app.features.games.service import get_game, save_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
 
 router = Router(name="g2048")
 
@@ -58,17 +58,11 @@ def move(board, direction):
     changed = False
 
     for row in rows:
-        if direction in ("right", "down"):
-            working = row[::-1]
-        else:
-            working = row
+        working = row[::-1] if direction in ("right", "down") else row
 
         new_working, points = slide_row_left(working)
 
-        if direction in ("right", "down"):
-            new_row = new_working[::-1]
-        else:
-            new_row = new_working
+        new_row = new_working[::-1] if direction in ("right", "down") else new_working
 
         if new_row != row:
             changed = True

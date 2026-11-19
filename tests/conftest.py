@@ -5,23 +5,23 @@
 
 import os
 import types
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 os.environ["BOT_TOKEN"] = "123456:TEST"
 # по умолчанию SQLite в памяти; TEST_DB_URL позволяет прогнать тесты на Postgres
 os.environ["DB_URL"] = os.environ.get("TEST_DB_URL", "sqlite://:memory:")
 os.environ.setdefault("WEBHOOK_SECRET", "test-secret")
 
-import pytest  # noqa: E402
-import pytest_asyncio  # noqa: E402
-from tortoise import Tortoise  # noqa: E402
+import pytest
+import pytest_asyncio
+from tortoise import Tortoise
 
-import bot_instance  # noqa: E402
-from tests import html_guard  # noqa: E402
-from config import TORTOISE_ORM  # noqa: E402
+import bot_instance
+from app.platform.loader import load_commands
+from app.platform.ttl_cache import clear_all
+from config import TORTOISE_ORM
 from db.models.connection import get_connection, upsert_connection
-from app.platform.ttl_cache import clear_all  # noqa: E402
-from app.platform.loader import load_commands  # noqa: E402
+from tests import html_guard
 
 bot_instance.setup_routes()
 load_commands()
@@ -71,9 +71,7 @@ class FakeBot:
         self.deleted = []  # delete_business_messages
         self.reads = []  # read_business_message
         self.documents = []  # send_document
-        self.media_sent = (
-            []
-        )  # send_photo/video/... (повторная отправка удалённого медиа)
+        self.media_sent = []  # send_photo/video/... (повторная отправка удалённого медиа)
         self.rich_sent = []  # send_rich_message
         self.album_sent = []  # send_media_group
         self._next_id = 1000
@@ -229,7 +227,7 @@ def make_message(
             is_premium=None,
             is_bot=is_bot,
         ),
-        date=datetime.fromtimestamp(ts, timezone.utc),
+        date=datetime.fromtimestamp(ts, UTC),
         photo=photo,
         video=video,
         voice=voice,

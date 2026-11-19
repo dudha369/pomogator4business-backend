@@ -1,9 +1,5 @@
 import time
 
-from app.platform.telegram.context import CommandContext
-from app.platform.telegram.registry import command
-from app.platform.utils import parse_duration
-from app.platform.telegram.self_actions import delete_own_messages
 from app.features.mute.service import (
     activate_from_warn,
     bump_warn_count,
@@ -12,6 +8,10 @@ from app.features.mute.service import (
     set_timed_mute,
     set_warn_mute,
 )
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
+from app.platform.telegram.self_actions import delete_own_messages
+from app.platform.utils import parse_duration
 
 
 @command(name="mute", module="mute")
@@ -96,7 +96,10 @@ async def handle_incoming(bot, connection, message) -> bool:
 async def mute_gate(handler, message, data):
     """Middleware: сообщение из замьюченного чата дальше не идёт."""
     inc = data["inc"]
-    if not inc.is_owner and inc.enabled("mute"):
-        if await handle_incoming(inc.bot, inc.connection, inc.message):
-            return None
+    if (
+        not inc.is_owner
+        and inc.enabled("mute")
+        and await handle_incoming(inc.bot, inc.connection, inc.message)
+    ):
+        return None
     return await handler(message, data)

@@ -11,9 +11,9 @@ connection_id во всех таблицах, где он есть, и копи�
 
 import logging
 
-from app.platform.ttl_cache import clear_all
 from tortoise import Tortoise
 
+from app.platform.ttl_cache import clear_all
 from db.models.connection import Connection
 
 logger = logging.getLogger("bot.connection_migration")

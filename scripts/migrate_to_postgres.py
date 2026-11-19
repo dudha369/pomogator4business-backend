@@ -15,7 +15,7 @@
 
 import asyncio
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import aiosqlite
 from tortoise import Tortoise
@@ -63,7 +63,7 @@ async def migrate_connections(conn):
     # подключение владельца после переноса. Передаём created_at явно —
     # auto_now_add срабатывает только если поле не задано явно.
     ordered = sorted(rows, key=lambda r: r["rowid"])
-    base = datetime.now(timezone.utc) - timedelta(seconds=len(ordered))
+    base = datetime.now(UTC) - timedelta(seconds=len(ordered))
     objs = []
     for i, row in enumerate(ordered):
         objs.append(

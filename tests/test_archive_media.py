@@ -2,9 +2,9 @@
 
 import pytest
 
+from app.features.archive.bot.deleted import on_business_deleted
 from db.models.module_settings import disable_module
 from tests.conftest import on_business_message
-from app.features.archive.bot.deleted import on_business_deleted
 
 from .conftest import CONNECTION_ID, deleted_event, make_message, tg_file
 
@@ -119,8 +119,8 @@ async def test_retention_frees_bytes_but_file_id_keeps_media_available(
     archive_ready, bot, client, monkeypatch
 ):
     """Байты (если их хранили) чистятся по сроку, а файл остаётся доступен по file_id."""
-    from config import settings
     from app.platform.retention import run_retention_once
+    from config import settings
 
     monkeypatch.setattr(settings, "KEEP_MEDIA_BYTES", True)
     msg = await receive(bot, photo=[tg_file("p")])
@@ -147,11 +147,6 @@ async def test_edited_message_media_stays_available(archive_ready, bot, client):
     edited.message_id = msg.message_id
     await on_business_edited(edited, bot)
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
-    deleted = [
-        e
-        for e in (await client.get("/api/archive", headers=client.owner)).json()[
-            "entries"
-        ]
-        if e["event"] == "deleted"
-    ][0]
+    entries = (await client.get("/api/archive", headers=client.owner)).json()["entries"]
+    deleted = next(e for e in entries if e["event"] == "deleted")
     assert deleted["media_type"] == "photo" and deleted["media_available"] is True

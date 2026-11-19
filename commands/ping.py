@@ -5,8 +5,8 @@
 
 import time
 
-from app.platform.telegram.context import CommandContext
 from app.platform.health import measure_health
+from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 
 _STARTED_AT = time.monotonic()

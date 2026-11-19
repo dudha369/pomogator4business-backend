@@ -8,8 +8,32 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.features.miniapp.api.aliases import MAX_ALIASES_PER_OWNER
+from app.features.ai.queries import get_ai_settings, upsert_ai_settings
 from app.features.autoresponder.api import MAX_KEYWORDS
+from app.features.autoresponder.queries import (
+    add_keyword_reply,
+    get_autoresponder_settings,
+    list_keyword_replies,
+    upsert_autoresponder_settings,
+)
+from app.features.chats.queries import (
+    list_chat_flags,
+    list_favorite_chat_ids,
+    set_chat_flags,
+    set_favorite_chat,
+)
+from app.features.miniapp.api.aliases import MAX_ALIASES_PER_OWNER
+from app.features.reminders.service import (
+    get_reminder_settings,
+    upsert_reminder_settings,
+)
+from app.features.templates.api import MAX_TEMPLATES
+from app.features.templates.service import (
+    count_templates,
+    get_template,
+    list_templates,
+    save_template,
+)
 from app.platform.api.deps import require_connection, require_user
 from app.platform.api.schemas import (
     AiCore,
@@ -19,15 +43,8 @@ from app.platform.api.schemas import (
     RemindersSettings,
     Template,
 )
-from app.features.templates.api import MAX_TEMPLATES
-from app.features.ai.queries import get_ai_settings, upsert_ai_settings
-from app.features.autoresponder.queries import (
-    add_keyword_reply,
-    get_autoresponder_settings,
-    list_keyword_replies,
-    upsert_autoresponder_settings,
-)
-from app.features.chats.queries import list_chat_flags, set_chat_flags
+from app.platform.telegram.registry import registry
+from app.platform.utils import is_valid_prefix
 from db.models.command_alias import (
     add_command_alias,
     count_command_aliases,
@@ -35,27 +52,14 @@ from db.models.command_alias import (
     list_command_aliases,
 )
 from db.models.connection import set_prefix
-from app.features.chats.queries import list_favorite_chat_ids, set_favorite_chat
 from db.models.module_settings import disable_module, list_disabled_modules
-from app.features.templates.service import (
-    count_templates,
-    get_template,
-    list_templates,
-    save_template,
-)
-from app.features.reminders.service import (
-    get_reminder_settings,
-    upsert_reminder_settings,
-)
 from db.models.user_locale import (
     get_timezone_name,
     get_timezone_offset,
+    is_valid_timezone,
     set_timezone_name,
     set_timezone_offset,
 )
-from app.platform.telegram.registry import registry
-from app.platform.utils import is_valid_prefix
-from db.models.user_locale import is_valid_timezone
 
 router = APIRouter()
 
@@ -213,9 +217,9 @@ async def import_backup(payload: BackupImport, user: dict = Depends(require_user
                 fields[key] = _text(src[key], 4096)
         for key in ("away_start_minutes", "away_end_minutes"):
             value = src.get(key)
-            if value is None or (isinstance(value, int) and 0 <= value <= 1439):
-                if key in src:
-                    fields[key] = value
+            valid = value is None or (isinstance(value, int) and 0 <= value <= 1439)
+            if valid and key in src:
+                fields[key] = value
         # как в API: режим без текста не включаем
         for flag, text_key in (
             ("greeting_enabled", "greeting_text"),

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from aiogram.exceptions import (
     TelegramBadRequest,
@@ -11,15 +11,15 @@ from aiogram.exceptions import (
 )
 
 from app.features.alerts.bot import report
-from app.features.emoji_clock.queries import get_clock_emoji
+from app.features.emoji_clock import DEFAULT_STYLE_ID as DEFAULT_CLOCK_STYLE
 from app.features.emoji_clock.queries import (
     get_active_emoji_status_settings,
+    get_clock_emoji,
     get_emoji_status_style,
     set_emoji_status_enabled,
     set_emoji_status_granted,
 )
 from db.models.user_locale import get_timezone_offsets_for
-from app.features.emoji_clock import DEFAULT_STYLE_ID as DEFAULT_CLOCK_STYLE
 
 logger = logging.getLogger("bot.scheduler")
 
@@ -101,7 +101,7 @@ async def emoji_clock_tick(bot):
         return
 
     offsets = await get_timezone_offsets_for([owner_id for owner_id, _ in settings])
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
     cache = {}
 
     gate = asyncio.Semaphore(_TICK_CONCURRENCY)
@@ -123,13 +123,13 @@ async def refresh_emoji_status(bot, owner_id):
     не дожидаясь следующего тика."""
     style = await get_emoji_status_style(owner_id)
     offsets = await get_timezone_offsets_for([owner_id])
-    time_key = _local_time_key(datetime.now(timezone.utc), offsets.get(owner_id, 180))
+    time_key = _local_time_key(datetime.now(UTC), offsets.get(owner_id, 180))
     await _push_emoji_status(bot, owner_id, style, time_key, {})
 
 
 async def run_emoji_clock(bot):
     while True:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sleep_for = 60 - now.second - now.microsecond / 1_000_000
         await asyncio.sleep(max(0.0, sleep_for))
         try:

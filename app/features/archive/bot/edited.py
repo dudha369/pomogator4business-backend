@@ -6,11 +6,11 @@ from aiogram import Bot, Router
 from aiogram.types import Message
 
 from app.features.archive import service
-from app.features.history.adapter import build_snapshot
 from app.features.archive.bot import send_classic, send_rich
 from app.features.archive.bot.keyboards import link_keyboard
 from app.features.archive.prefs import defaults
 from app.features.archive.service import TEXT_EDITS
+from app.features.history.adapter import build_snapshot
 from app.platform.telegram.mentions import format_mention
 from app.platform.telegram.self_actions import is_bot_edit
 from app.platform.utils import log_suppressed

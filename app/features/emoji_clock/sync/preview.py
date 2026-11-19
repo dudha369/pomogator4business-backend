@@ -37,7 +37,7 @@ def _font():
             probe = ImageFont.truetype(path, 100)
             _, top, _, bottom = probe.getbbox("A", anchor="ls")
             size = 100 * CAP_HEIGHT / (bottom - top)
-            return ImageFont.truetype(path, int(round(size))), cyrillic
+            return ImageFont.truetype(path, round(size)), cyrillic
         except OSError:
             continue
     return ImageFont.load_default(size=50), False

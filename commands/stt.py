@@ -1,6 +1,6 @@
+from app.platform.stt import transcribe_audio
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from app.platform.stt import transcribe_audio
 
 _MAX_DURATION_SECONDS = 120
 

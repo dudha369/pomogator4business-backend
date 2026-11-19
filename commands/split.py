@@ -17,10 +17,7 @@ async def cmd_split(ctx: CommandContext):
         await ctx.usage_error(ctx.t("split.usage"))
         return
 
-    if " " in ctx.args:
-        parts = ctx.args.split()[:_MAX_PARTS]
-    else:
-        parts = [x for x in ctx.args]
+    parts = ctx.args.split()[:_MAX_PARTS] if " " in ctx.args else list(ctx.args)
 
     await ctx.edit_command_message(parts.pop(0), parse_mode=None)
 

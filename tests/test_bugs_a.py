@@ -1,16 +1,18 @@
 """Регрессии чата «Баги A» (HANDOFF_audit, раздел 2, пп. 1–11)."""
 
+from typing import ClassVar
+
 import pytest
 
-from app.platform.telegram.context import CommandContext
 from app.features.games.bot.guess_number import cmd_guess
-
-from .conftest import FakeBot, make_message
+from app.features.games.service import get_game, save_game
 from app.features.history.service import log_message, recent_message_log
 from app.features.mirror.queries import get_mirror
 from app.features.profile.service import get_profile_backup
 from app.features.voice_effects.queries import set_voice_effect
-from app.features.games.service import get_game, save_game
+from app.platform.telegram.context import CommandContext
+
+from .conftest import FakeBot, make_message
 
 
 def make_ctx(bot, connection, args="", text=".x", from_id=42):
@@ -99,7 +101,6 @@ async def test_verbatim_commands_send_plain_text(
 
 
 async def test_spam_and_tr_send_plain_text(connection, monkeypatch):
-    import asyncio
 
     from commands import spam, tr
 
@@ -325,7 +326,7 @@ OTHER_TOKEN = "654321:" + "B" * 35
 class MirrorBot:
     """Подмена aiogram.Bot для зеркал: помнит вызовы set/delete_webhook."""
 
-    instances = []
+    instances: ClassVar[list] = []
     fail_webhook = False
 
     def __init__(self, token, **kwargs):
@@ -357,9 +358,9 @@ def types_ns(**kw):
 
 @pytest.fixture
 def mirror_env(monkeypatch):
-    from config import settings
     from app.features.mirror import manager as mm
     from app.features.mirror import setup as mirror_setup
+    from config import settings
 
     MirrorBot.instances, MirrorBot.fail_webhook = [], False
     monkeypatch.setattr(mm, "Bot", MirrorBot)
@@ -373,8 +374,8 @@ def mirror_env(monkeypatch):
 
 
 async def test_start_mirror_without_base_url_raises(mirror_env, monkeypatch):
-    from config import settings
     from app.features.mirror.manager import MirrorStartError
+    from config import settings
 
     monkeypatch.setattr(settings, "WEBHOOK_BASE_URL", "")
     with pytest.raises(MirrorStartError) as exc:
@@ -454,7 +455,7 @@ async def test_api_mirror_connect_reports_start_failure(client, mirror_env):
 
 
 async def test_mirror_handler_deletes_message_with_token(connection, mirror_env):
-    from app.features.mirror.bot import MirrorState, on_token_received
+    from app.features.mirror.bot import on_token_received
 
     deleted, answers = [], []
 
@@ -494,8 +495,8 @@ async def test_main_webhook_does_not_drop_pending_updates(monkeypatch):
 
 # --- 6/9. уведомление о правке: обрезка и вынос в поток ---------------------------
 async def test_classic_edit_notice_is_clipped_below_telegram_limit(connection):
-    from app.features.archive.prefs import defaults
     from app.features.archive.bot.edited import notify_edited as _notify_edited
+    from app.features.archive.prefs import defaults
 
     prefs = defaults()
     prefs = (

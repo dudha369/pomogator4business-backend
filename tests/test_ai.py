@@ -2,15 +2,15 @@ import types
 
 import pytest
 
-from config import settings
 from app.features.ai import service as ai
-from app.features.autoresponder import bot as ar_bot
+from app.features.ai.bot import on_draft_button
 from app.features.ai.queries import create_draft, get_draft, upsert_ai_settings
+from app.features.autoresponder import bot as ar_bot
 from app.features.autoresponder.queries import add_keyword_reply
 from app.features.chats.queries import set_chat_flags
 from app.features.history.service import save_history
+from config import settings
 from db.models.user_locale import set_timezone_offset
-from app.features.ai.bot import on_draft_button
 
 from .conftest import CONNECTION_ID, NOW, OWNER_ID, make_message
 

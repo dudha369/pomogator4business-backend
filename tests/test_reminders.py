@@ -1,7 +1,6 @@
 import pytest
 
-from app.features.chats.queries import set_chat_flags
-from app.features.chats.queries import set_favorite_chat
+from app.features.chats.queries import set_chat_flags, set_favorite_chat
 from app.features.history.service import save_history
 from app.features.reminders import bot as rem_bot
 from app.features.reminders import service as rem
@@ -203,8 +202,8 @@ async def test_waiting_endpoint_and_command(client, bot, api_bot):
 
 
 async def test_waiting_command_sends_list_privately(connection, bot):
-    from app.platform.telegram.context import CommandContext
     from app.features.reminders.bot import cmd_waiting
+    from app.platform.telegram.context import CommandContext
 
     from .conftest import make_message
 

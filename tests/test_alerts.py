@@ -1,8 +1,8 @@
 """Фича alerts: пауза, события и состояния, «Больше не показывать», подключённые места."""
 
 import asyncio
-from pathlib import Path
 import types
+from pathlib import Path
 
 import pytest
 
@@ -301,8 +301,8 @@ async def test_ai_without_key_is_reported_from_autoresponder(
     connection, alerts_bot, monkeypatch
 ):
     from app.features.ai import service as ai
-    from app.features.autoresponder import bot as autoresponder
     from app.features.ai.queries import upsert_ai_settings
+    from app.features.autoresponder import bot as autoresponder
 
     await upsert_ai_settings(OWNER_ID, enabled=True)
     monkeypatch.setattr(ai, "is_configured", lambda: False)

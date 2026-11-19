@@ -149,7 +149,7 @@ def kind_detail(locale, snap) -> str:
         lines = [label, escape(f"{name} {p.get('phone_number') or ''}".strip())]
     elif kind == "poll":
         options = [f"• {escape(o.get('text', ''))}" for o in p.get("options") or []]
-        lines = [label, escape(p.get("question") or "")] + options
+        lines = [label, escape(p.get("question") or ""), *options]
     elif kind == "dice":
         lines = [f"<b>{describe_dice(locale, p.get('emoji'), p.get('value'))}</b>"]
     elif kind in ("gift", "unique_gift"):

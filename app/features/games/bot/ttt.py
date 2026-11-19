@@ -9,12 +9,12 @@ from aiogram.types import (
 )
 
 from app.features.games.lock import serialized_game
-from db.models.connection import get_connection
-from db.models.user_locale import get_locale
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.mentions import format_mention, mention, remember
 from app.platform.telegram.registry import command
-from app.features.games.service import get_game, save_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
 
 router = Router(name="ttt")
 

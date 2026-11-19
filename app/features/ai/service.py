@@ -111,14 +111,14 @@ async def complete(system: str, messages: list):
     }
     try:
         timeout = aiohttp.ClientTimeout(total=_REQUEST_TIMEOUT_SECONDS)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(
-                settings.AI_API_URL, json=payload, headers=headers
-            ) as resp:
-                if resp.status != 200:
-                    logger.warning("AI provider returned HTTP %s", resp.status)
-                    return None
-                data = await resp.json()
+        async with (
+            aiohttp.ClientSession(timeout=timeout) as session,
+            session.post(settings.AI_API_URL, json=payload, headers=headers) as resp,
+        ):
+            if resp.status != 200:
+                logger.warning("AI provider returned HTTP %s", resp.status)
+                return None
+            data = await resp.json()
     except Exception:
         logger.warning("AI request failed", exc_info=True)
         return None

@@ -8,14 +8,14 @@
 Высота цифр одна для всех: берётся максимум по глифам 0-9 (с овершутами).
 """
 
+import contextlib
 import os
-from functools import lru_cache
+from functools import cache
 
 from PIL import Image, ImageDraw, ImageFont
 
 from app.features.emoji_clock.render import canvas
-from app.features.emoji_clock.render.canvas import BIG, CX, CY, SS
-
+from app.features.emoji_clock.render.canvas import CX, CY, SS
 from config import ROOT_DIR
 
 _ROOT = str(ROOT_DIR)
@@ -34,22 +34,21 @@ class Face:
         self._metrics = None
 
     def font(self, size):
-        font = ImageFont.truetype(self.path, max(1, int(round(size))))
+        font = ImageFont.truetype(self.path, max(1, round(size)))
         if self.weight is not None:
-            try:
+            with contextlib.suppress(Exception):
                 font.set_variation_by_axes([self.weight])
-            except Exception:
-                pass
         return font
 
-    @lru_cache(maxsize=None)
+    # Face — модульные синглтоны (BALOO, BEBAS…), кэш на экземпляр не утекает
+    @cache  # noqa: B019
     def ink_em(self, ch):
         """Настоящие края чернил символа (left, top, right, bottom) в em
         относительно точки отрисовки (anchor 'ls'). Измеряется по пикселям:
         getbbox в Pillow даёт границы по ширине шага символа, а не по чернилам,
         из-за чего «1» и «7» центровались неточно."""
         font = self.font(_REF)
-        sw = int(round(self.embolden * _REF))
+        sw = round(self.embolden * _REF)
         origin_x, origin_y = _REF // 2, int(_REF * 1.4)
         probe = Image.new("L", (_REF * 2, _REF * 2), 0)
         ImageDraw.Draw(probe).text(
@@ -116,7 +115,7 @@ def _layer(face, lines, size, gap_em):
     """Альфа-слой с текстом (по высоте — ровно чернила, по ширине — ровно чернила
     самой широкой строки; каждая строка центрирована по своим чернилам)."""
     font = face.font(size)
-    sw = int(round(face.embolden * size))
+    sw = round(face.embolden * size)
     line_h = face.height * size
     gap = gap_em * size
 
@@ -135,7 +134,7 @@ def _layer(face, lines, size, gap_em):
 
     width = max(ink_r - ink_l for _, ink_l, ink_r in placed)
     height = line_h * len(lines) + gap * (len(lines) - 1)
-    layer = Image.new("RGBA", (int(round(width)) + 2, int(round(height)) + 2))
+    layer = Image.new("RGBA", (round(width) + 2, round(height) + 2))
     pen = ImageDraw.Draw(layer)
 
     y = 1.0
@@ -176,12 +175,12 @@ def digits(face, lines, box_w, box_h, gap_em=0.0, max_stretch=1.0, cy=CY):
     layer = _layer(face, lines, size, gap_em)
     if stretch != 1.0:
         layer = layer.resize(
-            (layer.width, int(round(layer.height * stretch))), Image.LANCZOS
+            (layer.width, round(layer.height * stretch)), Image.LANCZOS
         )
 
     mask = canvas.blank()
     mask.paste(
         layer.getchannel("A"),
-        (int(round(CX - layer.width / 2)), int(round(cy - layer.height / 2))),
+        (round(CX - layer.width / 2), round(cy - layer.height / 2)),
     )
     return mask

@@ -1,14 +1,13 @@
 import asyncio
 import io
 
-from PIL import Image, ImageDraw
 from aiogram.types import BufferedInputFile
+from PIL import Image, ImageDraw
 
-from app.platform.telegram.context import CommandContext
 from app.platform.imaging import load_font, to_bytes, wrap_text
 from app.platform.media import download_message_photo
+from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-
 
 _BORDER = 40
 _INNER_BORDER = 4

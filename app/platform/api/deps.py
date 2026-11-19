@@ -7,9 +7,9 @@ from dataclasses import dataclass
 
 from fastapi import Depends, Header, HTTPException
 
+from app.platform.telegram.auth import validate_init_data
 from config import settings
 from db.models.connection import get_connection_by_owner
-from app.platform.telegram.auth import validate_init_data
 
 
 def require_user(x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-Data")):
@@ -20,7 +20,9 @@ def require_user(x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-
     try:
         user = json.loads(parsed["user"])
     except Exception:
-        raise HTTPException(status_code=401, detail="Missing user in init data")
+        raise HTTPException(
+            status_code=401, detail="Missing user in init data"
+        ) from None
 
     if settings.MAINTENANCE_MODE:
         raise HTTPException(status_code=503, detail={"reason": "maintenance_mode"})

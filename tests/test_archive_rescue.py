@@ -1,14 +1,12 @@
 """Спасение исчезающих медиа: владелец отвечает на сообщение, которого нет в истории."""
 
-import types
-
 import pytest
 
-from config import settings
+from app.features.archive.bot.deleted import on_business_deleted
 from app.features.history.service import get_history_entry
+from config import settings
 from db.models.module_settings import disable_module
 from tests.conftest import on_business_message
-from app.features.archive.bot.deleted import on_business_deleted
 
 from .conftest import CONNECTION_ID, OWNER_ID, deleted_event, make_message, tg_file
 

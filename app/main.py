@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import hmac
 import logging
 from contextlib import asynccontextmanager
@@ -7,16 +8,16 @@ from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
-from app.platform.api import setup_routers
-from bot_instance import bot, dp
-from config import TORTOISE_ORM, settings
-from app.platform.loader import load_commands
-from app.platform.logging_config import configure_logging
+from app.features.emoji_clock.bot import run_emoji_clock
 from app.features.mirror.manager import mirror_dispatcher, mirror_manager
 from app.features.reminders.bot import run_reminders_loop
-from app.platform.retention import run_retention_loop
 from app.features.scheduled.service import run_scheduled_loop
-from app.features.emoji_clock.bot import run_emoji_clock
+from app.platform.api import setup_routers
+from app.platform.loader import load_commands
+from app.platform.logging_config import configure_logging
+from app.platform.retention import run_retention_loop
+from bot_instance import bot, dp
+from config import TORTOISE_ORM, settings
 
 logger = logging.getLogger("bot.webhook")
 
@@ -72,10 +73,8 @@ async def lifespan(app: FastAPI):
     for task in _background_tasks:
         task.cancel()
     for task in _background_tasks:
-        try:
+        with contextlib.suppress(Exception, asyncio.CancelledError):
             await task
-        except (Exception, asyncio.CancelledError):
-            pass
 
     await mirror_manager.stop_all()
     await bot.session.close()

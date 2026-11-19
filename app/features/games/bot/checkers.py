@@ -2,12 +2,12 @@ from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.features.games.lock import serialized_game
-from db.models.connection import get_connection
-from db.models.user_locale import get_locale
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.mentions import format_mention, mention, remember
 from app.platform.telegram.registry import command
-from app.features.games.service import get_game, save_game
+from db.models.connection import get_connection
+from db.models.user_locale import get_locale
 
 router = Router(name="chk")
 
@@ -160,7 +160,7 @@ def legal_actions_for(board, idx, color):
     if color_has_any_capture(board, color):
         return captures  # пусто, если конкретно эта шашка бить не может
 
-    return {land: None for land in piece_quiet_moves(board, idx)}
+    return dict.fromkeys(piece_quiet_moves(board, idx))
 
 
 def apply_single_move(board, from_idx, to_idx, captured_idx):

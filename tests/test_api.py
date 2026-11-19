@@ -1,10 +1,10 @@
 import time
 
 from app.features.archive.queries import log_archive_event
-from db.models.connection import upsert_connection
 from app.features.history.service import save_history
+from db.models.connection import upsert_connection
 
-from .conftest import CONNECTION_ID, OWNER_ID
+from .conftest import CONNECTION_ID
 
 NOW = int(time.time())
 

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from app.platform.api.deps import Owner, current_owner, require_user
 from app.platform.api.schemas import CommandAlias
+from app.platform.telegram.registry import registry
 from db.models.command_alias import (
     add_command_alias,
     count_command_aliases,
@@ -18,7 +19,6 @@ from db.models.command_alias import (
     get_command_alias,
     list_command_aliases,
 )
-from app.platform.telegram.registry import registry
 
 router = APIRouter()
 

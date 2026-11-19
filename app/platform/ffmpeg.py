@@ -1,8 +1,17 @@
 import asyncio
 import os
 import tempfile
+from pathlib import Path
 
 _FFMPEG_TIMEOUT = 30
+
+
+def _read_if_exists(path):
+    """Содержимое файла или None, если ffmpeg его не создал."""
+    try:
+        return Path(path).read_bytes()
+    except FileNotFoundError:
+        return None
 
 
 async def apply_audio_filter(input_bytes, filter_str):
@@ -10,8 +19,7 @@ async def apply_audio_filter(input_bytes, filter_str):
         in_path = os.path.join(tmpdir, "in.ogg")
         out_path = os.path.join(tmpdir, "out.ogg")
 
-        with open(in_path, "wb") as f:
-            f.write(input_bytes)
+        await asyncio.to_thread(Path(in_path).write_bytes, input_bytes)
 
         process = await asyncio.create_subprocess_exec(
             "ffmpeg",
@@ -29,15 +37,13 @@ async def apply_audio_filter(input_bytes, filter_str):
 
         try:
             await asyncio.wait_for(process.wait(), timeout=_FFMPEG_TIMEOUT)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             process.kill()
             return None
 
-        if process.returncode != 0 or not os.path.exists(out_path):
+        if process.returncode != 0:
             return None
-
-        with open(out_path, "rb") as f:
-            return f.read()
+        return await asyncio.to_thread(_read_if_exists, out_path)
 
 
 async def convert_ogg_to_wav(input_bytes):
@@ -46,8 +52,7 @@ async def convert_ogg_to_wav(input_bytes):
         in_path = os.path.join(tmpdir, "in.ogg")
         out_path = os.path.join(tmpdir, "out.wav")
 
-        with open(in_path, "wb") as f:
-            f.write(input_bytes)
+        await asyncio.to_thread(Path(in_path).write_bytes, input_bytes)
 
         process = await asyncio.create_subprocess_exec(
             "ffmpeg",
@@ -65,12 +70,10 @@ async def convert_ogg_to_wav(input_bytes):
 
         try:
             await asyncio.wait_for(process.wait(), timeout=_FFMPEG_TIMEOUT)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             process.kill()
             return None
 
-        if process.returncode != 0 or not os.path.exists(out_path):
+        if process.returncode != 0:
             return None
-
-        with open(out_path, "rb") as f:
-            return f.read()
+        return await asyncio.to_thread(_read_if_exists, out_path)

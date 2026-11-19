@@ -4,8 +4,8 @@
 Шаблоны создаются в мини-приложении. `.t` без аргумента показывает список
 (только владельцу в личку — собеседник его не увидит)."""
 
-from app.features.templates.service import get_template, list_templates
 from app.features.autoresponder.service import render
+from app.features.templates.service import get_template, list_templates
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
 

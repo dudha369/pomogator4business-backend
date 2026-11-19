@@ -1,9 +1,9 @@
 import pytest
 
-from commands.ping import cmd_ping
 from app.platform.telegram.context import CommandContext
+from commands.ping import cmd_ping
 
-from .conftest import make_message, OWNER_ID
+from .conftest import OWNER_ID, make_message
 
 
 async def test_ping_endpoint_is_public_and_not_cached(client):

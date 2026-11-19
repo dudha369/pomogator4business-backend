@@ -6,23 +6,23 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.platform.api.deps import require_user
 from app.features.emoji_clock.api import build_styles_payload
-from app.platform.api.schemas import EmojiStatusState, MirrorStatus
-from db.models.connection import get_connection_by_owner
 from app.features.emoji_clock.queries import (
     get_emoji_status_style,
     is_emoji_status_enabled,
     is_emoji_status_granted,
 )
 from app.features.mirror.queries import get_mirror
+from app.platform.api.deps import require_user
+from app.platform.api.schemas import EmojiStatusState, MirrorStatus
+from db.models.connection import get_connection_by_owner
 from db.models.user_locale import (
     get_timezone_name,
     get_timezone_offset,
+    is_valid_timezone,
     set_timezone_name,
     set_timezone_offset,
 )
-from db.models.user_locale import is_valid_timezone
 
 router = APIRouter()
 

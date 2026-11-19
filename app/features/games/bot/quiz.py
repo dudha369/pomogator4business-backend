@@ -4,11 +4,11 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.features.games.lock import serialized_game
+from app.platform.i18n import t
+from app.platform.telegram.context import CommandContext
+from app.platform.telegram.registry import command
 from db.models.connection import get_connection
 from db.models.user_locale import get_locale
-from app.platform.telegram.context import CommandContext
-from app.platform.i18n import t
-from app.platform.telegram.registry import command
 
 router = Router(name="quiz")
 

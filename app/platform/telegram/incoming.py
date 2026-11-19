@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 from aiogram import Bot
 from aiogram.types import Message
 
-from db.models.connection import get_connection
 from app.features.history.service import log_message
+from db.models.connection import get_connection
 from db.models.module_settings import list_disabled_modules
 
 

@@ -5,12 +5,12 @@ import time
 
 import pytest
 
+from app.features.scheduled import service as scheduled
 from app.features.scheduled.queries import (
     add_scheduled_task,
     claim_scheduled_task,
     list_due_scheduled_tasks,
 )
-from app.features.scheduled import service as scheduled
 from app.platform.telegram.context import CommandContext
 from commands.bomb import cmd_bomb
 from commands.timer import cmd_timer

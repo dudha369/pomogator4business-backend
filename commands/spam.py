@@ -2,9 +2,9 @@ import asyncio
 
 from aiogram.exceptions import TelegramForbiddenError
 
+from app.platform.spam_control import clamp, is_spam_active, start_spam, stop_spam
 from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-from app.platform.spam_control import clamp, is_spam_active, start_spam, stop_spam
 from app.platform.utils import log_suppressed
 
 _LIMIT = 100

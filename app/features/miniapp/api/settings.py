@@ -7,14 +7,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.platform.api.deps import Owner, current_owner
+from app.platform.telegram.registry import registry
+from app.platform.utils import is_valid_prefix
 from db.models.connection import set_prefix
 from db.models.module_settings import (
     disable_module,
     enable_module,
     list_disabled_modules,
 )
-from app.platform.telegram.registry import registry
-from app.platform.utils import is_valid_prefix
 
 router = APIRouter()
 

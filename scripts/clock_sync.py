@@ -67,9 +67,9 @@ async def sync(styles, args):
     from aiogram import Bot
     from tortoise import Tortoise
 
-    from config import TORTOISE_ORM, settings
     from app.features.emoji_clock import queries as clock_db
     from app.features.emoji_clock.sync import runner
+    from config import TORTOISE_ORM, settings
 
     await Tortoise.init(config=TORTOISE_ORM)
     bot = Bot(token=settings.BOT_TOKEN)

@@ -5,13 +5,13 @@ import time
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from app.platform.api.deps import Owner, current_owner, require_user
-from app.platform.api.schemas import RemindersSettings
 from app.features.reminders import service
 from app.features.reminders.service import (
     get_reminder_settings,
     upsert_reminder_settings,
 )
+from app.platform.api.deps import Owner, current_owner, require_user
+from app.platform.api.schemas import RemindersSettings
 
 router = APIRouter()
 

@@ -1,9 +1,9 @@
 import random
 
 from app.features.games.lock import serialized_command
+from app.features.games.service import get_game, save_game
 from app.platform.i18n import t
 from app.platform.telegram.registry import command
-from app.features.games.service import get_game, save_game
 
 _DEFAULT_MAX = 100
 # потолок в пределах INT Postgres (2**31 - 1), иначе save_game падает

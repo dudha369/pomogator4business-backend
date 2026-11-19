@@ -1,14 +1,13 @@
 import asyncio
 import io
 
-from PIL import Image, ImageDraw
 from aiogram.types import BufferedInputFile
+from PIL import Image, ImageDraw
 
-from app.platform.telegram.context import CommandContext
 from app.platform.imaging import circular_crop, load_font, to_bytes, wrap_text
 from app.platform.media import download_user_avatar
+from app.platform.telegram.context import CommandContext
 from app.platform.telegram.registry import command
-
 
 _WIDTH = 800
 _PADDING = 36
