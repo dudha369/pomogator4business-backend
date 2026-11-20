@@ -21,12 +21,12 @@ from app.features.emoji_clock.queries import (
     set_emoji_status_granted,
 )
 from app.features.games.service import get_game
+from app.features.history.models import MessageHistory
 from app.features.history.service import (
     count_by_chat,
     count_by_day,
     get_history_entry,
     last_rows_by_chat,
-    list_history_rows_since,
     log_message,
     recent_message_log,
     save_history,
@@ -532,7 +532,12 @@ async def test_sql_aggregates_match_python(connection):
     assert day_rows[(today - 2, True)] == 1
 
     py = stats.daily_activity(
-        await list_history_rows_since(CONNECTION_ID, since), NOW, 0, 5
+        await MessageHistory.filter(
+            connection_id=CONNECTION_ID, created_at__gte=since
+        ).values("chat_id", "message_id", "is_owner", "created_at"),
+        NOW,
+        0,
+        5,
     )
     sql = stats.daily_from_counts(by_day, NOW, 0, 5)
     assert py == sql

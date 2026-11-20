@@ -5,8 +5,6 @@
 import datetime
 import statistics
 
-MAX_REPLY_GAP_SECONDS = 24 * 3600  # ответ позже суток уже не считаем «скоростью ответа»
-
 
 def local_date(ts: int, offset_minutes: int) -> str:
     moment = datetime.datetime.fromtimestamp(ts + offset_minutes * 60, datetime.UTC)
@@ -66,24 +64,6 @@ def top_chats(rows, limit: int = 5):
         [{"chat_id": r["chat_id"], "is_owner": r["is_owner"], "n": 1} for r in rows],
         limit,
     )
-
-
-def reply_times(rows):
-    """Секунды между первым неотвеченным входящим и ответом владельца,
-    по каждому чату отдельно. rows — по возрастанию времени."""
-    pending = {}  # chat_id -> время первого неотвеченного входящего
-    samples = []
-    for row in sorted(rows, key=lambda r: (r["created_at"], r.get("message_id", 0))):
-        chat = row["chat_id"]
-        if row["is_owner"]:
-            started = pending.pop(chat, None)
-            if started is not None:
-                gap = row["created_at"] - started
-                if 0 <= gap <= MAX_REPLY_GAP_SECONDS:
-                    samples.append(gap)
-        else:
-            pending.setdefault(chat, row["created_at"])
-    return samples
 
 
 def reply_summary(samples):
