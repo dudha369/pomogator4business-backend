@@ -107,19 +107,8 @@ def row(chat, owner, ts, mid=0):
     return {"chat_id": chat, "is_owner": owner, "created_at": ts, "message_id": mid}
 
 
-def test_reply_times_per_chat_with_streaks():
-    rows = [
-        row(1, False, 100),
-        row(1, False, 130),
-        row(1, True, 400),  # 300 с от ПЕРВОГО неотвеченного
-        row(2, False, 200),
-        row(2, True, 260),  # 60 с
-        row(3, True, 500),  # ответ без входящего — не считается
-        row(1, False, 1000),
-        row(1, True, 1000 + 25 * 3600),  # дольше суток — не считается
-    ]
-    assert sorted(stats.reply_times(rows)) == [60, 300]
-    summary = stats.reply_summary(stats.reply_times(rows))
+def test_reply_summary_median_and_empty():
+    summary = stats.reply_summary([60, 300])
     assert summary["median_seconds"] == 180 and summary["samples"] == 2
     assert stats.reply_summary([]) == {
         "median_seconds": None,

@@ -10,7 +10,7 @@ from app.features.history.service import (
     count_by_chat,
     count_by_day,
     count_messages_since,
-    list_history_rows_since,
+    reply_gaps,
 )
 from app.features.stats import service as stats_calc
 from app.platform.api.deps import Owner, current_owner
@@ -99,8 +99,7 @@ async def get_overview(
     since = now - days * 86400
 
     connection_id = connection["connection_id"]
-    # счёт и топ — SQL-агрегатами; в память грузим только лёгкие строки для скорости ответа
-    rows = await list_history_rows_since(connection_id, since)
+    # всё считает БД: счёт по дням, топ и интервалы ответа (в память идут только числа)
     return {
         "days": stats_calc.daily_from_counts(
             await count_by_day(connection_id, since, offset), now, offset, days
@@ -109,5 +108,5 @@ async def get_overview(
             await count_by_chat(connection_id, since)
         ),
         "archive": await count_archive_events_since(connection["connection_id"], since),
-        "reply_time": stats_calc.reply_summary(stats_calc.reply_times(rows)),
+        "reply_time": stats_calc.reply_summary(await reply_gaps(connection_id, since)),
     }

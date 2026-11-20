@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     HISTORY_RETENTION_DAYS: int = 90
     ARCHIVE_RETENTION_DAYS: int = 0
     MESSAGE_LOG_KEEP: int = 20000
+    # записи журнала .del/.panic старше этого срока удаляются (0 = только лимит MESSAGE_LOG_KEEP)
+    MESSAGE_LOG_RETENTION_DAYS: int = 30
+    # сколько строк history за проход очистки избавлять от ненужного raw_json (0 = выключено)
+    RAW_JSON_SCRUB_BATCH: int = 2000
 
     AI_API_KEY: str = ""
     AI_MODEL: str = "claude-haiku-5-5"

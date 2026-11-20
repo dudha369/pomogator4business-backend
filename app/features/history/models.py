@@ -33,7 +33,11 @@ class MessageHistory(Model):
     class Meta:
         table = "message_history"
         unique_together = (("connection_id", "chat_id", "message_id"),)
-        indexes = (("connection_id", "chat_id", "created_at"),)
+        indexes = (
+            ("connection_id", "chat_id", "created_at"),
+            # окна статистики и напоминаний: connection_id + created_at >= …
+            ("connection_id", "created_at"),
+        )
 
 
 class MessageLog(Model):
@@ -41,6 +45,8 @@ class MessageLog(Model):
     connection_id = fields.CharField(max_length=255)
     chat_id = fields.BigIntField()
     message_id = fields.BigIntField()
+    # unix-секунды; NULL — запись старого формата (очищается только по лимиту числа)
+    created_at = fields.BigIntField(null=True)
 
     class Meta:
         table = "message_log"

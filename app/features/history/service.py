@@ -1,3 +1,5 @@
+import time
+
 from tortoise import Tortoise
 from tortoise.functions import Max
 
@@ -163,17 +165,6 @@ async def list_recent_chats(connection_id, limit):
     )
 
 
-async def list_history_rows_since(connection_id, since_ts, limit=100000):
-    return (
-        await MessageHistory.filter(
-            connection_id=connection_id, created_at__gte=since_ts
-        )
-        .order_by("created_at")
-        .limit(limit)
-        .values("chat_id", "message_id", "is_owner", "created_at")
-    )
-
-
 async def _query(sql, params):
     """Сырой SQL с одинаковыми {1},{2}… для SQLite (?) и Postgres ($n): агрегаты,
     которые ORM выразит хуже (оконная функция, деление дат)."""
@@ -205,6 +196,32 @@ async def count_by_day(connection_id, since_ts, offset_minutes):
         " GROUP BY 1, 2",
         (int(offset_minutes) * 60, connection_id, since_ts),
     )
+
+
+MAX_REPLY_GAP_SECONDS = 24 * 3600  # ответ позже суток не считаем «скоростью ответа»
+
+
+async def reply_gaps(connection_id, since_ts):
+    """Секунды от первого неотвеченного входящего до ответа владельца — по одному
+    числу на каждую «серию» входящих в чате. Серия = сообщения между двумя ответами
+    владельца (k — число ответов владельца строго до строки). Ответ позже суток и
+    ответ без входящего не учитываются. Считает БД: в память идут только эти числа."""
+    rows = await _query(
+        "SELECT reply_at - first_in AS gap FROM ("
+        " SELECT MIN(CASE WHEN is_owner THEN NULL ELSE created_at END) AS first_in,"
+        "  MIN(CASE WHEN is_owner THEN created_at END) AS reply_at"
+        " FROM ("
+        "  SELECT chat_id, is_owner, created_at,"
+        "   SUM(CASE WHEN is_owner THEN 1 ELSE 0 END) OVER (PARTITION BY chat_id"
+        "    ORDER BY created_at, message_id"
+        "    ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS k"
+        "  FROM message_history WHERE connection_id = {p1} AND created_at >= {p2}"
+        " ) t GROUP BY chat_id, COALESCE(k, 0)"
+        ") g WHERE first_in IS NOT NULL AND reply_at IS NOT NULL"
+        " AND reply_at - first_in BETWEEN 0 AND {p3}",
+        (connection_id, since_ts, MAX_REPLY_GAP_SECONDS),
+    )
+    return [int(r["gap"]) for r in rows]
 
 
 async def count_by_chat(connection_id, since_ts):
@@ -297,7 +314,10 @@ async def list_media_flags(connection_id, pairs):
 
 async def log_message(connection_id, chat_id, message_id):
     await MessageLog.create(
-        connection_id=connection_id, chat_id=chat_id, message_id=message_id
+        connection_id=connection_id,
+        chat_id=chat_id,
+        message_id=message_id,
+        created_at=int(time.time()),
     )
 
 
@@ -339,3 +359,24 @@ async def trim_message_log(keep):
                 connection_id=connection_id, log_id__lte=rows[0]
             ).delete()
     return removed
+
+
+async def expire_message_log(older_than_ts):
+    """Удаляет записи журнала старше порога (записи без времени не трогает)."""
+    return await MessageLog.filter(created_at__lt=older_than_ts).delete()
+
+
+async def scrub_raw_json(limit):
+    """Обнуляет raw_json у текстов и файлов — он нужен только экзотическим типам,
+    а новые строки его уже не получают. Порция в `limit` строк; возвращает число
+    обнулённых."""
+    ids = (
+        await MessageHistory.filter(
+            raw_json__not_isnull=True, kind__in=["text", *FILE_KINDS]
+        )
+        .limit(limit)
+        .values_list("id", flat=True)
+    )
+    if not ids:
+        return 0
+    return await MessageHistory.filter(id__in=list(ids)).update(raw_json=None)
