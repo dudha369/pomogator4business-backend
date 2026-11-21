@@ -17,6 +17,7 @@ FEATURES = (
     "autoresponder",
     "chats",
     "connection",
+    "custom_emoji",
     "echo",
     "emoji_clock",
     "games",

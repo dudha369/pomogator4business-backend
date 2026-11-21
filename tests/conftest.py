@@ -71,11 +71,11 @@ class FakeBot:
         self.deleted = []  # delete_business_messages
         self.reads = []  # read_business_message
         self.documents = []  # send_document
-        self.media_sent = (
-            []
-        )  # send_photo/video/... (повторная отправка удалённого медиа)
+        self.media_sent = []  # send_photo/video/... (повторная отправка удалённого медиа)
         self.rich_sent = []  # send_rich_message
         self.album_sent = []  # send_media_group
+        self.custom_emoji = {}  # id -> стикер для get_custom_emoji_stickers
+        self.emoji_calls = []  # списки id, о которых спрашивали Telegram
         self._next_id = 1000
 
     async def send_rich_message(self, **kwargs):
@@ -109,6 +109,12 @@ class FakeBot:
     async def send_document(self, **kwargs):
         self._check("send_document", kwargs)
         self.documents.append(kwargs)
+
+    async def get_custom_emoji_stickers(self, custom_emoji_ids):
+        self.emoji_calls.append(list(custom_emoji_ids))
+        return [
+            self.custom_emoji[i] for i in custom_emoji_ids if i in self.custom_emoji
+        ]
 
     # --- скачивание файлов и повторная отправка медиа ---
     async def get_file(self, file_id):
@@ -294,6 +300,7 @@ def api_bot(monkeypatch, bot):
         "get_me",
         "get_file",
         "download_file",
+        "get_custom_emoji_stickers",
     ):
         monkeypatch.setattr(bot_instance.bot, name, getattr(bot, name))
     return bot

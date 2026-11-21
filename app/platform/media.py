@@ -33,6 +33,41 @@ async def download_user_avatar(bot, user_id):
     return buffer.read()
 
 
+# кастомные эмодзи крошечные (.tgs до 64 КБ, .webm до 256 КБ); всё, что больше, — не эмодзи
+MAX_CUSTOM_EMOJI_BYTES = 512 * 1024
+
+_EMOJI_MIME = (
+    ("is_animated", "application/x-tgsticker"),
+    ("is_video", "video/webm"),
+)
+
+
+def emoji_mime(sticker):
+    """MIME файла кастомного эмодзи по флагам стикера: tgs / webm / webp."""
+    for flag, mime in _EMOJI_MIME:
+        if getattr(sticker, flag, False):
+            return mime
+    return "image/webp"
+
+
+async def download_custom_emoji(bot, emoji_id):
+    """(байты, mime) кастомного эмодзи или None. Работает без премиума у бота.
+    Неизвестный id и слишком большой файл — не сбой, а «нет эмодзи»."""
+    try:
+        stickers = await bot.get_custom_emoji_stickers([emoji_id])
+    except TelegramAPIError:
+        logger.info("Эмодзи %s недоступно", emoji_id, exc_info=True)
+        return None
+    if not stickers:
+        return None
+    sticker = stickers[0]
+    if (sticker.file_size or 0) > MAX_CUSTOM_EMOJI_BYTES:
+        return None
+    file = await bot.get_file(sticker.file_id)
+    buffer = await bot.download_file(file.file_path)
+    return buffer.read(), emoji_mime(sticker)
+
+
 @dataclass
 class Media:
     """Медиа сообщения. data=None — файл не скачан (status говорит почему)."""
