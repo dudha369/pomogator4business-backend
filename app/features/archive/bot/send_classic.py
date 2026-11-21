@@ -2,7 +2,6 @@
 
 import logging
 
-from aiogram import html
 from aiogram.types import (
     InputMediaAudio,
     InputMediaDocument,
@@ -24,8 +23,9 @@ from app.features.archive.render.classic import (
     MESSAGE_LIMIT,
     before_after,
     build_notice,
-    clip,
-    highlight_changes_async,
+    clip_text,
+    highlight_edit,
+    render_text,
 )
 from app.features.archive.service import gift_sticker_id
 from app.features.archive.snapshot import GIFT_KINDS
@@ -148,20 +148,24 @@ async def album(bot, chat_id, locale, mention, items, header_key):
 
 
 async def edited_text(bot, chat_id, locale, mention, old, new, link_kb):
+    # обрезаем: без этого два текста по 4096 дают >4096 и Telegram отклоняет
     text = t(
         "archive.edited_notice",
         locale,
         mention=mention,
-        # обрезаем: без этого два текста по 4096 дают >4096 и Telegram отклоняет
-        old_text=html.quote(clip(old["text"])),
-        new_text=await highlight_changes_async(clip(old["text"]), clip(new["text"])),
+        old_text=render_text(*clip_text(old["text"], old.get("entities"))),
+        new_text=await highlight_edit(
+            old["text"], old.get("entities"), new["text"], new.get("entities")
+        ),
     )
     return (await _text(bot, chat_id, text, link_kb)).message_id
 
 
 async def edited_caption(bot, chat_id, locale, mention, old, new, link_kb):
     header = t("archive.edited_caption_header", locale, mention=mention)
-    text = header + await before_after(locale, old["text"], new["text"])
+    text = header + await before_after(
+        locale, old["text"], new["text"], old.get("entities"), new.get("entities")
+    )
     return (await _text(bot, chat_id, text, link_kb)).message_id
 
 
@@ -171,7 +175,9 @@ async def edited_media(
     """Замена файла: сообщение «изменено» и под ним файлы «Было»/«Стало»."""
     text = t("archive.edited_media_header", locale, mention=mention)
     if change == "media_caption":
-        text += await before_after(locale, old["text"], new["text"])
+        text += await before_after(
+            locale, old["text"], new["text"], old.get("entities"), new.get("entities")
+        )
     notice = await _text(bot, chat_id, text, link_kb)
     for snap, entry, label in (
         (old, old_entry, "archive.caption_before"),

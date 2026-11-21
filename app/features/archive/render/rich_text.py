@@ -4,6 +4,7 @@
 и пользовательский текст у нас уже готовы как Telegram-HTML (<b>, <a>, <tg-emoji>…),
 поэтому здесь один небольшой преобразователь, а не вторая система разметки."""
 
+import re
 from html.parser import HTMLParser
 
 from aiogram.types import (
@@ -112,3 +113,37 @@ def html_to_rich(markup: str):
         name, attrs, children = parser.stack.pop()
         parser._add(_wrap(name, attrs, children))
     return _compact(parser.stack[0][2])
+
+
+_TAG_OR_NEWLINE = re.compile(r"(<[^>]+>|\n)")
+_TAG_NAME = re.compile(r"<([\w-]+)")
+
+
+def split_html_lines(markup: str) -> list[str]:
+    """HTML -> строки (абзацы Rich), каждая — самостоятельная разметка.
+
+    Тег, открытый на переводе строки, закрывается в конце строки и открывается заново
+    в начале следующей; строки без видимого текста пропускаются."""
+    lines: list[str] = []
+    stack: list[tuple[str, str]] = []  # (имя, открывающий тег)
+    line, has_text = "", False
+    for part in _TAG_OR_NEWLINE.split(markup):
+        if part == "\n":
+            if has_text:
+                lines.append(
+                    line + "".join(f"</{name}>" for name, _ in reversed(stack))
+                )
+            line, has_text = "".join(tag for _, tag in stack), False
+        elif part.startswith("</"):
+            if stack:
+                stack.pop()
+            line += part
+        elif part.startswith("<"):
+            stack.append((_TAG_NAME.match(part).group(1), part))
+            line += part
+        elif part:
+            line += part
+            has_text = has_text or bool(part.strip())
+    if has_text:
+        lines.append(line)
+    return lines

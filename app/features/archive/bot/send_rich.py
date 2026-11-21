@@ -3,7 +3,7 @@
 
 import logging
 
-from app.features.archive.render.classic import EMPTY, clip, highlight_changes_async
+from app.features.archive.render.classic import EMPTY, highlight_edit
 from app.features.archive.render.rich import (
     build_deleted,
     build_edit_history,
@@ -108,10 +108,7 @@ async def try_edit_history(
         mention,
         versions,
         times,
-        current_html=await highlight_changes_async(
-            clip(versions[-2]), clip(versions[-1])
-        )
-        or EMPTY,
+        current_html=await highlight_edit(*versions[-2], *versions[-1]) or EMPTY,
         header_key=header_key,
         media_snaps=_history_media(new, message_id, albums, prefs),
         prefs=prefs,

@@ -4,6 +4,7 @@
 
 import asyncio
 import html as _html
+import itertools
 import re
 from difflib import SequenceMatcher
 from html import escape
@@ -39,8 +40,9 @@ def render_text(text, entities) -> str:
             from aiogram.types import MessageEntity
             from aiogram.utils.text_decorations import html_decoration
 
+            # aiogram кладёт url в href как есть: `&` в адресе надо экранировать
             items = [
-                MessageEntity(**e)
+                MessageEntity(**{**e, "url": escape(e["url"])} if e.get("url") else e)
                 for e in entities
                 if e.get("type") not in _STRIPPED_ENTITIES
             ]
@@ -199,36 +201,129 @@ def build_notice(
 # --- «Было/Стало» ------------------------------------------------------------
 
 _CLIP = 1700  # два текста по 4096 не влезут в одно сообщение — режем оба
+# поверх этих сущностей жирное выделение не накладываем: у премиум-эмодзи вместо
+# текста плейсхолдер, а внутри уже жирного оно ничего не меняет
+_NO_HIGHLIGHT = {"custom_emoji", "bold"}
+
+
+def u16_len(text: str) -> int:
+    """Длина в UTF-16: в таких единицах Telegram считает offset/length сущностей."""
+    return len(text.encode("utf-16-le")) // 2
+
+
+def clip_text(text, entities=None, limit: int = _CLIP):
+    """Обрезает текст и сущности согласованно -> (текст, сущности).
+
+    Сущность, вылезшая за край, укорачивается; премиум-эмодзи, которое пришлось бы
+    резать, отбрасывается целиком (половина эмодзи не рисуется)."""
+    text = text or ""
+    if len(text) <= limit:
+        return text, entities
+    cut = text[:limit].rstrip()
+    end = u16_len(cut)
+    kept = []
+    for entity in entities or ():
+        offset, length = entity["offset"], entity["length"]
+        if offset >= end:
+            continue
+        if offset + length > end:
+            if entity.get("type") == "custom_emoji":
+                continue
+            entity = {**entity, "length": end - offset}
+        kept.append(entity)
+    return cut + "…", kept or None
 
 
 def clip(text) -> str:
-    text = text or ""
-    return text if len(text) <= _CLIP else text[:_CLIP].rstrip() + "…"
+    return clip_text(text)[0]
 
 
-def highlight_changes(old_text: str, new_text: str) -> str:
-    """Новый текст в HTML: вставленное/изменённое выделено жирным."""
+def changed_ranges(old_text: str, new_text: str) -> list[tuple[int, int]]:
+    """Вставленное/изменённое в new_text: диапазоны [start, end) в единицах UTF-16.
+
+    Сравниваем по символам Python (эмодзи не рвутся пополам), а границы переводим в
+    UTF-16 — именно так считаются offset сущностей Telegram."""
+    position = [0]
+    for char in new_text:
+        position.append(position[-1] + (2 if ord(char) > 0xFFFF else 1))
     matcher = SequenceMatcher(None, old_text, new_text, autojunk=False)
+    return [
+        (position[j1], position[j2])
+        for tag, _i1, _i2, j1, j2 in matcher.get_opcodes()
+        if tag in ("replace", "insert") and j2 > j1
+    ]
+
+
+def _subtract(span, blocked):
+    parts = [span]
+    for b_start, b_end in blocked:
+        rest = []
+        for start, end in parts:
+            if b_end <= start or b_start >= end:
+                rest.append((start, end))
+                continue
+            if start < b_start:
+                rest.append((start, b_start))
+            if b_end < end:
+                rest.append((b_end, end))
+        parts = rest
+    return parts
+
+
+def bold_entities(ranges, entities) -> list[dict]:
+    """Жирное выделение для диапазонов так, чтобы оно НЕ пересекалось с сущностями
+    сообщения: каждый кусок целиком внутри или целиком снаружи любой сущности — иначе
+    HTML получится с перехлёстом тегов."""
+    blocked = [
+        (e["offset"], e["offset"] + e["length"])
+        for e in entities
+        if e.get("type") in _NO_HIGHLIGHT
+    ]
+    cuts = sorted(
+        {p for e in entities for p in (e["offset"], e["offset"] + e["length"])}
+    )
     result = []
-    for tag, _i1, _i2, j1, j2 in matcher.get_opcodes():
-        new_part = new_text[j1:j2]
-        if tag == "equal":
-            result.append(escape(new_part))
-        elif tag in ("replace", "insert") and new_part:
-            result.append(f"<b>{escape(new_part)}</b>")
-    return "".join(result)
+    for span in ranges:
+        for start, end in _subtract(span, blocked):
+            points = [start, *(c for c in cuts if start < c < end), end]
+            result += [
+                {"type": "bold", "offset": a, "length": b - a}
+                for a, b in itertools.pairwise(points)
+            ]
+    return result
 
 
-async def highlight_changes_async(old_text: str, new_text: str) -> str:
+def highlight_changes(old_text: str, new_text: str, new_entities=None) -> str:
+    """Новый текст в HTML: форматирование сообщения сохранено, вставленное/изменённое
+    дополнительно выделено жирным."""
+    entities = [
+        e for e in (new_entities or ()) if e.get("type") not in _STRIPPED_ENTITIES
+    ]
+    extra = bold_entities(changed_ranges(old_text, new_text), entities)
+    return render_text(new_text, [*entities, *extra])
+
+
+async def highlight_changes_async(
+    old_text: str, new_text: str, new_entities=None
+) -> str:
     """SequenceMatcher квадратичен: на патологичных строках до секунд — в поток,
     иначе встаёт весь event loop (WEB_CONCURRENCY=1)."""
-    return await asyncio.to_thread(highlight_changes, old_text, new_text)
+    return await asyncio.to_thread(highlight_changes, old_text, new_text, new_entities)
 
 
-async def before_after(locale, old_text, new_text) -> str:
-    old_html = escape(clip(old_text)) or EMPTY
+async def highlight_edit(old_text, old_entities, new_text, new_entities) -> str:
+    """Единое место «обрезать оба текста и подсветить правку» для обеих веток."""
+    old_text, _ = clip_text(old_text, old_entities)
+    new_text, new_entities = clip_text(new_text, new_entities)
+    return await highlight_changes_async(old_text, new_text, new_entities)
+
+
+async def before_after(
+    locale, old_text, new_text, old_entities=None, new_entities=None
+) -> str:
+    old_html = render_text(*clip_text(old_text, old_entities)) or EMPTY
     new_html = (
-        await highlight_changes_async(clip(old_text), clip(new_text))
+        await highlight_edit(old_text, old_entities, new_text, new_entities)
         if new_text
         else EMPTY
     )

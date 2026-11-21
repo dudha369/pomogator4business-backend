@@ -73,20 +73,30 @@ def group_albums(items):
     return units
 
 
+def _entities(snapshot):
+    return (snapshot or {}).get("entities")
+
+
 def edit_versions(previous, old, new, now, created_at=None):
-    """Цепочка версий текста [первая … текущая] и время каждой.
+    """Цепочка версий [первая … текущая] и время каждой; версия = (текст, сущности).
 
     previous — прошлые правки этого сообщения из архива. Если цепочка не сходится
-    (например, часть правок пропущена), начинаем с последней известной версии."""
+    (например, часть правок пропущена), начинаем с последней известной версии.
+    Сущности берём из снимков журнала (у старых записей их может не быть)."""
     rows = [r for r in previous if r["edit_kind"] in TEXT_EDITS]
-    versions = [rows[0]["old_text"] or ""] if rows else [old["text"] or ""]
+    current = (old["text"] or "", _entities(old))
+    versions = (
+        [(rows[0]["old_text"] or "", _entities(rows[0].get("old_snapshot")))]
+        if rows
+        else [current]
+    )
     times = [created_at]
     for row in rows:
-        versions.append(row["new_text"] or "")
+        versions.append((row["new_text"] or "", _entities(row.get("new_snapshot"))))
         times.append(row["created_at"])
-    if versions[-1] != (old["text"] or ""):
-        versions, times = [old["text"] or ""], [None]
-    versions.append(new["text"] or "")
+    if versions[-1][0] != current[0]:
+        versions, times = [current], [None]
+    versions.append((new["text"] or "", _entities(new)))
     times.append(now)
     return versions, times
 
