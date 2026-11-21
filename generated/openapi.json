@@ -4572,6 +4572,68 @@
         "summary": "List Commands"
       }
     },
+    "/api/custom-emoji/{emoji_id}": {
+      "get": {
+        "operationId": "get_custom_emoji_api_custom_emoji__emoji_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "emoji_id",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{1,32}$",
+              "title": "Emoji Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-tgsticker": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "video/webm": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Custom Emoji"
+      }
+    },
     "/api/emoji-status": {
       "get": {
         "operationId": "get_emoji_status_api_emoji_status_get",

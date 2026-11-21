@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BINARY_ENDPOINTS = {
     ("GET", "/avatar/{target_user_id}"),
     ("GET", "/archive/{log_id}/media"),
+    ("GET", "/custom-emoji/{emoji_id}"),
 }
 
 
