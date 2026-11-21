@@ -40,8 +40,13 @@ from aiogram.types import (
 )
 
 from app.features.archive.prefs import ArchivePrefs, defaults
-from app.features.archive.render.classic import EMPTY, format_forward, render_text
-from app.features.archive.render.rich_text import html_to_rich
+from app.features.archive.render.classic import (
+    EMPTY,
+    clip_text,
+    format_forward,
+    render_text,
+)
+from app.features.archive.render.rich_text import html_to_rich, split_html_lines
 from app.platform.i18n import t
 
 VISUAL = ("photo", "video", "animation")
@@ -72,8 +77,7 @@ def paragraphs(markup: str) -> list:
     """Строки HTML -> абзацы (каждая строка — отдельный блок)."""
     return [
         InputRichBlockParagraph(text=html_to_rich(line))
-        for line in markup.split("\n")
-        if line.strip()
+        for line in split_html_lines(markup)
     ]
 
 
@@ -89,14 +93,9 @@ def quote_block(text, entities=None, *, html=None):
     """Цитата. html — уже готовая разметка (например, с подсветкой изменений);
     пустой текст -> невидимый символ, чтобы блок не исчез."""
     if html is None:
-        text = (text or "")[:_MAX_TEXT]
-        if not text:
-            html = EMPTY
-        elif "\n" in text:
-            # форматирование на нескольких строках не склеить с абзацами — без него
-            html = "\n".join(escape(line) for line in text.split("\n") if line)
-        else:
-            html = render_text(text, entities)
+        # форматирование на нескольких строках сохраняется: paragraphs() закрывает и
+        # заново открывает теги на каждом переводе строки
+        html = render_text(*clip_text(text, entities, _MAX_TEXT)) or EMPTY
     return InputRichBlockBlockQuotation(blocks=paragraphs(html) or paragraphs(EMPTY))
 
 
@@ -247,7 +246,7 @@ def build_edited_media(
         blocks += label_block(locale, label)
         blocks.append(media_block(snap))
         if caption_changed:
-            blocks.append(quote_block(text))
+            blocks.append(quote_block(text, snap.get("entities")))
     return _message(blocks)
 
 
@@ -272,25 +271,25 @@ def build_edit_history(
 ) -> InputRichMessage:
     """Вся история правок одного сообщения одним Rich Message.
 
-    versions — тексты от первоначального до текущего, times — время каждой версии
+    versions — пары (текст, сущности) от первоначальной до текущей, times — время каждой версии
     (None, если неизвестно). Сверху «Было/Стало» для последней правки, ранние версии
     свёрнуты в раскрывающийся блок."""
     blocks = header_blocks(locale, mention, header_key=header_key)
     if media_snaps:
         blocks += media_blocks(locale, list(media_snaps), prefs)
     blocks += label_block(locale, "archive.caption_before")
-    blocks.append(quote_block(versions[-2]))
+    blocks.append(quote_block(*versions[-2]))
     blocks += label_block(locale, "archive.caption_after")
     blocks.append(quote_block(None, html=current_html))
 
     earlier = list(zip(versions[:-2], times[:-2], strict=False))
     if earlier:
         inner = []
-        for text, stamp in earlier:
+        for (text, entities), stamp in earlier:
             when = _time_html(stamp)
             if when:
                 inner += paragraphs(when)
-            inner.append(quote_block(text))
+            inner.append(quote_block(text, entities))
         blocks.append(
             InputRichBlockDetails(
                 summary=html_to_rich(

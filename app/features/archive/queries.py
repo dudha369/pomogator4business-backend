@@ -163,7 +163,8 @@ async def expire_archive_media(older_than_ts):
 
 
 async def get_edit_history(connection_id, chat_id, message_id):
-    """Все правки одного сообщения (старые первыми): тексты, время, id уведомления."""
+    """Все правки одного сообщения (старые первыми): тексты, снимки (там сущности),
+    время, id уведомления."""
     return await (
         ArchiveLog.filter(
             connection_id=connection_id,
@@ -176,6 +177,8 @@ async def get_edit_history(connection_id, chat_id, message_id):
             "log_id",
             "old_text",
             "new_text",
+            "old_snapshot",
+            "new_snapshot",
             "edit_kind",
             "notice_message_id",
             "created_at",
