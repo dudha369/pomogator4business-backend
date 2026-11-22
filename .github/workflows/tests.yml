@@ -47,6 +47,14 @@ jobs:
       - run: uv run pytest -q
         env:
           TEST_DB_URL: postgres://postgres:postgres@localhost:5432/postgres
+      # весь набор ещё раз с включённым шифрованием содержимого (app/features/vault)
+      - run: uv run pytest -q
+        env:
+          TEST_VAULT: "1"
+      - run: uv run pytest -q
+        env:
+          TEST_VAULT: "1"
+          TEST_DB_URL: postgres://postgres:postgres@localhost:5432/postgres
       # миграции: чистая БД -> upgrade -> модели и миграции не расходятся
       - run: PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE ci_migrations"
       - run: |

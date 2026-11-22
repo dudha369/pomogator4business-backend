@@ -3,6 +3,15 @@
 from tortoise.expressions import Q
 
 from app.features.archive.models import ArchiveLog, ArchivePrefs
+from app.features.vault import service as vault
+from config import settings
+
+TABLE = "archive_log"
+
+
+async def _open(connection_id, rows):
+    return await vault.open_by_connection(TABLE, connection_id, rows)
+
 
 LIST_COLUMNS = (
     "log_id",
@@ -22,6 +31,7 @@ LIST_COLUMNS = (
     "old_snapshot",
     "new_snapshot",
     "created_at",
+    "enc_ver",
 )
 
 
@@ -47,36 +57,44 @@ async def log_archive_event(
 ):
     if media_type is not None and media_status is None:
         media_status = "saved" if media_data is not None else "failed"
+    content = {
+        "old_text": old_text,
+        "new_text": new_text,
+        "media_data": media_data,
+        "media_name": media_name,
+        "old_snapshot": old_snapshot,
+        "new_snapshot": new_snapshot,
+    }
+    owner_id = await vault.owner_of(connection_id) if vault.enabled() else None
+    sealed = await vault.seal_values(TABLE, owner_id, content)
+    if sealed is None:  # шифрование сломалось: событие сохраняем без содержимого
+        sealed = dict.fromkeys(content)
     row = await ArchiveLog.create(
         connection_id=connection_id,
         chat_id=chat_id,
         message_id=message_id,
         event=event,
-        old_text=old_text,
-        new_text=new_text,
         media_type=media_type,
-        media_data=media_data,
         media_mime=media_mime,
-        media_name=media_name,
         media_status=media_status,
         kind=kind,
         is_owner=is_owner,
         edit_kind=edit_kind,
-        old_snapshot=old_snapshot,
-        new_snapshot=new_snapshot,
         notice_message_id=notice_message_id,
         created_at=created_at,
+        **sealed,
     )
     return row.log_id
 
 
 async def get_recent_archive(connection_id, limit):
-    return (
+    rows = (
         await ArchiveLog.filter(connection_id=connection_id)
         .order_by("-log_id")
         .limit(limit)
         .values(*LIST_COLUMNS)
     )
+    return await _open(connection_id, rows)
 
 
 async def get_archive_page(
@@ -104,15 +122,54 @@ async def get_archive_page(
         query = query.filter(created_at__gte=date_from)
     if date_to is not None:
         query = query.filter(created_at__lte=date_to)
-    if search:
-        query = query.filter(
-            Q(old_text__icontains=search) | Q(new_text__icontains=search)
-        )
-
     ordering = "log_id" if ascending else "-log_id"
-    rows = await query.order_by(ordering).limit(limit + 1).values(*LIST_COLUMNS)
+    if search and vault.enabled():
+        # шифротекст в SQL не ищется: просматриваем свежие записи порциями и фильтруем
+        # расшифрованное в Python (не больше ARCHIVE_SEARCH_SCAN записей)
+        ids = await _search_ids(
+            query.order_by(ordering), connection_id, search, limit + 1
+        )
+        rows = (
+            await ArchiveLog.filter(log_id__in=ids)
+            .order_by(ordering)
+            .values(*LIST_COLUMNS)
+            if ids
+            else []
+        )
+    else:
+        if search:
+            query = query.filter(
+                Q(old_text__icontains=search) | Q(new_text__icontains=search)
+            )
+        rows = await query.order_by(ordering).limit(limit + 1).values(*LIST_COLUMNS)
     has_more = len(rows) > limit
-    return rows[:limit], has_more
+    return await _open(connection_id, rows[:limit]), has_more
+
+
+_SEARCH_BATCH = 500
+
+
+async def _search_ids(ordered_query, connection_id, search, want):
+    """log_id записей, где в старом или новом тексте есть `search` (без учёта регистра)."""
+    needle = search.casefold()
+    owner = await vault.owner_of(connection_id)
+    found, scanned = [], 0
+    while len(found) < want and scanned < settings.ARCHIVE_SEARCH_SCAN:
+        batch = (
+            await ordered_query.offset(scanned)
+            .limit(_SEARCH_BATCH)
+            .values("log_id", "old_text", "new_text", "enc_ver")
+        )
+        if not batch:
+            break
+        scanned += len(batch)
+        for row in await vault.open_rows(TABLE, owner, batch):
+            texts = (row["old_text"] or "", row["new_text"] or "")
+            if any(needle in text.casefold() for text in texts):
+                found.append(row["log_id"])
+                if len(found) == want:
+                    break
+    return found
 
 
 async def count_archive_events_since(connection_id, since_ts):
@@ -152,8 +209,9 @@ async def get_log_media(connection_id, log_id):
         "media_name",
         "media_status",
         "media_data",
+        "enc_ver",
     )
-    return rows[0] if rows else None
+    return (await _open(connection_id, rows))[0] if rows else None
 
 
 async def expire_archive_media(older_than_ts):
@@ -165,7 +223,7 @@ async def expire_archive_media(older_than_ts):
 async def get_edit_history(connection_id, chat_id, message_id):
     """Все правки одного сообщения (старые первыми): тексты, снимки (там сущности),
     время, id уведомления."""
-    return await (
+    rows = await (
         ArchiveLog.filter(
             connection_id=connection_id,
             chat_id=chat_id,
@@ -182,8 +240,10 @@ async def get_edit_history(connection_id, chat_id, message_id):
             "edit_kind",
             "notice_message_id",
             "created_at",
+            "enc_ver",
         )
     )
+    return await _open(connection_id, rows)
 
 
 async def get_archive_prefs_data(connection_id):

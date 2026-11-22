@@ -12,6 +12,7 @@ class Alert(Model):
     code = fields.CharField(max_length=64)  # «base» или «base:subject», см. catalog.py
     kind = fields.CharField(max_length=8)  # "event" | "state"
     details = fields.JSONField(default=dict)  # dict[str, str] для подстановки в текст
+    enc_ver = fields.SmallIntField(null=True)  # см. app/features/vault
     count = fields.IntField(default=1)
     created_at = fields.BigIntField()
     last_at = fields.BigIntField()  # последнее возникновение

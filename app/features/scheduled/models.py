@@ -11,6 +11,7 @@ class ScheduledTask(Model):
     chat_id = fields.BigIntField()
     message_id = fields.BigIntField(null=True)  # bomb: что удалить
     text = fields.TextField(null=True)  # timer: что отправить
+    enc_ver = fields.SmallIntField(null=True)  # см. app/features/vault
     run_at = fields.BigIntField(db_index=True)  # unix-секунды
 
     class Meta:

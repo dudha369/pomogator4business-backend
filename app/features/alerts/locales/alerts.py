@@ -13,6 +13,8 @@ RU = {
     "alert.emoji_access_revoked.text": "Часы в статусе выключены. Включить заново можно в мини-приложении → Аккаунт.",
     "alert.ai_no_key.title": "⚠️ ИИ-ответы не работают: нет ключа",
     "alert.ai_no_key.text": "ИИ включён, но на сервере не задан AI_API_KEY, поэтому бот не отвечает через ИИ. Задайте ключ или выключите ИИ в мини-приложении.",
+    "alert.data_key_missing.title": "⚠️ Часть данных не расшифровывается",
+    "alert.data_key_missing.text": "Ключ шифрования недоступен: некоторые записи архива показываются без содержимого. Данные не удалены — верните ключ в DATA_MASTER_KEYS на сервере.",
 }
 
 EN = {
@@ -30,6 +32,8 @@ EN = {
     "alert.emoji_access_revoked.text": "The status clock is off. You can turn it on again in the mini app → Account.",
     "alert.ai_no_key.title": "⚠️ AI replies are not working: no key",
     "alert.ai_no_key.text": "AI is on, but AI_API_KEY is not set on the server, so the bot cannot reply with AI. Set the key or turn AI off in the mini app.",
+    "alert.data_key_missing.title": "⚠️ Some data cannot be decrypted",
+    "alert.data_key_missing.text": "The encryption key is unavailable, so some archive records are shown without content. Nothing was deleted: restore the key in DATA_MASTER_KEYS on the server.",
 }
 
 UK = {
@@ -47,4 +51,6 @@ UK = {
     "alert.emoji_access_revoked.text": "Годинник у статусі вимкнено. Увімкнути знову можна в міні-застосунку → Акаунт.",
     "alert.ai_no_key.title": "⚠️ ШІ-відповіді не працюють: немає ключа",
     "alert.ai_no_key.text": "ШІ увімкнено, але на сервері не задано AI_API_KEY, тому бот не відповідає через ШІ. Задайте ключ або вимкніть ШІ в міні-застосунку.",
+    "alert.data_key_missing.title": "⚠️ Частину даних не вдається розшифрувати",
+    "alert.data_key_missing.text": "Ключ шифрування недоступний, тому деякі записи архіву показано без вмісту. Дані не видалено — поверніть ключ у DATA_MASTER_KEYS на сервері.",
 }

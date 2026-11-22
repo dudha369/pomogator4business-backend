@@ -33,6 +33,7 @@ FEATURES = (
     "stats",
     "story",
     "templates",
+    "vault",
     "voice_effects",
 )
 

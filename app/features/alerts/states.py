@@ -28,7 +28,14 @@ async def _ai_no_key(owner_id: int) -> bool:
     return bool(settings and settings["enabled"]) and not ai.is_configured()
 
 
+async def _data_key_missing(owner_id: int) -> bool:
+    from app.features.vault.service import failed_owners
+
+    return owner_id in failed_owners
+
+
 CHECKS = {
+    "data_key_missing": _data_key_missing,
     "mirror_not_running": _mirror_not_running,
     "emoji_access_revoked": _emoji_access_revoked,
     "ai_no_key": _ai_no_key,

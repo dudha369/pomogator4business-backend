@@ -12,6 +12,7 @@ from app.features.emoji_clock.bot import run_emoji_clock
 from app.features.mirror.manager import mirror_dispatcher, mirror_manager
 from app.features.reminders.bot import run_reminders_loop
 from app.features.scheduled.service import run_scheduled_loop
+from app.features.vault import service as vault
 from app.platform.api import setup_routers
 from app.platform.loader import load_commands
 from app.platform.logging_config import configure_logging
@@ -58,6 +59,8 @@ async def lifespan(app: FastAPI):
 
     load_commands()
     await Tortoise.init(config=TORTOISE_ORM)
+    # неисправные ключи шифрования = приложение не стартует (Render оставит прежнюю версию)
+    await vault.startup_check()
 
     await _set_webhook()
 

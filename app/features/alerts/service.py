@@ -9,6 +9,19 @@ from app.features.alerts.catalog import (
     spec_for,
 )
 from app.features.alerts.models import Alert, AlertMute
+from app.features.vault import service as vault
+
+TABLE = "alerts"
+
+
+async def _open(alert: Alert | None) -> Alert | None:
+    """Расшифровывает `details` у загруженной строки (в БД они — шифротекст)."""
+    if alert is not None and alert.enc_ver is not None:
+        row = await vault.open_row(
+            TABLE, alert.owner_id, {"details": alert.details, "enc_ver": alert.enc_ver}
+        )
+        alert.details = row["details"] or {}
+    return alert
 
 
 def clean_details(details: dict) -> dict[str, str]:
@@ -35,19 +48,25 @@ async def record(
 
     now = int(time.time()) if now is None else now
     details = clean_details(details)
+    # при сбое шифрования подробности не пишем (открытый текст в БД не попадает)
+    sealed = await vault.seal_values(TABLE, owner_id, {"details": details}) or {
+        "details": {}
+    }
     alert, created = await Alert.get_or_create(
         owner_id=owner_id,
         code=code,
         defaults={
             "kind": spec.kind,
-            "details": details,
             "created_at": now,
             "last_at": now,
             "notified_at": now,
+            **sealed,
         },
     )
     if created:
+        alert.details = details
         return alert
+    await _open(alert)
 
     due = now - alert.notified_at >= cooldown_seconds(code)
     if spec.kind == "state" and not due:
@@ -55,13 +74,15 @@ async def record(
     # счётчик без атомарности: гонка двух повторов может ошибиться на единицу — не важно
     alert.count += 1
     alert.last_at = now
-    alert.details = details
-    fields = ["count", "last_at", "details"]
+    alert.details = sealed["details"]
+    alert.enc_ver = sealed.get("enc_ver")
+    fields = ["count", "last_at", "details", "enc_ver"]
     if due:
         alert.notified_at = now
         alert.dismissed = False
         fields += ["notified_at", "dismissed"]
     await alert.save(update_fields=fields)
+    alert.details = details
     return alert if due else None
 
 
@@ -78,6 +99,7 @@ async def list_active(owner_id: int) -> list[Alert]:
     rows = await Alert.filter(owner_id=owner_id).order_by("-last_at")
     result = []
     for row in rows:
+        await _open(row)
         if row.kind == "state" and not await still_active(owner_id, row.code):
             await row.delete()
         elif not row.dismissed:
@@ -86,7 +108,7 @@ async def list_active(owner_id: int) -> list[Alert]:
 
 
 async def get_alert(owner_id: int, alert_id: int) -> Alert | None:
-    return await Alert.filter(owner_id=owner_id, id=alert_id).first()
+    return await _open(await Alert.filter(owner_id=owner_id, id=alert_id).first())
 
 
 async def dismiss(owner_id: int, alert_id: int) -> bool:
