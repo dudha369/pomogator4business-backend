@@ -51,6 +51,20 @@ class Settings(BaseSettings):
     # сколько строк history за проход очистки избавлять от ненужного raw_json (0 = выключено)
     RAW_JSON_SCRUB_BATCH: int = 2000
 
+    # Linkscan (app/features/linkscan): провайдеры без ключа пропускаются
+    URLHAUS_AUTH_KEY: str = ""  # бесплатный ключ abuse.ch (auth.abuse.ch)
+    SAFE_BROWSING_API_KEY: str = (
+        ""  # Google Safe Browsing v4 (только некоммерческое использование)
+    )
+    # VirusTotal (ключ — VT_API_KEY выше): публичный API 4/мин, 500/сутки, только некоммерческий.
+    # Для публичного сервиса выключить: LINKSCAN_VT_ENABLED=false
+    LINKSCAN_VT_ENABLED: bool = True
+    LINKSCAN_VT_DAILY_LIMIT: int = (
+        400  # с запасом: тот же ключ использует команда .check
+    )
+    LINKSCAN_CACHE_TTL_HOURS: float = 24
+    LINKSCAN_MAX_LINKS: int = 5  # ссылок из одного сообщения
+
     AI_API_KEY: str = ""
     AI_MODEL: str = "claude-haiku-5-5"
     AI_API_URL: str = "https://api.anthropic.com/v1/messages"
@@ -120,6 +134,7 @@ TORTOISE_ORM = {
                 "app.features.scheduled.models",
                 "app.features.games.models",
                 "app.features.alerts.models",
+                "app.features.linkscan.models",
                 "aerich.models",
             ],
             "default_connection": "default",

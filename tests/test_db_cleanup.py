@@ -177,4 +177,4 @@ def test_platform_retention_has_no_feature_queries():
 
 def test_retention_modules_live_in_features():
     owners = [f for f in FEATURES if feature_module(f, "retention")]
-    assert set(owners) == {"ai", "archive", "autoresponder", "history"}
+    assert set(owners) == {"ai", "archive", "autoresponder", "history", "linkscan"}

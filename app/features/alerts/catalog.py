@@ -14,6 +14,8 @@ from config import settings
 class AlertSpec:
     kind: Literal["event", "state"]
     cooldown_hours: float | None = None  # None — `ALERT_COOLDOWN_HOURS` из настроек
+    # текст в HTML (в шаблонах можно `<code>`); значения из details экранируются при отправке
+    html: bool = False
 
 
 CATALOG: dict[str, AlertSpec] = {
@@ -22,6 +24,9 @@ CATALOG: dict[str, AlertSpec] = {
     "mirror_not_running": AlertSpec("state"),
     "emoji_access_revoked": AlertSpec("state"),
     "ai_no_key": AlertSpec("state"),
+    "dangerous_link": AlertSpec("event", html=True),
+    "dangerous_file": AlertSpec("event", html=True),
+    "file_unchecked": AlertSpec("event", html=True),
 }
 
 MAX_CODE_LEN = 64

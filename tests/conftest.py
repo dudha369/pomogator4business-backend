@@ -120,10 +120,14 @@ class FakeBot:
     async def get_file(self, file_id):
         return types.SimpleNamespace(file_path=f"files/{file_id}")
 
-    async def download_file(self, file_path):
+    async def download_file(self, file_path, destination=None, **kwargs):
         import io
 
-        return io.BytesIO(b"bytes:" + file_path.encode())
+        data = b"bytes:" + file_path.encode()
+        if destination is None:
+            return io.BytesIO(data)
+        destination.write(data)  # как aiogram: пишет в переданный приёмник
+        destination.seek(0)
 
     async def _send_media(self, kind, **kwargs):
         self._check(f"send_{kind}", kwargs)

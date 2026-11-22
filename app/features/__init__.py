@@ -22,6 +22,7 @@ FEATURES = (
     "emoji_clock",
     "games",
     "history",
+    "linkscan",
     "miniapp",
     "mirror",
     "mute",

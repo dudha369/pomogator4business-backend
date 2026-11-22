@@ -8,6 +8,7 @@ from app.features.archive.bot import router as archive_router
 from app.features.connection.bot import router as connection_router
 from app.features.games.bot import router as games_router
 from app.features.history.outgoing import install_outgoing_recorder
+from app.features.linkscan.bot import router as linkscan_router
 from app.features.mirror.bot import router as mirror_router
 from app.features.settings.bot import router as settings_router
 from app.platform.telegram.dm import router as bot_commands_router
@@ -32,6 +33,9 @@ def setup_routes() -> Dispatcher:
 
     dp.include_router(connection_router)
     dp.include_router(business_messages_router)
+    dp.include_router(
+        linkscan_router
+    )  # до архива: смотрит правки, ничего не перехватывая
     dp.include_router(archive_router)
     dp.include_router(alerts_router)
     dp.include_router(mirror_router)

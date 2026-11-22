@@ -1,7 +1,7 @@
 """Бизнес-сообщения: цепочка middleware + диспетчер команд.
 
 Порядок регистрации = порядок обработки (прежний конвейер):
-  контекст (outer) → журнал владельца → спасение медиа → история → расшифровка голосовых →
+  контекст (outer) → журнал владельца → спасение медиа → история → проверка ссылок (фон) → расшифровка голосовых →
   эффект голосовых → новый контакт → mute → автоответчик → эхо → type-триггеры → команда.
 Шаги живут рядом со своей логикой; здесь только их порядок."""
 
@@ -11,6 +11,7 @@ from app.features.archive.bot.transcript import voice_transcript
 from app.features.autoresponder.bot import autoresponder_step
 from app.features.echo.bot import echo_step
 from app.features.history.bot import record_history, rescue_replied_media
+from app.features.linkscan.bot import linkscan_step
 from app.features.mute.bot import mute_gate
 from app.features.voice_effects.bot import voice_step
 from app.platform.telegram.dispatch import dispatch_command
@@ -22,6 +23,7 @@ STEPS = (
     owner_journal,
     rescue_replied_media,
     record_history,
+    linkscan_step,
     voice_transcript,
     voice_step,
     new_contact_step,
