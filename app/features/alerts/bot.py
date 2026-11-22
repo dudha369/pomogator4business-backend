@@ -1,12 +1,13 @@
 """Единая точка `report()` и кнопки под сообщением-предупреждением."""
 
+import html
 import logging
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.features.alerts import service
-from app.features.alerts.catalog import base_code
+from app.features.alerts.catalog import base_code, spec_for
 from app.features.alerts.models import Alert
 from app.platform.i18n import t
 from db.models.user_locale import get_locale
@@ -36,16 +37,36 @@ def _main_bot():
 
 def render_text(alert: Alert, locale: str) -> str:
     base = base_code(alert.code)
+    details = alert.details
+    if spec_for(alert.code).html:  # значения приходят из чужих сообщений: экранируем
+        details = {k: html.escape(v, quote=False) for k, v in details.items()}
     return (
-        t(f"alert.{base}.title", locale, **alert.details)
+        t(f"alert.{base}.title", locale, **details)
         + "\n\n"
-        + t(f"alert.{base}.text", locale, **alert.details)
+        + t(f"alert.{base}.text", locale, **details)
     )
 
 
-def keyboard(alert_id: int, locale: str) -> InlineKeyboardMarkup:
+def _message_row(details: dict, locale: str) -> list:
+    """«Перейти к сообщению» — как под уведомлениями архива. Нужны `msg_id` (и `username`)."""
+    if not str(details.get("msg_id", "")).isdigit():
+        return []
+    from app.features.archive.bot.keyboards import (
+        link_keyboard,
+    )  # лениво: цикл импортов
+
+    markup = link_keyboard(
+        locale, details.get("username") or None, int(details["msg_id"])
+    )
+    return markup.inline_keyboard
+
+
+def keyboard(
+    alert_id: int, locale: str, details: dict | None = None
+) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            *_message_row(details or {}, locale),
             [
                 InlineKeyboardButton(
                     text=t("alert.btn.ok", locale),
@@ -55,7 +76,7 @@ def keyboard(alert_id: int, locale: str) -> InlineKeyboardMarkup:
                     text=t("alert.btn.mute", locale),
                     callback_data=f"{_PREFIX}:mute:{alert_id}",
                 ),
-            ]
+            ],
         ]
     )
 
@@ -66,8 +87,8 @@ async def _notify(alert: Alert) -> None:
         await _main_bot().send_message(
             chat_id=alert.owner_id,
             text=render_text(alert, locale),
-            reply_markup=keyboard(alert.id, locale),
-            parse_mode=None,
+            reply_markup=keyboard(alert.id, locale, alert.details),
+            parse_mode="HTML" if spec_for(alert.code).html else None,
         )
     except Exception as error:  # владелец мог заблокировать бота: это не наша авария
         logger.warning("Предупреждение %s не доставлено: %s", alert.code, error)

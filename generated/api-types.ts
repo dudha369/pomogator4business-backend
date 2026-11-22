@@ -511,6 +511,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/linkscan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Linkscan */
+        get: operations["get_linkscan_api_linkscan_get"];
+        put?: never;
+        /** Update Linkscan */
+        post: operations["update_linkscan_api_linkscan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locale": {
         parameters: {
             query?: never;
@@ -1537,6 +1555,35 @@ export interface components {
             keyword: string;
             /** Reply Text */
             reply_text: string;
+        };
+        /** LinkscanOut */
+        LinkscanOut: {
+            /** Chats */
+            chats: number[];
+            /** Enabled */
+            enabled: boolean;
+            /** External */
+            external: boolean;
+            /** Providers */
+            providers: {
+                [key: string]: boolean;
+            };
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "all" | "selected";
+        };
+        /** LinkscanUpdate */
+        LinkscanUpdate: {
+            /** Chats */
+            chats?: number[] | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** External */
+            external?: boolean | null;
+            /** Scope */
+            scope?: ("all" | "selected") | null;
         };
         /** LocaleOut */
         LocaleOut: {
@@ -2981,6 +3028,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_linkscan_api_linkscan_get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkscanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_linkscan_api_linkscan_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkscanUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkscanOut"];
                 };
             };
             /** @description Validation Error */

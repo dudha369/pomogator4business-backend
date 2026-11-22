@@ -34,6 +34,7 @@ def test_steps_order_is_preserved():
         "owner_journal",
         "rescue_replied_media",  # спасение — до записи самого сообщения
         "record_history",
+        "linkscan_step",  # в фоне, цепочку не держит
         "voice_transcript",  # после записи: дописывает текст в сохранённую строку
         "voice_step",
         "new_contact_step",
