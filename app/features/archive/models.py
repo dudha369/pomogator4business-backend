@@ -14,7 +14,7 @@ class ArchiveLog(Model):
     new_text = fields.TextField(null=True)
     media_type = fields.CharField(max_length=16, null=True)
     media_mime = fields.CharField(max_length=255, null=True)
-    media_name = fields.CharField(max_length=255, null=True)
+    media_name = fields.TextField(null=True)
     media_status = fields.CharField(max_length=16, null=True)
     media_data = fields.BinaryField(null=True)
     kind = fields.CharField(max_length=24, null=True)
@@ -26,6 +26,8 @@ class ArchiveLog(Model):
     new_snapshot = fields.JSONField(null=True)
     # id сообщения-уведомления в чате с ботом: его правим, а не шлём новое
     notice_message_id = fields.BigIntField(null=True)
+    # версия ключа данных; NULL — открытая запись (до шифрования), см. app/features/vault
+    enc_ver = fields.SmallIntField(null=True)
     created_at = fields.BigIntField()
 
     class Meta:

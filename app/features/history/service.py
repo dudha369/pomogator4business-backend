@@ -9,6 +9,17 @@ from app.features.history.snapshot import (
     MAX_DOWNLOAD_BYTES,
     SNAPSHOT_COLUMNS,
 )
+from app.features.vault import service as vault
+from app.features.vault.backfill import seal_legacy
+from app.features.vault.tables import TABLES
+
+TABLE = "message_history"
+# колонки с содержимым (шифруются); остальное — метаданные, лежат открыто
+CONTENT = tuple(TABLES[TABLE].columns)
+
+
+async def _open(connection_id, rows):
+    return await vault.open_by_connection(TABLE, connection_id, rows)
 
 
 async def save_history(
@@ -44,45 +55,71 @@ async def save_history(
             media_status = "failed"
 
     snap_values = {c: snapshot[c] for c in SNAPSHOT_COLUMNS if c in snapshot}
+    content = {
+        "text": text,
+        "media_data": media_data,
+        "media_name": media_name,
+        **{c: v for c, v in snap_values.items() if c in CONTENT},
+    }
+    owner_id = await vault.owner_of(connection_id) if vault.enabled() else None
+    sealed = await vault.seal_values(TABLE, owner_id, content)
+    if sealed is None:  # шифрование сломалось: метаданные сохраняем, содержимое — нет
+        sealed = dict.fromkeys(content)
+    plain = {c: v for c, v in snap_values.items() if c not in CONTENT}
     obj, created = await MessageHistory.get_or_create(
         connection_id=connection_id,
         chat_id=chat_id,
         message_id=message_id,
         defaults={
             "is_owner": bool(is_owner),
-            "text": text,
             "media_type": media_type,
-            "media_data": media_data,
             "media_mime": media_mime,
-            "media_name": media_name,
             "media_status": media_status,
             "created_at": created_at,
-            **snap_values,
+            **plain,
+            **sealed,
         },
     )
-    if not created:
-        obj.text = text
-        update_fields = ["text"]
-        if media_type is not None:
-            obj.media_type = media_type
-            obj.media_mime = media_mime
-            obj.media_name = media_name
-            obj.media_status = media_status
-            update_fields += ["media_type", "media_mime", "media_name", "media_status"]
-
-            if media_data is not None:
-                obj.media_data = media_data
-                update_fields.append("media_data")
-        for column, value in snap_values.items():
-            setattr(obj, column, value)
-        update_fields += list(snap_values)
-        await obj.save(update_fields=update_fields)
+    if created:
+        return
+    if vault.enabled():
+        if "enc_ver" not in sealed:
+            return  # шифрование сломалось: сохранённое не затираем
+        if obj.enc_ver is None:
+            # открытая строка: сначала целиком в шифротекст, иначе в строке смешаются виды
+            await seal_legacy(TABLE, id=obj.id)
+            obj = await MessageHistory.get(id=obj.id)
+            if obj.enc_ver is None:
+                return
+    update_fields = ["text"]
+    if media_type is not None:
+        obj.media_type = media_type
+        obj.media_mime = media_mime
+        obj.media_status = media_status
+        update_fields += ["media_type", "media_mime", "media_name", "media_status"]
+        if media_data is not None:
+            update_fields.append("media_data")
+    for column in (*update_fields, *snap_values):
+        value = (
+            sealed[column]
+            if column in sealed
+            else (
+                snap_values[column] if column in snap_values else getattr(obj, column)
+            )
+        )
+        setattr(obj, column, value)
+    update_fields += [c for c in snap_values if c not in update_fields]
+    if "enc_ver" in sealed:
+        obj.enc_ver = sealed["enc_ver"]
+        update_fields.append("enc_ver")
+    await obj.save(update_fields=update_fields)
 
 
 async def get_history_text(connection_id, chat_id, message_id):
     rows = await MessageHistory.filter(
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
-    ).values("text")
+    ).values("text", "enc_ver")
+    rows = await _open(connection_id, rows)
     return rows[0]["text"] if rows else None
 
 
@@ -90,18 +127,33 @@ async def get_history_entry(connection_id, chat_id, message_id):
     rows = await MessageHistory.filter(
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
     ).values()
-    return rows[0] if rows else None
+    return (await _open(connection_id, rows))[0] if rows else None
 
 
 async def set_history_transcript(connection_id, chat_id, message_id, text):
-    await MessageHistory.filter(
-        connection_id=connection_id, chat_id=chat_id, message_id=message_id
-    ).update(transcript=text)
+    where = {
+        "connection_id": connection_id,
+        "chat_id": chat_id,
+        "message_id": message_id,
+    }
+    if vault.enabled():
+        await seal_legacy(TABLE, **where)
+        sealed = await vault.seal_values(
+            TABLE, await vault.owner_of(connection_id), {"transcript": text}
+        )
+        if sealed is None:
+            return
+        await MessageHistory.filter(**where, enc_ver__not_isnull=True).update(**sealed)
+        await MessageHistory.filter(**where, enc_ver__isnull=True).update(
+            transcript=text
+        )
+        return
+    await MessageHistory.filter(**where).update(transcript=text)
 
 
 async def list_album(connection_id, chat_id, media_group_id):
     """Сообщения одного альбома, которые ещё лежат в истории (старые первыми)."""
-    return await (
+    rows = await (
         MessageHistory.filter(
             connection_id=connection_id,
             chat_id=chat_id,
@@ -110,6 +162,7 @@ async def list_album(connection_id, chat_id, media_group_id):
         .order_by("message_id")
         .values()
     )
+    return await _open(connection_id, rows)
 
 
 async def delete_history(connection_id, chat_id, message_id):
@@ -138,11 +191,12 @@ async def get_recent_history(connection_id, chat_id, limit):
             "message_id",
             "is_owner",
             "text",
+            "enc_ver",
             "media_type",
             "created_at",
         )
     )
-    return list(reversed(rows))
+    return list(reversed(await _open(connection_id, rows)))
 
 
 async def list_last_incoming_by_chat(connection_id):
@@ -238,9 +292,9 @@ async def list_chat_history(connection_id, chat_id, limit):
         await MessageHistory.filter(connection_id=connection_id, chat_id=chat_id)
         .order_by("-created_at", "-message_id")
         .limit(limit)
-        .values("message_id", "is_owner", "text", "created_at")
+        .values("message_id", "is_owner", "text", "enc_ver", "created_at")
     )
-    return list(reversed(rows))
+    return list(reversed(await _open(connection_id, rows)))
 
 
 async def last_owner_message_at(connection_id, chat_id):
@@ -275,8 +329,8 @@ async def expire_history_media(older_than_ts):
 async def get_history_media(connection_id, chat_id, message_id):
     rows = await MessageHistory.filter(
         connection_id=connection_id, chat_id=chat_id, message_id=message_id
-    ).values("media_type", "media_data", "media_mime", "media_name")
-    return rows[0] if rows else None
+    ).values("media_type", "media_data", "media_mime", "media_name", "enc_ver")
+    return (await _open(connection_id, rows))[0] if rows else None
 
 
 async def list_media_flags(connection_id, pairs):
@@ -297,7 +351,9 @@ async def list_media_flags(connection_id, pairs):
         "media_mime",
         "media_name",
         "media_status",
+        "enc_ver",
     )
+    rows = await _open(connection_id, rows)
     with_data = set(
         await base.filter(media_data__not_isnull=True).values_list(
             "chat_id", "message_id"

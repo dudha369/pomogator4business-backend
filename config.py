@@ -33,6 +33,16 @@ class Settings(BaseSettings):
     # пауза между одинаковыми предупреждениями владельцу (код из app/features/alerts/catalog.py)
     ALERT_COOLDOWN_HOURS: float = 6
 
+    # Шифрование содержимого в БД (app/features/vault). Мастер-ключи: «версия:base64url»
+    # через запятую, первый — активный: `2:<ключ>,1:<старый ключ>`. Сгенерировать:
+    # `uv run python scripts/gen_master_key.py`. КОПИЮ хранить вне Render: потеряв ключ,
+    # данные не восстановить. Пусто — шифрование выключено (только пока в БД нет шифротекста).
+    DATA_MASTER_KEYS: str = ""
+    # сколько последних записей архива просматривает поиск (шифротекст в SQL не ищется)
+    ARCHIVE_SEARCH_SCAN: int = 3000
+    # потолок строк на таблицу за один проход фонового шифрования старых данных
+    VAULT_BACKFILL_MAX: int = 20000
+
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
     # Какие типы файлов показывать в Rich. Голосовые по умолчанию обычные: на iPhone
@@ -135,6 +145,7 @@ TORTOISE_ORM = {
                 "app.features.games.models",
                 "app.features.alerts.models",
                 "app.features.linkscan.models",
+                "app.features.vault.models",
                 "aerich.models",
             ],
             "default_connection": "default",

@@ -46,7 +46,10 @@ async def test_first_report_notifies_and_repeat_waits(database):
         await service.record(OWNER_ID, "no_delete_right", {"name": "B"}, now=NOW + 60)
         is None
     )
-    row = await Alert.get(owner_id=OWNER_ID, code="no_delete_right")
+    stored = await Alert.get(owner_id=OWNER_ID, code="no_delete_right")
+    row = await service.get_alert(
+        OWNER_ID, stored.id
+    )  # details в БД могут быть шифротекстом
     assert (row.count, row.details) == (2, {"name": "B"})  # событие считает повторы
 
     again = await service.record(
@@ -262,9 +265,9 @@ async def test_start_all_reports_broken_mirror(database, alerts_bot):
 
     await save_mirror(OWNER_ID, b"not-a-token", 1, "m", NOW)
     await MirrorManager().start_all()
-    assert (await Alert.get(code="mirror_not_running")).details == {
-        "reason": "token_invalid"
-    }
+    stored = await Alert.get(code="mirror_not_running")
+    row = await service.get_alert(OWNER_ID, stored.id)
+    assert row.details == {"reason": "token_invalid"}
 
 
 async def test_connect_mirror_resolves_state(database, monkeypatch):

@@ -17,6 +17,7 @@ import pytest_asyncio
 from tortoise import Tortoise
 
 import bot_instance
+from app.features.vault import service as vault
 from app.platform.loader import load_commands
 from app.platform.ttl_cache import clear_all
 from config import TORTOISE_ORM
@@ -34,6 +35,8 @@ async def on_business_message(message, bot):
     return await router.propagate_event("business_message", message, bot=bot)
 
 
+# 32 нулевых байта в base64url: только для тестов
+TEST_MASTER_KEYS = "1:" + "A" * 43
 OWNER_ID = 42
 CONNECTION_ID = "conn-1"
 NOW = 1_800_000_000
@@ -50,7 +53,10 @@ async def database():
         )
     await Tortoise.generate_schemas()
     clear_all()  # кэш настроек не должен переживать пересозданную БД
+    # TEST_VAULT=1 прогоняет ВЕСЬ набор с включённым шифрованием содержимого
+    vault.configure(TEST_MASTER_KEYS if os.environ.get("TEST_VAULT") else "")
     yield
+    vault.configure("")
     clear_all()
     await Tortoise.close_connections()
 

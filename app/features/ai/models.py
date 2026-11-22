@@ -23,6 +23,7 @@ class AiDraft(Model):
     chat_id = fields.BigIntField()
     source_message_id = fields.BigIntField()
     text = fields.TextField()
+    enc_ver = fields.SmallIntField(null=True)  # см. app/features/vault
     created_at = fields.BigIntField()
     status = fields.CharField(
         max_length=16, default="pending"
