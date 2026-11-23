@@ -203,7 +203,11 @@ async def rotate_owner_key(owner_id: int) -> int:
 
 
 async def owner_of(connection_id) -> int | None:
+    from app.platform.sources import userbot_owner
     from db.models.connection import get_connection
+
+    if (owner := userbot_owner(connection_id)) is not None:
+        return owner
 
     row = await get_connection(connection_id)
     return row["owner_id"] if row else None

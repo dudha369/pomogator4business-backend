@@ -12,6 +12,7 @@ from app.features.emoji_clock.bot import run_emoji_clock
 from app.features.mirror.manager import mirror_dispatcher, mirror_manager
 from app.features.reminders.bot import run_reminders_loop
 from app.features.scheduled.service import run_scheduled_loop
+from app.features.userbot.manager import manager as userbot_manager
 from app.features.vault import service as vault
 from app.platform.api import setup_routers
 from app.platform.loader import load_commands
@@ -70,6 +71,7 @@ async def lifespan(app: FastAPI):
     _background_tasks.append(asyncio.create_task(run_scheduled_loop(bot)))
 
     await mirror_manager.start_all()
+    _background_tasks.append(asyncio.create_task(userbot_manager.run()))
 
     yield
 

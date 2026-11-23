@@ -7,6 +7,7 @@ import logging
 import time
 
 from app.features.history.adapter import build_snapshot
+from app.features.history.ingest import ingest
 from app.features.history.service import get_history_entry, save_history
 from app.platform.media import extract_history_media, extract_media_from_reply
 from app.platform.telegram.incoming import Incoming
@@ -93,14 +94,15 @@ async def record_history(handler, message, data):
             )
 
     if inc.text is not None or snapshot is not None:
-        await save_history(
-            inc.connection_id,
-            inc.chat_id,
-            message.message_id,
-            inc.is_owner,
-            inc.text,
-            int(message.date.timestamp()) if message.date else int(time.time()),
+        await ingest(
+            source="bot",
+            connection_id=inc.connection_id,
+            chat_id=inc.chat_id,
+            message_id=message.message_id,
+            is_owner=inc.is_owner,
+            text=inc.text,
+            ts=int(message.date.timestamp()) if message.date else int(time.time()),
             snapshot=snapshot,
-            **media_fields(media),
+            media=media_fields(media),
         )
     return await handler(message, data)

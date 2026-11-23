@@ -33,6 +33,7 @@ FEATURES = (
     "stats",
     "story",
     "templates",
+    "userbot",
     "vault",
     "voice_effects",
 )

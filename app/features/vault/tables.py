@@ -69,5 +69,12 @@ TABLES: dict[str, Table] = {
             {"text": TEXT},
             "connection_id",
         ),
+        Table(
+            "userbot_sessions",
+            "app.features.userbot.models:UserbotSession",
+            "owner_id",
+            {"session": TEXT},
+            "owner_id",
+        ),
     )
 }

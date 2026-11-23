@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     # потолок строк на таблицу за один проход фонового шифрования старых данных
     VAULT_BACKFILL_MAX: int = 20000
 
+    # Юзербот (app/features/userbot): один api_id приложения на всех. Получить на
+    # my.telegram.org → API development tools. Не заданы — юзербот выключен.
+    TELEGRAM_API_ID: int = 0
+    TELEGRAM_API_HASH: str = ""
+
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
     # Какие типы файлов показывать в Rich. Голосовые по умолчанию обычные: на iPhone
@@ -106,6 +111,10 @@ class Settings(BaseSettings):
     def WEBHOOK_SECRET(self) -> str:
         return self.WEBHOOK_SECRET_RAW or _derive_webhook_secret(self.BOT_TOKEN)
 
+    @property
+    def USERBOT_CONFIGURED(self) -> bool:
+        return bool(self.TELEGRAM_API_ID and self.TELEGRAM_API_HASH)
+
     @computed_field
     @property
     def CORS_ORIGINS(self) -> list[str]:
@@ -146,6 +155,7 @@ TORTOISE_ORM = {
                 "app.features.alerts.models",
                 "app.features.linkscan.models",
                 "app.features.vault.models",
+                "app.features.userbot.models",
                 "aerich.models",
             ],
             "default_connection": "default",

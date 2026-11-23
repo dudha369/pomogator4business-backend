@@ -2381,6 +2381,63 @@
         "title": "LocaleUpdate",
         "type": "object"
       },
+      "LoginIn": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "consent"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "LoginOut": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "qr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr"
+          },
+          "state": {
+            "enum": [
+              "starting",
+              "qr",
+              "password",
+              "done",
+              "error"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "qr",
+          "error"
+        ],
+        "title": "LoginOut",
+        "type": "object"
+      },
       "MessageCounts": {
         "properties": {
           "incoming": {
@@ -2547,6 +2604,21 @@
           "reply_time"
         ],
         "title": "OverviewOut",
+        "type": "object"
+      },
+      "PasswordIn": {
+        "properties": {
+          "password": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "PasswordIn",
         "type": "object"
       },
       "PingOut": {
@@ -3150,6 +3222,66 @@
           "outgoing"
         ],
         "title": "TopChat",
+        "type": "object"
+      },
+      "UserbotOut": {
+        "properties": {
+          "login": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoginOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "not_configured",
+                  "no_encryption"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "none",
+              "login",
+              "connecting",
+              "connected",
+              "revoked",
+              "removing"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "reason",
+          "status",
+          "username",
+          "login"
+        ],
+        "title": "UserbotOut",
         "type": "object"
       },
       "ValidationError": {
@@ -5978,6 +6110,180 @@
           }
         },
         "summary": "Delete Template"
+      }
+    },
+    "/api/userbot": {
+      "delete": {
+        "operationId": "disconnect_api_userbot_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserbotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disconnect"
+      },
+      "get": {
+        "operationId": "get_userbot_api_userbot_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserbotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Userbot"
+      }
+    },
+    "/api/userbot/login": {
+      "post": {
+        "operationId": "start_login_api_userbot_login_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserbotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Login"
+      }
+    },
+    "/api/userbot/login/password": {
+      "post": {
+        "operationId": "submit_password_api_userbot_login_password_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserbotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Password"
       }
     }
   }

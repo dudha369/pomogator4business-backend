@@ -34,7 +34,23 @@ async def _data_key_missing(owner_id: int) -> bool:
     return owner_id in failed_owners
 
 
+async def _userbot_disconnected(owner_id: int) -> bool:
+    from app.features.userbot.queries import get_info
+
+    info = await get_info(owner_id)
+    return bool(info and info["status"] == "active" and not info["connected"])
+
+
+async def _userbot_session_revoked(owner_id: int) -> bool:
+    from app.features.userbot.queries import get_info
+
+    info = await get_info(owner_id)
+    return bool(info and info["status"] == "revoked")
+
+
 CHECKS = {
+    "userbot_disconnected": _userbot_disconnected,
+    "userbot_session_revoked": _userbot_session_revoked,
     "data_key_missing": _data_key_missing,
     "mirror_not_running": _mirror_not_running,
     "emoji_access_revoked": _emoji_access_revoked,

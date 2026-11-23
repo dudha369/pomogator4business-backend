@@ -25,6 +25,8 @@ CATALOG: dict[str, AlertSpec] = {
     "emoji_access_revoked": AlertSpec("state"),
     "ai_no_key": AlertSpec("state"),
     "data_key_missing": AlertSpec("state"),
+    "userbot_disconnected": AlertSpec("state"),
+    "userbot_session_revoked": AlertSpec("state"),
     "dangerous_link": AlertSpec("event", html=True),
     "dangerous_file": AlertSpec("event", html=True),
     "file_unchecked": AlertSpec("event", html=True),
