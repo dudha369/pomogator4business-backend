@@ -30,6 +30,7 @@ CATALOG: dict[str, AlertSpec] = {
     "dangerous_link": AlertSpec("event", html=True),
     "dangerous_file": AlertSpec("event", html=True),
     "file_unchecked": AlertSpec("event", html=True),
+    "limit_reached": AlertSpec("event", cooldown_hours=24),
 }
 
 MAX_CODE_LEN = 64

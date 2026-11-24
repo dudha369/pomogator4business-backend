@@ -18,6 +18,7 @@ _ERROR_KEYS = {
     "invalid_format": "mirror.invalid_token_format",
     "connection_failed": "mirror.connection_failed",
     "start_failed": "mirror.start_failed",
+    "limit_reached": "mirror.limit_reached",
 }
 
 

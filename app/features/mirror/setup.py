@@ -4,6 +4,7 @@ import time
 from aiogram import Bot as AiogramBot
 
 from app.features.alerts import service as alerts
+from app.features.limits.bot import enforce
 from app.features.mirror.manager import MirrorStartError, mirror_manager
 from app.features.mirror.queries import save_mirror
 from app.platform.crypto import encrypt_token
@@ -13,7 +14,7 @@ _TOKEN_PATTERN = re.compile(r"^\d+:[A-Za-z0-9_-]{30,50}$")
 
 class MirrorSetupError(Exception):
     def __init__(self, code: str):
-        self.code = code  # "invalid_format" | "connection_failed" | "start_failed"
+        self.code = code  # "invalid_format" | "connection_failed" | "start_failed" | "limit_reached"
         super().__init__(code)
 
 
@@ -24,6 +25,10 @@ async def connect_mirror(owner_id: int, token: str) -> str:
     token = token.strip()
     if not _TOKEN_PATTERN.match(token):
         raise MirrorSetupError("invalid_format")
+    # зеркало одно на владельца (MirrorBot.owner_id — ключ) и заменяется новым,
+    # поэтому «уже подключённых, кроме заменяемого» всегда 0
+    if not await enforce(owner_id, "mirrors", current=0):
+        raise MirrorSetupError("limit_reached")
 
     test_bot = AiogramBot(token=token)
     try:

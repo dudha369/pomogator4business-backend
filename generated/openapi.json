@@ -2254,6 +2254,53 @@
         "title": "KeywordSaved",
         "type": "object"
       },
+      "LimitOut": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "metric": {
+            "title": "Metric",
+            "type": "string"
+          },
+          "period": {
+            "enum": [
+              "day",
+              "current",
+              "plan"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "used": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used"
+          }
+        },
+        "required": [
+          "metric",
+          "limit",
+          "used",
+          "period"
+        ],
+        "title": "LimitOut",
+        "type": "object"
+      },
       "LinkscanOut": {
         "properties": {
           "chats": {
@@ -2637,6 +2684,49 @@
           "server_time_ms"
         ],
         "title": "PingOut",
+        "type": "object"
+      },
+      "PlanOut": {
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          },
+          "limits": {
+            "items": {
+              "$ref": "#/components/schemas/LimitOut"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "plan": {
+            "title": "Plan",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan",
+          "source",
+          "expires_at",
+          "is_admin",
+          "limits"
+        ],
+        "title": "PlanOut",
         "type": "object"
       },
       "PrefixOut": {
@@ -5434,6 +5524,45 @@
           }
         },
         "summary": "Ping Deep"
+      }
+    },
+    "/api/plan": {
+      "get": {
+        "operationId": "get_plan_api_plan_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Plan"
       }
     },
     "/api/readall": {

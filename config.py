@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     # ограничение доступа к мини-приложению: id через запятую; пусто — доступ у всех
     ALLOWED_USER_IDS: str = ""
 
+    # владелец проекта: id через запятую; безлимитный план (app/features/limits)
+    ADMIN_USER_IDS: str = ""
+    # лимиты планов: `метрика=число,…` (-1 — без лимита), см. app/features/limits/plans.py;
+    # не названные метрики берут значения из кода
+    PLAN_LIMITS_FREE: str = ""
+    PLAN_LIMITS_PRO: str = ""
+    PLAN_LIMITS_MAX: str = ""
+
     # пауза между одинаковыми предупреждениями владельцу (код из app/features/alerts/catalog.py)
     ALERT_COOLDOWN_HOURS: float = 6
 
@@ -156,6 +164,7 @@ TORTOISE_ORM = {
                 "app.features.linkscan.models",
                 "app.features.vault.models",
                 "app.features.userbot.models",
+                "app.features.limits.models",
                 "aerich.models",
             ],
             "default_connection": "default",

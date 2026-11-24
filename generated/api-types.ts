@@ -632,6 +632,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Plan */
+        get: operations["get_plan_api_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/readall": {
         parameters: {
             query?: never;
@@ -1608,6 +1625,20 @@ export interface components {
             /** Reply Text */
             reply_text: string;
         };
+        /** LimitOut */
+        LimitOut: {
+            /** Limit */
+            limit: number | null;
+            /** Metric */
+            metric: string;
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "day" | "current" | "plan";
+            /** Used */
+            used: number | null;
+        };
         /** LinkscanOut */
         LinkscanOut: {
             /** Chats */
@@ -1734,6 +1765,19 @@ export interface components {
             ok: boolean;
             /** Server Time Ms */
             server_time_ms: number;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /** Expires At */
+            expires_at: number | null;
+            /** Is Admin */
+            is_admin: boolean;
+            /** Limits */
+            limits: components["schemas"]["LimitOut"][];
+            /** Plan */
+            plan: string;
+            /** Source */
+            source: string;
         };
         /** PrefixOut */
         PrefixOut: {
@@ -3395,6 +3439,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_api_plan_get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
                 };
             };
             /** @description Validation Error */

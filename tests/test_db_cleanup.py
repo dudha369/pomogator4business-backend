@@ -182,6 +182,7 @@ def test_retention_modules_live_in_features():
         "archive",
         "autoresponder",
         "history",
+        "limits",
         "linkscan",
         "vault",
     }

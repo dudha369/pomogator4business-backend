@@ -8,6 +8,7 @@ from aiogram import Router
 from aiogram.exceptions import TelegramBadRequest
 
 from app.features.alerts.bot import report
+from app.features.limits.bot import enforce
 from app.features.linkscan import queries, service
 from app.features.linkscan.local import (
     TRUSTED_HOSTS,
@@ -55,6 +56,14 @@ async def scan_edited(bot, message) -> None:
         await scan_message(bot, connection["owner_id"], message)
 
 
+async def _within_limit(owner_id: int, providers):
+    """Внешние сервисы или (), если суточный лимит тарифа исчерпан: проверки внутри бота
+    (без сети) продолжают работать. Считается один опрос внешних сервисов."""
+    if not any(p.enabled() for p in providers):
+        return providers
+    return providers if await enforce(owner_id, "linkscan_checks_day") else ()
+
+
 async def scan_message(bot, owner_id: int, message) -> None:
     cfg = await queries.get_settings(owner_id)
     if not cfg["enabled"]:
@@ -76,7 +85,8 @@ async def scan_message(bot, owner_id: int, message) -> None:
     for link in extract_links(text, entities, settings.LINKSCAN_MAX_LINKS):
         verdict = assess_link(link)
         if link.host not in TRUSTED_HOSTS:
-            verdict = await service.scan("url", link.url, verdict, providers)
+            external = await _within_limit(owner_id, providers)
+            verdict = await service.scan("url", link.url, verdict, external)
         if verdict.level >= ALERT_LEVEL:
             details = service.link_details(link, verdict, sender, ref, locale)
             await report(owner_id, f"{service.LINK_CODE}:{link.host[:48]}", **details)
@@ -122,6 +132,8 @@ async def _scan_document(owner_id, bot, document, providers, sender, ref, locale
     verdict = assess_file(name)
     sha256 = ""
     too_big = (document.file_size or 0) > MAX_FILE_BYTES
+    if not too_big:  # слишком большой файл всё равно не скачать: лимит не тратим
+        providers = await _within_limit(owner_id, providers)
     if any(p.enabled() for p in providers) and not too_big:
         sha256 = await _sha256_of(bot, document.file_id) or ""
         too_big = not sha256

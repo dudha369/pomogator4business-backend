@@ -46,6 +46,8 @@ async def api_connect_mirror(
     except MirrorSetupError as exc:
         if exc.code == "start_failed":
             raise HTTPException(status_code=503, detail="start_failed") from exc
+        if exc.code == "limit_reached":
+            raise HTTPException(status_code=403, detail="limit_reached") from exc
         detail = (
             "invalid_format" if exc.code == "invalid_format" else "connection_failed"
         )
