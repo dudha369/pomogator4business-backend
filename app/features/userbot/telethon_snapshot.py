@@ -131,3 +131,53 @@ def build_snapshot(message) -> dict | None:
 
 def message_ts(message) -> int:
     return int(message.date.timestamp())
+
+
+def chat_kind(chat) -> str:
+    """Вид чата по типу объекта Telethon (User / Chat / Channel)."""
+    name = type(chat).__name__
+    if name == "User":
+        return "private"
+    if name == "Channel":
+        return "supergroup" if getattr(chat, "megagroup", False) else "channel"
+    return "group"
+
+
+def display_name(entity) -> str | None:
+    """Название чата или имя человека."""
+    title = getattr(entity, "title", None)
+    if title:
+        return title
+    parts = [getattr(entity, "first_name", None), getattr(entity, "last_name", None)]
+    return " ".join(p for p in parts if p) or None
+
+
+def ub_message(message, chat, sender, download=None):
+    """Сообщение Telethon -> `UbMessage` (None, если хранить нечего)."""
+    from app.features.userbot.ub_types import UbChat, UbMessage
+
+    snap = build_snapshot(message)
+    if snap is None:
+        return None
+    media = getattr(message, "media", None)
+    inner = getattr(media, "document", None) or getattr(media, "photo", None)
+    if getattr(inner, "id", None) is not None:
+        # без него «замену файла при правке» не заметить (у юзербота нет file_unique_id)
+        snap["file_unique_id"] = str(inner.id)
+    ub_chat = UbChat(
+        id=message.chat_id,
+        kind=chat_kind(chat),
+        title=display_name(chat),
+        username=getattr(chat, "username", None),
+    )
+    return UbMessage(
+        chat=ub_chat,
+        message_id=message.id,
+        ts=message_ts(message),
+        is_out=bool(getattr(message, "out", False)),
+        snapshot=snap,
+        sender_id=getattr(sender, "id", None),
+        sender_name=display_name(sender) if sender is not None else None,
+        sender_username=getattr(sender, "username", None),
+        download=download,
+    )

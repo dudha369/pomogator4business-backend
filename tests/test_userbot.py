@@ -13,6 +13,7 @@ from tortoise import Tortoise
 
 from app.features.history.ingest import ingest
 from app.features.history.models import MessageHistory
+from app.features.history.rules import set_rule
 from app.features.history.service import get_history_entry
 from app.features.userbot import lock as lockmod
 from app.features.userbot import login, queries, service
@@ -312,6 +313,12 @@ class FakeClient:
     async def wait_disconnected(self):
         await self._gone.wait()
 
+    async def listen(self, sink):
+        self.sink = sink
+
+    async def list_dialogs(self, limit):
+        return getattr(self, "dialogs", [])
+
     def session_changed(self):
         return self.changed
 
@@ -524,6 +531,7 @@ def snap(text="hello"):
 
 
 async def test_ingest_userbot_group_is_encrypted_under_owner(ub):
+    await set_rule(OWNER_ID, -100123, "supergroup", enabled=True)
     saved = await ingest(
         source="userbot",
         connection_id=UB_CONN,
@@ -557,6 +565,7 @@ async def test_ingest_userbot_skips_private_chat_when_business_covers(ub):
 
 
 async def test_ingest_userbot_private_chat_saved_without_business(ub):
+    await set_rule(OWNER_ID, 555, "private", enabled=True)
     saved = await ingest(
         source="userbot",
         connection_id=UB_CONN,

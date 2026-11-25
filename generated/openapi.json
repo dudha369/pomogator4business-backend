@@ -409,6 +409,28 @@
             "title": "Chat Id",
             "type": "integer"
           },
+          "chat_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Kind"
+          },
+          "chat_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Title"
+          },
           "connection_id": {
             "title": "Connection Id",
             "type": "string"
@@ -548,6 +570,25 @@
               }
             ],
             "title": "Old Text"
+          },
+          "sender_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender Name"
+          },
+          "source": {
+            "enum": [
+              "bot",
+              "userbot"
+            ],
+            "title": "Source",
+            "type": "string"
           }
         },
         "required": [
@@ -568,7 +609,11 @@
           "media_mime",
           "media_name",
           "media_status",
-          "media_available"
+          "media_available",
+          "source",
+          "chat_title",
+          "chat_kind",
+          "sender_name"
         ],
         "title": "ArchiveEntry",
         "type": "object"
@@ -1712,6 +1757,85 @@
           "deleted"
         ],
         "title": "Deleted",
+        "type": "object"
+      },
+      "DialogOut": {
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "private",
+              "group",
+              "supergroup",
+              "channel"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "members": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Members"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "username",
+          "members",
+          "archived"
+        ],
+        "title": "DialogOut",
+        "type": "object"
+      },
+      "DialogsOut": {
+        "properties": {
+          "dialogs": {
+            "items": {
+              "$ref": "#/components/schemas/DialogOut"
+            },
+            "title": "Dialogs",
+            "type": "array"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dialogs",
+          "has_more"
+        ],
+        "title": "DialogsOut",
         "type": "object"
       },
       "EmojiEnabledOut": {
@@ -2976,6 +3100,130 @@
         "title": "ReplyTime",
         "type": "object"
       },
+      "RuleIn": {
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "kind": {
+            "enum": [
+              "private",
+              "group",
+              "supergroup",
+              "channel"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "media_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Media Enabled"
+          },
+          "notify": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notify"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "RuleIn",
+        "type": "object"
+      },
+      "RuleOut": {
+        "properties": {
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "private",
+              "group",
+              "supergroup",
+              "channel"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "media_enabled": {
+            "title": "Media Enabled",
+            "type": "boolean"
+          },
+          "notify": {
+            "title": "Notify",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chat_id",
+          "kind",
+          "enabled",
+          "media_enabled",
+          "notify"
+        ],
+        "title": "RuleOut",
+        "type": "object"
+      },
+      "RulesOut": {
+        "properties": {
+          "groups_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Groups Limit"
+          },
+          "groups_used": {
+            "title": "Groups Used",
+            "type": "integer"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleOut"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "groups_used",
+          "groups_limit"
+        ],
+        "title": "RulesOut",
+        "type": "object"
+      },
       "SettingsOut": {
         "properties": {
           "modules": {
@@ -4213,6 +4461,103 @@
           }
         },
         "summary": "Export Archive"
+      }
+    },
+    "/api/archive/rules": {
+      "get": {
+        "operationId": "get_rules_api_archive_rules_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Rules"
+      }
+    },
+    "/api/archive/rules/{chat_id}": {
+      "put": {
+        "operationId": "put_rule_api_archive_rules__chat_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chat_id",
+            "required": true,
+            "schema": {
+              "title": "Chat Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Rule"
       }
     },
     "/api/archive/settings": {
@@ -6315,6 +6660,103 @@
           }
         },
         "summary": "Get Userbot"
+      }
+    },
+    "/api/userbot/dialogs": {
+      "get": {
+        "description": "Диалоги аккаунта для экрана выбора чатов. Живой запрос к Telegram (кэш пару\nминут): список нигде не хранится. Клиент работает в процессе с блокировкой, и в окне\nдеплоя этот процесс может быть другим — тогда 503, повторить через несколько секунд.",
+        "operationId": "get_dialogs_api_userbot_dialogs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(private|group|supergroup|channel)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DialogsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Dialogs"
       }
     },
     "/api/userbot/login": {

@@ -6,15 +6,17 @@
 
 import logging
 
-from telethon import TelegramClient, errors
+from telethon import TelegramClient, errors, events
 from telethon.sessions import StringSession
 
+from app.features.userbot import telethon_snapshot as snapshots
 from app.features.userbot.errors import (
     FloodWait,
     PasswordInvalid,
     PasswordNeeded,
     SessionRevoked,
 )
+from app.features.userbot.ub_types import UbDialog
 from config import settings
 
 logger = logging.getLogger("bot.userbot.telethon")
@@ -143,6 +145,77 @@ class RunningClient:
     @property
     def client(self) -> TelegramClient:
         return self._client
+
+    # --- события ---------------------------------------------------------------
+
+    async def listen(self, sink) -> None:
+        """Подписывается на новые, изменённые и удалённые сообщения.
+
+        `sink` (events.UserbotSink): `wants(chat_id, kind)` — ранний фильтр по правилам
+        (выключенные чаты не стоят ничего), `new/edited(UbMessage)`, `deleted(chat_id, ids)`.
+        Сбой обработчика одного события не должен ронять клиента."""
+        client = self._client
+
+        async def build(event):
+            message = event.message
+            guess = "private" if event.is_private else "group"
+            if not await sink.wants(event.chat_id, guess):
+                return None
+            chat = await event.get_chat()
+            try:
+                sender = await message.get_sender()
+            except Exception:
+                sender = None  # имя автора — украшение, не повод терять сообщение
+
+            def download():
+                return client.download_media(message, file=bytes)
+
+            return snapshots.ub_message(message, chat, sender, download)
+
+        def safe(handler, make):
+            async def run(event):
+                try:
+                    arg = await make(event)
+                    if arg is not None:
+                        await handler(arg)
+                except Exception as exc:
+                    logger.warning("Обработчик события: %s", type(exc).__name__)
+                    logger.debug("детали сбоя обработчика", exc_info=True)
+
+            return run
+
+        client.add_event_handler(safe(sink.new, build), events.NewMessage())
+        client.add_event_handler(safe(sink.edited, build), events.MessageEdited())
+
+        async def on_deleted(event):
+            try:
+                await sink.deleted(event.chat_id, list(event.deleted_ids))
+            except Exception as exc:
+                logger.warning("Обработчик удаления: %s", type(exc).__name__)
+                logger.debug("детали сбоя обработчика", exc_info=True)
+
+        client.add_event_handler(on_deleted, events.MessageDeleted())
+
+    async def list_dialogs(self, limit: int) -> list[UbDialog]:
+        """Диалоги аккаунта (в т.ч. из папок и архива) — для экрана выбора чатов.
+        Заодно наполняет кэш сущностей Telethon: без него обновления каналов не идут."""
+        out = []
+        async for dialog in self._client.iter_dialogs(limit=limit):
+            entity = dialog.entity
+            if getattr(entity, "is_self", False) or dialog.id == 777000:
+                continue  # «Избранное» и служебный чат Telegram
+            out.append(
+                UbDialog(
+                    id=dialog.id,
+                    kind=snapshots.chat_kind(entity),
+                    title=dialog.name or "",
+                    username=getattr(entity, "username", None),
+                    members=getattr(entity, "participants_count", None),
+                    archived=bool(getattr(dialog, "archived", False)),
+                    is_bot=bool(getattr(entity, "bot", False)),
+                )
+            )
+        return out
 
     async def log_out(self) -> bool:
         """Завершить сеанс на стороне Telegram: строка сессии становится мёртвой."""

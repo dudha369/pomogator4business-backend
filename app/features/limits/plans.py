@@ -29,9 +29,10 @@ METRICS: dict[str, Metric] = {
     # подключены (задача 22)
     "mirrors": Metric("state", "mirrors"),
     "linkscan_checks_day": Metric("window", "linkscan_checks_day"),
-    # подготовлены для 17.2 и 26: лимит и тексты есть, проверки в коде ещё нет
-    "archive_chats": Metric("state"),
+    # группы и каналы в архиве (17.2): проверяется при включении чата. Личные чаты не
+    # считаются: их ведёт бизнес-бот, а общий объём архива ограничит задача 17.3
     "archive_groups": Metric("state"),
+    # подготовлены для 17.3 и 26: лимит и тексты есть, проверки в коде ещё нет
     "stored_messages": Metric("state"),
     "media_bytes": Metric("state"),
     "retention_days": Metric("value"),

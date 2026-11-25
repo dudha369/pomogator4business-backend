@@ -9,8 +9,10 @@ import time
 
 from aiogram.client.session.middlewares.base import BaseRequestMiddleware
 
+from app.features.history import rules
 from app.features.history.adapter import build_snapshot
 from app.features.history.service import save_history
+from app.features.vault.service import owner_of
 from app.platform.utils import log_suppressed
 
 
@@ -29,6 +31,11 @@ async def record_outgoing(bot, connection_id: str, message) -> None:
     snapshot = build_snapshot(message, bot_id=getattr(bot, "id", None))
     if snapshot is None:
         return
+    owner = await owner_of(connection_id)
+    if owner is not None and not await rules.should_archive(
+        owner, message.chat.id, "private", "bot"
+    ):
+        return  # чат выключен в правилах архива
     await save_history(
         connection_id,
         message.chat.id,

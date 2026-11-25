@@ -6,6 +6,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from app.features.history import rule_queries
 from app.features.limits import queries, service
 from app.features.limits.plans import METRICS, limit_for, period_start
 from app.features.mirror.queries import get_mirror
@@ -35,7 +36,9 @@ async def _used(owner_id: int, metric: str, now: int) -> int | None:
         return await queries.get_used(owner_id, metric, period)
     if metric == "mirrors":  # зеркало одно на владельца
         return 1 if await get_mirror(owner_id) else 0
-    return None  # остальные метрики подключит 17.2
+    if metric == "archive_groups":
+        return await rule_queries.count_enabled_groups(owner_id)
+    return None  # остальные метрики подключит 17.3
 
 
 @router.get("/plan", response_model=PlanOut)

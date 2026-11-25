@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from app.features.archive import export
 from app.features.archive.media import attach_media_info, load_media
 from app.features.archive.queries import get_archive_page
-from app.platform.api.deps import Owner, current_owner
+from app.features.archive.scope import ArchiveScope, archive_scope
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.archive_export")
@@ -102,27 +102,32 @@ async def _collect_photos(connection_id, entries):
 
 
 @router.post("/archive/export", response_model=ExportResult)
-async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owner)):
-    connection = owner.connection
-    owner_id = owner.id
+async def export_archive(
+    req: ExportRequest, scope: ArchiveScope = Depends(archive_scope)
+):
+    owner_id = scope.id
     if owner_id in _running:
         raise HTTPException(status_code=429, detail="Export already running")
 
     _running.add(owner_id)
     try:
-        entries, truncated = await _collect_entries(connection["connection_id"], req)
+        entries, truncated = await _collect_entries(scope.connection_ids, req)
         if not entries:
             raise HTTPException(status_code=404, detail="Nothing to export")
 
         from bot_instance import bot
 
         # типы медиа нужны всем форматам (для подписи), байты фото — только HTML
-        await attach_media_info(connection["connection_id"], entries)
+        await attach_media_info(scope.connection_ids, entries)
         photos = {}
         if req.format == "html" and req.include_media:
-            photos = await _collect_photos(connection["connection_id"], entries)
+            photos = await _collect_photos(scope.connection_ids, entries)
 
         names = await _chat_names(bot, [e["chat_id"] for e in entries])
+        # группы и каналы юзербота бот не видит: берём названия из самих записей
+        names.update(
+            {e["chat_id"]: e["chat_title"] for e in entries if e["chat_title"]}
+        )
         offset = await get_timezone_offset(owner_id)
         locale = await get_locale(owner_id)
         now = int(time.time())
@@ -154,7 +159,7 @@ async def export_archive(req: ExportRequest, owner: Owner = Depends(current_owne
         stamp = export.format_ts(now, offset)[:10]
         try:
             await bot.send_document(
-                chat_id=connection["owner_chat_id"],
+                chat_id=scope.owner_chat_id,
                 document=BufferedInputFile(
                     content, filename=f"archive_{stamp}.{req.format}"
                 ),

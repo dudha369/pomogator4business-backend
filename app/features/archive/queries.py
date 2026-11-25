@@ -9,8 +9,14 @@ from config import settings
 TABLE = "archive_log"
 
 
+def _ids(connection_id) -> list[str]:
+    """Один `connection_id` или список (у владельца бизнес-бот и юзербот — два)."""
+    return [connection_id] if isinstance(connection_id, str) else list(connection_id)
+
+
 async def _open(connection_id, rows):
-    return await vault.open_by_connection(TABLE, connection_id, rows)
+    # у всех подключений одного владельца общий ключ данных: берём любое
+    return await vault.open_by_connection(TABLE, _ids(connection_id)[0], rows)
 
 
 LIST_COLUMNS = (
@@ -108,7 +114,7 @@ async def get_archive_page(
     date_to=None,
     ascending=False,
 ):
-    query = ArchiveLog.filter(connection_id=connection_id)
+    query = ArchiveLog.filter(connection_id__in=_ids(connection_id))
     if before_id is not None:
         if ascending:
             query = query.filter(log_id__gt=before_id)
@@ -127,7 +133,7 @@ async def get_archive_page(
         # шифротекст в SQL не ищется: просматриваем свежие записи порциями и фильтруем
         # расшифрованное в Python (не больше ARCHIVE_SEARCH_SCAN записей)
         ids = await _search_ids(
-            query.order_by(ordering), connection_id, search, limit + 1
+            query.order_by(ordering), _ids(connection_id)[0], search, limit + 1
         )
         rows = (
             await ArchiveLog.filter(log_id__in=ids)
@@ -197,8 +203,11 @@ async def list_log_media_availability(connection_id, log_ids):
 
 
 async def get_log_media(connection_id, log_id):
-    rows = await ArchiveLog.filter(connection_id=connection_id, log_id=log_id).values(
+    rows = await ArchiveLog.filter(
+        connection_id__in=_ids(connection_id), log_id=log_id
+    ).values(
         "log_id",
+        "connection_id",
         "event",
         "old_snapshot",
         "new_snapshot",

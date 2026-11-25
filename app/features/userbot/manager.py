@@ -13,7 +13,7 @@ import contextlib
 import logging
 import time
 
-from app.features.userbot import queries
+from app.features.userbot import events, queries
 from app.features.userbot.errors import SessionRevoked
 from app.features.userbot.lock import make_lock
 from app.platform.tasks import spawn
@@ -21,6 +21,7 @@ from config import settings
 
 logger = logging.getLogger("bot.userbot")
 
+_DIALOGS_TTL = 120  # секунд: список диалогов для экрана выбора чатов
 LOCK_RETRY = 15  # пауза между попытками взять блокировку
 TICK = 10  # период сверки и heartbeat
 BACKOFF_MIN, BACKOFF_MAX = 5, 300
@@ -34,6 +35,7 @@ class _Slot:
         self.owner_id = owner_id
         self.client = client
         self.watch: asyncio.Task | None = None
+        self.dialogs: tuple[float, list] | None = None  # (когда получены, список)
 
 
 class UserbotManager:
@@ -131,9 +133,30 @@ class UserbotManager:
         slot = _Slot(owner_id, client)
         slot.watch = spawn(self._watch(slot), name=f"userbot-watch-{owner_id}")
         self.slots[owner_id] = slot
+        await client.listen(events.Sink(owner_id))
+        # список диалогов заодно наполняет кэш сущностей: без него обновления каналов не идут
+        spawn(self._prime_dialogs(owner_id), name=f"userbot-dialogs-{owner_id}")
         self._failures.pop(owner_id, None)
         await queries.set_connected(owner_id, True)
         logger.info("Юзербот %s подключён", owner_id)
+
+    async def dialogs(self, owner_id: int) -> list | None:
+        """Диалоги аккаунта живым запросом (кэш на пару минут). None — клиент этого
+        процесса сейчас не работает (нет сессии, не подключён, окно деплоя)."""
+        slot = self.slots.get(owner_id)
+        if slot is None:
+            return None
+        if slot.dialogs and time.monotonic() - slot.dialogs[0] < _DIALOGS_TTL:
+            return slot.dialogs[1]
+        items = await slot.client.list_dialogs(settings.USERBOT_DIALOGS_MAX)
+        slot.dialogs = (time.monotonic(), items)
+        return items
+
+    async def _prime_dialogs(self, owner_id: int) -> None:
+        try:
+            await self.dialogs(owner_id)
+        except Exception as exc:
+            logger.warning("Диалоги юзербота не загружены (%s)", type(exc).__name__)
 
     async def _watch(self, slot: _Slot) -> None:
         """Telethon сам переподключается; сюда доходит окончательная потеря связи."""

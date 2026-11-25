@@ -36,6 +36,8 @@ class MessageHistory(Model):
         table = "message_history"
         unique_together = (("connection_id", "chat_id", "message_id"),)
         indexes = (
+            # удаления без chat_id (личные чаты и малые группы юзербота): ищем по номеру
+            ("connection_id", "message_id"),
             ("connection_id", "chat_id", "created_at"),
             # окна статистики и напоминаний: connection_id + created_at >= …
             ("connection_id", "created_at"),
@@ -53,3 +55,28 @@ class MessageLog(Model):
     class Meta:
         table = "message_log"
         indexes = (("connection_id", "chat_id", "log_id"),)
+
+
+class ChatArchiveRule(Model):
+    """Правило архива для одного чата владельца (общее для бизнес-бота и юзербота).
+
+    Строка хранит только отклонение от умолчаний (`history.rules.default_rule`):
+    личные чаты бизнес-бота включены без строки, всё остальное выключено."""
+
+    id = fields.IntField(pk=True)
+    owner_id = fields.BigIntField()
+    chat_id = fields.BigIntField()
+    kind = fields.CharField(max_length=16)  # private | group | supergroup | channel
+    enabled = fields.BooleanField(default=False)
+    media_enabled = fields.BooleanField(
+        default=False
+    )  # сохранять файлы байтами (юзербот)
+    notify = fields.BooleanField(
+        default=True
+    )  # присылать уведомления об удалении и правке
+    created_at = fields.BigIntField()
+    updated_at = fields.BigIntField()
+
+    class Meta:
+        table = "chat_archive_rules"
+        unique_together = (("owner_id", "chat_id"),)

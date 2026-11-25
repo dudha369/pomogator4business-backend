@@ -24,6 +24,8 @@ RU = {
     "userbot.btn.off": "Отключить и удалить сессию",
     "userbot.btn.off_yes": "Да, отключить",
     "userbot.btn.open_app": "Открыть мини-приложение",
+    "userbot.burst.deleted": '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Массовое удаление</b>\nЧат: {chat}\nУдалено сообщений: <b>{count}</b>.\nВсе они сохранены в архиве.',
+    "userbot.burst.open": "Открыть в архиве",
 }
 
 EN = {
@@ -52,6 +54,8 @@ EN = {
     "userbot.btn.off": "Disconnect and delete session",
     "userbot.btn.off_yes": "Yes, disconnect",
     "userbot.btn.open_app": "Open mini app",
+    "userbot.burst.deleted": '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Bulk deletion</b>\nChat: {chat}\nMessages deleted: <b>{count}</b>.\nAll of them are saved in the archive.',
+    "userbot.burst.open": "Open in archive",
 }
 
 UK = {
@@ -80,4 +84,6 @@ UK = {
     "userbot.btn.off": "Відключити й видалити сесію",
     "userbot.btn.off_yes": "Так, відключити",
     "userbot.btn.open_app": "Відкрити міні-застосунок",
+    "userbot.burst.deleted": '<tg-emoji emoji-id="5258130763148172425">🗑</tg-emoji> <b>Масове видалення</b>\nЧат: {chat}\nВидалено повідомлень: <b>{count}</b>.\nУсі вони збережені в архіві.',
+    "userbot.burst.open": "Відкрити в архіві",
 }

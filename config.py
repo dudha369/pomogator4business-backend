@@ -55,6 +55,15 @@ class Settings(BaseSettings):
     # my.telegram.org → API development tools. Не заданы — юзербот выключен.
     TELEGRAM_API_ID: int = 0
     TELEGRAM_API_HASH: str = ""
+    # файлы юзербота (только в чатах, где включено «Файлы»): максимум на файл, байты
+    USERBOT_MEDIA_MAX_BYTES: int = 20 * 1024 * 1024
+    USERBOT_MEDIA_TIMEOUT: int = 120  # секунд на скачивание одного файла
+    # список диалогов для экрана выбора чатов: сколько запрашиваем у Telegram
+    USERBOT_DIALOGS_MAX: int = 300
+    # массовое удаление: уведомления одного чата копятся BURST_WINDOW секунд;
+    # больше BURST_THRESHOLD сообщений — вместо них одна сводка с числом
+    USERBOT_BURST_WINDOW: float = 5
+    USERBOT_BURST_THRESHOLD: int = 5
 
     KEEP_MEDIA_BYTES: bool = False
     ARCHIVE_RICH: bool = True
@@ -66,7 +75,12 @@ class Settings(BaseSettings):
     ARCHIVE_ALBUM_STYLE: str = "slideshow"
     MEDIA_RETENTION_DAYS: int = 14
     ARCHIVE_MEDIA_RETENTION_DAYS: int = 90
-    HISTORY_RETENTION_DAYS: int = 90
+    # «окно слежения» (копия сообщений, чтобы показать удалённое/изменённое): 14 дней
+    HISTORY_RETENTION_DAYS: int = 14
+    # технические потолки на ПОДКЛЮЧЕНИЕ (бизнес-бот и юзербот отдельно); сверх них
+    # самые старые строки окна обрезаются, 0 = без потолка. Защита базы от шумных чатов.
+    HISTORY_MAX_PER_CONNECTION: int = 100000
+    HISTORY_MEDIA_MAX_MB: int = 200
     ARCHIVE_RETENTION_DAYS: int = 0
     MESSAGE_LOG_KEEP: int = 20000
     # записи журнала .del/.panic старше этого срока удаляются (0 = только лимит MESSAGE_LOG_KEEP)

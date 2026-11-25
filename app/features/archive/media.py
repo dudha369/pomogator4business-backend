@@ -12,6 +12,7 @@ from app.features.archive.queries import get_log_media, list_log_media_availabil
 from app.features.archive.snapshot import public_view
 from app.features.history.service import get_history_media, list_media_flags
 from app.features.history.snapshot import FILE_KINDS, MAX_DOWNLOAD_BYTES
+from app.platform.sources import source_of
 
 logger = logging.getLogger("bot.archive_media")
 
@@ -31,6 +32,19 @@ def content_type(media_type, mime):
     return mime or _DEFAULT_MIME.get(media_type, "application/octet-stream")
 
 
+def origin_info(connection_id, snap) -> dict:
+    """Откуда запись: источник, название чата и автор (юзербот кладёт их в raw_json)."""
+    raw = (snap or {}).get("raw_json")
+    raw = raw if isinstance(raw, dict) else {}
+    chat, sender = raw.get("chat") or {}, raw.get("from") or {}
+    return {
+        "source": source_of(connection_id),
+        "chat_title": chat.get("title"),
+        "chat_kind": chat.get("type"),
+        "sender_name": sender.get("name"),
+    }
+
+
 def _snapshot_media(snap):
     """(kind, mime, name, status) файла из снимка или None."""
     if not snap or snap.get("kind") not in FILE_KINDS:
@@ -43,6 +57,17 @@ def _snapshot_media(snap):
 
 
 async def attach_media_info(connection_id, entries):
+    """Описание записей архива; у владельца записи бывают из двух подключений
+    (бизнес-бот и юзербот), поэтому считаем по `connection_id` каждой записи."""
+    by_connection: dict[str, list] = {}
+    for entry in entries:
+        by_connection.setdefault(entry["connection_id"], []).append(entry)
+    for connection, group in by_connection.items():
+        await _attach_for(connection, group)
+    return entries
+
+
+async def _attach_for(connection_id, entries):
     """Дописывает в каждую запись поля old / new (описание содержимого для
     отрисовки) и media_type, media_mime, media_name, media_status,
     media_available (байты не загружаются)."""
@@ -66,6 +91,7 @@ async def attach_media_info(connection_id, entries):
         new_snap = entry.pop("new_snapshot", None)
         entry["old"] = public_view(old_snap)
         entry["new"] = public_view(new_snap)
+        entry.update(origin_info(entry["connection_id"], new_snap or old_snap))
 
         # какое медиа показывать в списке: у правки — актуальное, у удаления — удалённое
         snap = (
@@ -156,7 +182,7 @@ async def load_media(connection_id, log_id, which="auto"):
 
     if which == "old" or snap is None:
         history = await get_history_media(
-            connection_id, row["chat_id"], row["message_id"]
+            row["connection_id"], row["chat_id"], row["message_id"]
         )
         if history and history["media_data"]:
             return (

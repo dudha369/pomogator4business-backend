@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from app.features.archive.api_export import router as export_router
+from app.features.archive.api_rules import router as rules_router
 from app.features.archive.media import attach_media_info, content_type, load_media
 from app.features.archive.prefs import (
     ALBUM_STYLES,
@@ -13,7 +14,7 @@ from app.features.archive.prefs import (
     update_prefs,
 )
 from app.features.archive.queries import get_archive_page
-from app.platform.api.deps import Owner, current_owner
+from app.features.archive.scope import ArchiveScope, archive_scope
 
 router = APIRouter()
 
@@ -56,6 +57,10 @@ class ArchiveEntry(BaseModel):
     media_name: str | None
     media_status: str | None
     media_available: bool
+    source: Literal["bot", "userbot"]  # откуда запись: бизнес-бот или юзербот
+    chat_title: str | None  # название чата (у юзербота; у бизнес-бота — по chat_id)
+    chat_kind: str | None  # private | group | supergroup | channel
+    sender_name: str | None  # автор сообщения (у юзербота)
 
 
 class ArchivePage(BaseModel):
@@ -97,11 +102,10 @@ async def get_archive(
     date_from: int | None = Query(default=None),
     date_to: int | None = Query(default=None),
     sort: str = Query(default="desc", pattern="^(asc|desc)$"),
-    owner: Owner = Depends(current_owner),
+    scope: ArchiveScope = Depends(archive_scope),
 ):
-    connection = owner.connection
     entries, has_more = await get_archive_page(
-        connection["connection_id"],
+        scope.connection_ids,
         before_id,
         limit,
         event=event,
@@ -112,7 +116,7 @@ async def get_archive(
         ascending=(sort == "asc"),
     )
 
-    await attach_media_info(connection["connection_id"], entries)
+    await attach_media_info(scope.connection_ids, entries)
 
     next_cursor = entries[-1]["log_id"] if entries and has_more else None
     return {
@@ -133,10 +137,9 @@ async def get_archive(
 async def get_archive_media(
     log_id: int,
     which: str = Query(default="auto", pattern="^(auto|old|new)$"),
-    owner: Owner = Depends(current_owner),
+    scope: ArchiveScope = Depends(archive_scope),
 ):
-    connection = owner.connection
-    media = await load_media(connection["connection_id"], log_id, which)
+    media = await load_media(scope.connection_ids, log_id, which)
     if media is None:
         raise HTTPException(status_code=404, detail="Медиа не сохранено")
 
@@ -174,17 +177,17 @@ def _prefs_response(prefs):
 
 
 @router.get("/archive/settings", response_model=ArchiveSettingsOut)
-async def get_archive_settings(owner: Owner = Depends(current_owner)):
-    return _prefs_response(await load_prefs(owner.connection["connection_id"]))
+async def get_archive_settings(scope: ArchiveScope = Depends(archive_scope)):
+    return _prefs_response(await load_prefs(scope.settings_connection_id))
 
 
 @router.post("/archive/settings", response_model=ArchiveSettingsOut)
 async def update_archive_settings(
-    patch: ArchivePrefsPatch, owner: Owner = Depends(current_owner)
+    patch: ArchivePrefsPatch, scope: ArchiveScope = Depends(archive_scope)
 ):
     changes = patch.model_dump(exclude_none=True)
     try:
-        prefs = await update_prefs(owner.connection["connection_id"], changes)
+        prefs = await update_prefs(scope.settings_connection_id, changes)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _prefs_response(prefs)
@@ -193,3 +196,4 @@ async def update_archive_settings(
 router.include_router(
     export_router
 )  # тот же префикс /archive, после основных маршрутов
+router.include_router(rules_router)

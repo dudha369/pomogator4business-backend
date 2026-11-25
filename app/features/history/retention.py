@@ -5,6 +5,8 @@ from app.features.history.service import (
     expire_message_log,
     purge_history,
     scrub_raw_json,
+    trim_history,
+    trim_history_media,
     trim_message_log,
 )
 from app.platform.retention import DAY, retention_task
@@ -56,3 +58,17 @@ async def scrub_legacy_raw_json(now):
             break
         await asyncio.sleep(0)
     return total
+
+
+@retention_task("history_trimmed")
+async def trim_history_rows(now):
+    if settings.HISTORY_MAX_PER_CONNECTION <= 0:
+        return None
+    return await trim_history(settings.HISTORY_MAX_PER_CONNECTION)
+
+
+@retention_task("history_media_trimmed")
+async def trim_history_files(now):
+    if settings.HISTORY_MEDIA_MAX_MB <= 0:
+        return None
+    return await trim_history_media(settings.HISTORY_MEDIA_MAX_MB * 1024 * 1024)

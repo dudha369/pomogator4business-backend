@@ -12,6 +12,7 @@ from app.features.history.snapshot import (
 from app.features.vault import service as vault
 from app.features.vault.backfill import seal_legacy
 from app.features.vault.tables import TABLES
+from app.platform.sources import CHANNEL_PEER_LIMIT, USERBOT_PREFIX
 
 TABLE = "message_history"
 # колонки с содержимым (шифруются); остальное — метаданные, лежат открыто
@@ -95,7 +96,9 @@ async def save_history(
     if media_type is not None:
         obj.media_type = media_type
         obj.media_mime = media_mime
-        obj.media_status = media_status
+        if not (media_status == "failed" and obj.media_data is not None):
+            # правка без новых байтов не должна перечёркивать уже сохранённый файл
+            obj.media_status = media_status
         update_fields += ["media_type", "media_mime", "media_name", "media_status"]
         if media_data is not None:
             update_fields.append("media_data")
@@ -430,9 +433,107 @@ async def scrub_raw_json(limit):
         await MessageHistory.filter(
             raw_json__not_isnull=True, kind__in=["text", *FILE_KINDS]
         )
+        # у юзербота в raw_json лежат название чата и имя автора: он им и живёт
+        .exclude(connection_id__startswith=USERBOT_PREFIX)
         .limit(limit)
         .values_list("id", flat=True)
     )
     if not ids:
         return 0
     return await MessageHistory.filter(id__in=list(ids)).update(raw_json=None)
+
+
+async def find_userbot_by_ids(connection_id, message_ids):
+    """Удалённые без chat_id (личные чаты и малые группы юзербота): номера сообщений
+    уникальны на аккаунт, поэтому ищем по номеру. Каналы и супергруппы исключены:
+    номера у них свои для каждого канала, а событие удаления там приходит с chat_id."""
+    rows = await MessageHistory.filter(
+        connection_id=connection_id,
+        message_id__in=list(message_ids),
+        chat_id__gt=CHANNEL_PEER_LIMIT,
+    ).values()
+    return await _open(connection_id, rows)
+
+
+async def attach_media(connection_id, chat_id, message_id, data, status) -> bool:
+    """Дописывает скачанные байты в УЖЕ записанную строку. Строки нет (сообщение успели
+    удалить и убрать из истории) — ничего не создаёт: иначе удалённое воскресло бы."""
+    where = {
+        "connection_id": connection_id,
+        "chat_id": chat_id,
+        "message_id": message_id,
+    }
+    if vault.enabled():
+        sealed = await vault.seal_values(
+            TABLE, await vault.owner_of(connection_id), {"media_data": data}
+        )
+        if sealed is None:
+            return False
+        return bool(
+            await MessageHistory.filter(**where, enc_ver__not_isnull=True).update(
+                **sealed, media_status=status
+            )
+        )
+    return bool(
+        await MessageHistory.filter(**where).update(
+            media_data=data, media_status=status
+        )
+    )
+
+
+async def set_media_status(connection_id, chat_id, message_id, status) -> None:
+    await MessageHistory.filter(
+        connection_id=connection_id, chat_id=chat_id, message_id=message_id
+    ).update(media_status=status)
+
+
+async def trim_history(keep):
+    """Технический потолок окна слежения: оставляет по `keep` последних строк НА КАЖДОЕ
+    подключение, самые старые удаляет (как `trim_message_log`). Возвращает число строк."""
+    removed = 0
+    ids = await MessageHistory.all().distinct().values_list("connection_id", flat=True)
+    for connection_id in ids:
+        rows = (
+            await MessageHistory.filter(connection_id=connection_id)
+            .order_by("-id")
+            .offset(keep)
+            .limit(1)
+            .values_list("id", flat=True)
+        )
+        if rows:
+            removed += await MessageHistory.filter(
+                connection_id=connection_id, id__lte=rows[0]
+            ).delete()
+    return removed
+
+
+async def trim_history_media(max_bytes, batch=200):
+    """Потолок объёма файлов в окне: на каждое подключение освобождает байты самых
+    старых файлов (строка и текст остаются, статус `trimmed`). Размер берём из открытой
+    колонки file_size: шифротекст читать не нужно. Возвращает число освобождённых файлов."""
+    freed = 0
+    ids = (
+        await MessageHistory.filter(media_data__not_isnull=True)
+        .distinct()
+        .values_list("connection_id", flat=True)
+    )
+    for connection_id in ids:
+        rows = (
+            await MessageHistory.filter(
+                connection_id=connection_id, media_data__not_isnull=True
+            )
+            .order_by("id")
+            .values_list("id", "file_size")
+        )
+        total = sum(size or 0 for _, size in rows)
+        victims = []
+        for row_id, size in rows:
+            if total <= max_bytes:
+                break
+            victims.append(row_id)
+            total -= size or 0
+        for i in range(0, len(victims), batch):
+            freed += await MessageHistory.filter(id__in=victims[i : i + batch]).update(
+                media_data=None, media_status="trimmed"
+            )
+    return freed

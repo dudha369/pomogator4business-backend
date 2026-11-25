@@ -360,7 +360,7 @@ async def test_plan_endpoint_for_free_owner(client, database):
         "period": "day",
     }
     assert by_metric["mirrors"]["used"] == 1 and by_metric["mirrors"]["limit"] == 1
-    assert by_metric["archive_groups"]["used"] is None  # подключит 17.2
+    assert by_metric["archive_groups"]["used"] == 0  # групп в архиве пока нет
     assert by_metric["retention_days"]["period"] == "plan"
     assert set(by_metric) == set(plans.METRICS)
 

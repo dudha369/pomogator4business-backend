@@ -213,6 +213,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/archive/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rules */
+        get: operations["get_rules_api_archive_rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/archive/rules/{chat_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Rule */
+        put: operations["put_rule_api_archive_rules__chat_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/archive/settings": {
         parameters: {
             query?: never;
@@ -908,6 +942,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/userbot/dialogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dialogs
+         * @description Диалоги аккаунта для экрана выбора чатов. Живой запрос к Telegram (кэш пару
+         *     минут): список нигде не хранится. Клиент работает в процессе с блокировкой, и в окне
+         *     деплоя этот процесс может быть другим — тогда 503, повторить через несколько секунд.
+         */
+        get: operations["get_dialogs_api_userbot_dialogs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/userbot/login": {
         parameters: {
             query?: never;
@@ -1086,6 +1142,10 @@ export interface components {
         ArchiveEntry: {
             /** Chat Id */
             chat_id: number;
+            /** Chat Kind */
+            chat_kind: string | null;
+            /** Chat Title */
+            chat_title: string | null;
             /** Connection Id */
             connection_id: string;
             /** Created At */
@@ -1121,6 +1181,13 @@ export interface components {
             old: components["schemas"]["SnapshotView"] | null;
             /** Old Text */
             old_text: string | null;
+            /** Sender Name */
+            sender_name: string | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "bot" | "userbot";
         };
         /** ArchiveOptions */
         ArchiveOptions: {
@@ -1431,6 +1498,31 @@ export interface components {
              * @constant
              */
             deleted: true;
+        };
+        /** DialogOut */
+        DialogOut: {
+            /** Archived */
+            archived: boolean;
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "private" | "group" | "supergroup" | "channel";
+            /** Members */
+            members: number | null;
+            /** Title */
+            title: string;
+            /** Username */
+            username: string | null;
+        };
+        /** DialogsOut */
+        DialogsOut: {
+            /** Dialogs */
+            dialogs: components["schemas"]["DialogOut"][];
+            /** Has More */
+            has_more: boolean;
         };
         /** EmojiEnabledOut */
         EmojiEnabledOut: {
@@ -1854,6 +1946,45 @@ export interface components {
             p90_seconds: number | null;
             /** Samples */
             samples: number;
+        };
+        /** RuleIn */
+        RuleIn: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "private" | "group" | "supergroup" | "channel";
+            /** Media Enabled */
+            media_enabled?: boolean | null;
+            /** Notify */
+            notify?: boolean | null;
+        };
+        /** RuleOut */
+        RuleOut: {
+            /** Chat Id */
+            chat_id: number;
+            /** Enabled */
+            enabled: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "private" | "group" | "supergroup" | "channel";
+            /** Media Enabled */
+            media_enabled: boolean;
+            /** Notify */
+            notify: boolean;
+        };
+        /** RulesOut */
+        RulesOut: {
+            /** Groups Limit */
+            groups_limit: number | null;
+            /** Groups Used */
+            groups_used: number;
+            /** Rules */
+            rules: components["schemas"]["RuleOut"][];
         };
         /** SettingsOut */
         SettingsOut: {
@@ -2466,6 +2597,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rules_api_archive_rules_get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_rule_api_archive_rules__chat_id__put: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path: {
+                chat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulesOut"];
                 };
             };
             /** @description Validation Error */
@@ -4029,6 +4228,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserbotOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dialogs_api_userbot_dialogs_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                kind?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DialogsOut"];
                 };
             };
             /** @description Validation Error */
