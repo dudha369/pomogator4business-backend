@@ -23,6 +23,7 @@ _FIRST_RUN_DELAY_SECONDS = 300
 
 RetentionTask = Callable[[int], Awaitable[int | None]]
 _TASKS: dict[str, RetentionTask] = {}
+LAST_RUN: dict[str, tuple[int, bool]] = {}  # имя -> (когда, успешно): для /health/deep
 
 
 def retention_task(name: str) -> Callable[[RetentionTask], RetentionTask]:
@@ -52,7 +53,9 @@ async def run_retention_once(now=None):
             removed = await task(now)
         except Exception:
             logger.exception("Сбой задачи очистки %s", name)
+            LAST_RUN[name] = (now, False)
             continue
+        LAST_RUN[name] = (now, True)
         if removed is not None:
             stats[name] = removed
     return stats

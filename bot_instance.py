@@ -10,6 +10,8 @@ from app.features.games.bot import router as games_router
 from app.features.history.outgoing import install_outgoing_recorder
 from app.features.linkscan.bot import router as linkscan_router
 from app.features.mirror.bot import router as mirror_router
+from app.features.ops.bot import router as ops_router
+from app.features.ops.middleware import OpsContextMiddleware
 from app.features.settings.bot import router as settings_router
 from app.features.userbot.bot import router as userbot_router
 from app.platform.telegram.dm import router as bot_commands_router
@@ -30,6 +32,7 @@ dp = Dispatcher(storage=MemoryStorage())
 
 
 def setup_routes() -> Dispatcher:
+    dp.update.outer_middleware(OpsContextMiddleware("bot"))
     dp.update.outer_middleware(UpdateLoggingMiddleware())
 
     dp.include_router(connection_router)
@@ -39,6 +42,7 @@ def setup_routes() -> Dispatcher:
     )  # до архива: смотрит правки, ничего не перехватывая
     dp.include_router(archive_router)
     dp.include_router(alerts_router)
+    dp.include_router(ops_router)
     dp.include_router(mirror_router)
     dp.include_router(games_router)
     dp.include_router(settings_router)

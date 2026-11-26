@@ -106,6 +106,18 @@ class Settings(BaseSettings):
     AI_MODEL: str = "claude-haiku-5-5"
     AI_API_URL: str = "https://api.anthropic.com/v1/messages"
 
+    # Наблюдаемость (app/features/ops): оповещения администраторам (ADMIN_USER_IDS)
+    HEALTH_SECRET: str = ""  # заголовок X-Health-Secret для GET /health/deep; пусто — только initData админа
+    OPS_REPEAT_MINUTES: int = 60  # повтор той же ошибки — не чаще
+    OPS_BURST_THRESHOLD: int = 20  # событий за 5 минут = «всплеск»
+    OPS_MAX_PER_HOUR: int = 10  # потолок обычных оповещений в час
+    ERROR_EVENTS_RETENTION_DAYS: int = 30
+    SKIP_MIGRATION_CHECK: bool = (
+        False  # аварийный выход: не сверять миграции при старте
+    )
+    RENDER_GIT_COMMIT: str = ""  # Render отдаёт сам
+    BUILD_SHA: str = ""  # запасной источник версии сборки
+
     # Документация API (/docs, /openapi.json) — только для разработки
     ENABLE_DOCS: bool = False
 
@@ -134,6 +146,10 @@ class Settings(BaseSettings):
         return self.WEBHOOK_SECRET_RAW or _derive_webhook_secret(self.BOT_TOKEN)
 
     @property
+    def BUILD(self) -> str:
+        return (self.RENDER_GIT_COMMIT or self.BUILD_SHA)[:7] or "unknown"
+
+    @property
     def USERBOT_CONFIGURED(self) -> bool:
         return bool(self.TELEGRAM_API_ID and self.TELEGRAM_API_HASH)
 
@@ -159,6 +175,7 @@ TORTOISE_ORM = {
                 "app.features.echo.models",
                 "app.features.autoresponder.models",
                 "app.features.mute.models",
+                "app.features.ops.models",
                 "app.features.story.models",
                 "app.features.chats.models",
                 "db.models.command_alias",

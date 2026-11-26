@@ -184,5 +184,6 @@ def test_retention_modules_live_in_features():
         "history",
         "limits",
         "linkscan",
+        "ops",
         "vault",
     }

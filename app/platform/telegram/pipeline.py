@@ -5,6 +5,8 @@
   эффект голосовых → новый контакт → mute → автоответчик → эхо → type-триггеры → команда.
 Шаги живут рядом со своей логикой; здесь только их порядок."""
 
+import functools
+
 from aiogram import Router
 
 from app.features.archive.bot.transcript import voice_transcript
@@ -14,6 +16,7 @@ from app.features.history.bot import record_history, rescue_replied_media
 from app.features.linkscan.bot import linkscan_step
 from app.features.mute.bot import mute_gate
 from app.features.voice_effects.bot import voice_step
+from app.platform.log_context import bind
 from app.platform.telegram.dispatch import dispatch_command
 from app.platform.telegram.incoming import load_incoming, owner_journal
 from commands.scam import new_contact_step
@@ -34,12 +37,23 @@ STEPS = (
 )
 
 
+def _named(step):
+    """Кладёт имя шага в контекст лога: в строке ошибки видно, где упало."""
+
+    @functools.wraps(step)
+    async def run(handler, message, data):
+        bind(step=step.__name__)
+        return await step(handler, message, data)
+
+    return run
+
+
 def build_router() -> Router:
     router = Router(name="business_messages")
     observer = router.business_message
     observer.outer_middleware(load_incoming)
     for step in STEPS:
-        observer.middleware(step)
+        observer.middleware(_named(step))
     observer.register(dispatch_command)
     return router
 

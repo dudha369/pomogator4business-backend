@@ -27,6 +27,7 @@ FEATURES = (
     "miniapp",
     "mirror",
     "mute",
+    "ops",
     "profile",
     "reminders",
     "scheduled",
