@@ -190,7 +190,8 @@ export interface paths {
         get: operations["get_archive_api_archive_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Archive */
+        delete: operations["delete_archive_api_archive_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1491,6 +1492,23 @@ export interface components {
             /** Outgoing */
             outgoing: number;
         };
+        /** DeleteIn */
+        DeleteIn: {
+            /** Ids */
+            ids: number[];
+            /**
+             * Media Only
+             * @default false
+             */
+            media_only?: boolean;
+        };
+        /** DeleteOut */
+        DeleteOut: {
+            /** Count */
+            count: number;
+            /** Freed Bytes */
+            freed_bytes: number;
+        };
         /** Deleted */
         Deleted: {
             /**
@@ -2562,6 +2580,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchivePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_archive_api_archive_delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteOut"];
                 };
             };
             /** @description Validation Error */

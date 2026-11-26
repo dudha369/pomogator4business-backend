@@ -79,6 +79,16 @@ RU = {
     ),
     "archive.collapsed_media": "Вложения: {count}",
     "archive.transcript": "Расшифровка",
+    "archive.limit.select": "Выбрать в мини-приложении",
+    "archive.limit.files": "Удалить только файлы",
+    "archive.limit.all": "Удалить всё",
+    "archive.limit.confirm": "Удалить все записи архива ({count}) вместе с файлами? Это нельзя отменить.",
+    "archive.limit.yes": "Да, удалить {count}",
+    "archive.limit.no": "Отмена",
+    "archive.limit.files_done": "Файлы удалены: {count} (освобождено {size} МБ).",
+    "archive.limit.all_done": "Удалено записей: {count}.",
+    "archive.limit.nothing": "Архив уже пуст.",
+    "archive.limit.failed": "Не удалось. Попробуйте позже.",
 }
 
 EN = {
@@ -162,6 +172,16 @@ EN = {
     ),
     "archive.collapsed_media": "Attachments: {count}",
     "archive.transcript": "Transcript",
+    "archive.limit.select": "Select in the mini app",
+    "archive.limit.files": "Delete files only",
+    "archive.limit.all": "Delete everything",
+    "archive.limit.confirm": "Delete all archive entries ({count}) together with their files? This cannot be undone.",
+    "archive.limit.yes": "Yes, delete {count}",
+    "archive.limit.no": "Cancel",
+    "archive.limit.files_done": "Files deleted: {count} ({size} MB freed).",
+    "archive.limit.all_done": "Entries deleted: {count}.",
+    "archive.limit.nothing": "The archive is already empty.",
+    "archive.limit.failed": "Failed. Please try again later.",
 }
 
 UK = {
@@ -245,4 +265,14 @@ UK = {
     ),
     "archive.collapsed_media": "Вкладення: {count}",
     "archive.transcript": "Розшифровка",
+    "archive.limit.select": "Вибрати в міні-застосунку",
+    "archive.limit.files": "Видалити лише файли",
+    "archive.limit.all": "Видалити все",
+    "archive.limit.confirm": "Видалити всі записи архіву ({count}) разом із файлами? Це не можна скасувати.",
+    "archive.limit.yes": "Так, видалити {count}",
+    "archive.limit.no": "Скасувати",
+    "archive.limit.files_done": "Файли видалено: {count} (звільнено {size} МБ).",
+    "archive.limit.all_done": "Видалено записів: {count}.",
+    "archive.limit.nothing": "Архів уже порожній.",
+    "archive.limit.failed": "Не вдалося. Спробуйте пізніше.",
 }

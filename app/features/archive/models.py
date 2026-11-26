@@ -17,6 +17,8 @@ class ArchiveLog(Model):
     media_name = fields.TextField(null=True)
     media_status = fields.CharField(max_length=16, null=True)
     media_data = fields.BinaryField(null=True)
+    # размер файла до шифрования (17.3): по сумме считается лимит `archive_media_bytes`
+    media_size = fields.BigIntField(null=True)
     kind = fields.CharField(max_length=24, null=True)
     # автор сообщения: True — владелец, False — собеседник (Telegram не сообщает,
     # кто именно удалил, поэтому в уведомлении называем автора)

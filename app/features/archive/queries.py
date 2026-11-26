@@ -1,6 +1,7 @@
 """Запросы к таблицам архива (`archive_log`, `archive_prefs`) — без логики и без aiogram."""
 
 from tortoise.expressions import Q
+from tortoise.functions import Sum
 
 from app.features.archive.models import ArchiveLog, ArchivePrefs
 from app.features.vault import service as vault
@@ -83,6 +84,7 @@ async def log_archive_event(
         media_type=media_type,
         media_mime=media_mime,
         media_status=media_status,
+        media_size=len(media_data) if sealed.get("media_data") is not None else None,
         kind=kind,
         is_owner=is_owner,
         edit_kind=edit_kind,
@@ -226,7 +228,62 @@ async def get_log_media(connection_id, log_id):
 async def expire_archive_media(older_than_ts):
     return await ArchiveLog.filter(
         created_at__lt=older_than_ts, media_data__not_isnull=True
-    ).update(media_data=None, media_status="expired")
+    ).update(media_data=None, media_size=None, media_status="expired")
+
+
+# --- лимиты и срок по тарифу (17.3): содержимое не читаем и не пишем ----------------
+
+
+async def archive_usage(connection_ids) -> tuple[int, int]:
+    """(число записей, байты файлов) по подключениям владельца. Событий мало, поэтому
+    считаем по таблице, а не держим счётчик."""
+    base = ArchiveLog.filter(connection_id__in=_ids(connection_ids))
+    total = await base.annotate(size=Sum("media_size")).values("size")
+    size = int(total[0]["size"] or 0) if total else 0
+    return await base.count(), size
+
+
+async def delete_entries(
+    connection_ids, ids=None, max_id=None, media_only=False
+) -> tuple[int, int]:
+    """Удалить записи владельца (`ids` — выбранные, иначе все до `max_id`) или только
+    их файлы. Возвращает (затронуто записей, освобождено байт). Чужие id игнорируются:
+    выборка всегда ограничена подключениями владельца."""
+    query = ArchiveLog.filter(connection_id__in=_ids(connection_ids))
+    if ids is not None:
+        query = query.filter(log_id__in=list(ids))
+    if max_id is not None:
+        query = query.filter(log_id__lte=max_id)
+    if media_only:
+        query = query.filter(media_data__not_isnull=True)
+    total = await query.annotate(size=Sum("media_size")).values("size")
+    freed = int(total[0]["size"] or 0) if total else 0
+    if media_only:
+        count = await query.update(
+            media_data=None, media_size=None, media_status="deleted"
+        )
+    else:
+        count = await query.delete()
+    return count, freed
+
+
+async def logged_connection_ids() -> list[str]:
+    """Подключения, у которых есть записи архива (для очистки по сроку тарифа)."""
+    return await ArchiveLog.all().distinct().values_list("connection_id", flat=True)
+
+
+async def purge_connections_before(connection_ids, older_than_ts) -> int:
+    return await ArchiveLog.filter(
+        connection_id__in=_ids(connection_ids), created_at__lt=older_than_ts
+    ).delete()
+
+
+async def expire_connections_media(connection_ids, older_than_ts) -> int:
+    return await ArchiveLog.filter(
+        connection_id__in=_ids(connection_ids),
+        created_at__lt=older_than_ts,
+        media_data__not_isnull=True,
+    ).update(media_data=None, media_size=None, media_status="expired")
 
 
 async def get_edit_history(connection_id, chat_id, message_id):
@@ -264,3 +321,14 @@ async def save_archive_prefs_data(connection_id, data):
     await ArchivePrefs.update_or_create(
         connection_id=connection_id, defaults={"data": data}
     )
+
+
+async def newest_log_id(connection_ids) -> int | None:
+    """Самая новая запись владельца: граница для «удалить всё» после подтверждения."""
+    row = (
+        await ArchiveLog.filter(connection_id__in=_ids(connection_ids))
+        .order_by("-log_id")
+        .first()
+        .values("log_id")
+    )
+    return row["log_id"] if row else None

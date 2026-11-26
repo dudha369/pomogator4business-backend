@@ -61,12 +61,22 @@ def _message_row(details: dict, locale: str) -> list:
     return markup.inline_keyboard
 
 
+def _action_rows(code: str, alert_id: int, locale: str) -> list:
+    """Кнопки действий под предупреждением (пока — архив заполнен)."""
+    if not code.startswith("limit_reached:archive_"):
+        return []
+    from app.features.archive.bot.limit_actions import action_rows  # лениво: цикл
+
+    return action_rows(code, alert_id, locale)
+
+
 def keyboard(
-    alert_id: int, locale: str, details: dict | None = None
+    alert_id: int, locale: str, details: dict | None = None, code: str = ""
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             *_message_row(details or {}, locale),
+            *_action_rows(code, alert_id, locale),
             [
                 InlineKeyboardButton(
                     text=t("alert.btn.ok", locale),
@@ -87,7 +97,7 @@ async def _notify(alert: Alert) -> None:
         await _main_bot().send_message(
             chat_id=alert.owner_id,
             text=render_text(alert, locale),
-            reply_markup=keyboard(alert.id, locale, alert.details),
+            reply_markup=keyboard(alert.id, locale, alert.details, alert.code),
             parse_mode="HTML" if spec_for(alert.code).html else None,
         )
     except Exception as error:  # владелец мог заблокировать бота: это не наша авария

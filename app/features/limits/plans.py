@@ -29,20 +29,32 @@ METRICS: dict[str, Metric] = {
     # подключены (задача 22)
     "mirrors": Metric("state", "mirrors"),
     "linkscan_checks_day": Metric("window", "linkscan_checks_day"),
-    # группы и каналы в архиве (17.2): проверяется при включении чата. Личные чаты не
-    # считаются: их ведёт бизнес-бот, а общий объём архива ограничит задача 17.3
+    # группы и каналы в архиве (17.2): проверяется при включении чата
     "archive_groups": Metric("state"),
-    # подготовлены для 17.3 и 26: лимит и тексты есть, проверки в коде ещё нет
-    "stored_messages": Metric("state"),
-    "media_bytes": Metric("state"),
+    # объём ПОЙМАННОГО (17.3): записи `archive_log` и байты файлов в них. Проверяет
+    # `archive.capacity` при каждой записи события
+    "archive_entries": Metric("state", "archive_full"),
+    "archive_media_bytes": Metric("state", "archive_full"),
+    # срок хранения (17.3): значения плана, их читает очистка (`limit_for`)
     "retention_days": Metric("value"),
+    "retention_media_days": Metric("value"),
 }
 
-# Щедро: всё, что есть сегодня, ничего не теряет. Не названное — без лимита.
+MB = 1024 * 1024
+
+# Не названное — без лимита. Срок файлов не больше срока записей (см. `retention`).
 DEFAULTS: dict[str, dict[str, int | None]] = {
-    "free": {"mirrors": 1, "linkscan_checks_day": 50, "archive_groups": 3},
-    "pro": {},
-    "max": {},
+    "free": {
+        "mirrors": 1,
+        "linkscan_checks_day": 50,
+        "archive_groups": 3,
+        "archive_entries": 300,
+        "archive_media_bytes": 100 * MB,
+        "retention_days": 14,
+        "retention_media_days": 14,
+    },
+    "pro": {"retention_days": 30, "retention_media_days": 30},
+    "max": {"retention_days": 30, "retention_media_days": 30},
 }
 
 WINDOW_SECONDS = 86400
@@ -92,3 +104,13 @@ def period_start(metric: str, now: int) -> int | None:
     if METRICS[metric].kind != "window":
         return None
     return now - now % WINDOW_SECONDS
+
+
+def retention(plan: str) -> tuple[int | None, int | None]:
+    """(дни хранения записей, дни хранения файлов); None — без срока. Файлы не живут
+    дольше текста: у них внутри записи нет собственной жизни."""
+    text = limit_for(plan, "retention_days")
+    media = limit_for(plan, "retention_media_days")
+    if text is not None and (media is None or media > text):
+        media = text
+    return text, media

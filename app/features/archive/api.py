@@ -4,6 +4,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
+from app.features.archive.api_delete import router as delete_router
 from app.features.archive.api_export import router as export_router
 from app.features.archive.api_rules import router as rules_router
 from app.features.archive.media import attach_media_info, content_type, load_media
@@ -197,3 +198,4 @@ router.include_router(
     export_router
 )  # тот же префикс /archive, после основных маршрутов
 router.include_router(rules_router)
+router.include_router(delete_router)

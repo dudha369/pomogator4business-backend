@@ -7,6 +7,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from app.features.archive import capacity
 from app.features.archive.prefs import ArchivePrefs, load_prefs
 from app.features.archive.queries import get_edit_history, log_archive_event
 from app.features.archive.snapshot import edit_kind
@@ -134,25 +135,34 @@ async def collect_deleted(
 
 
 async def record_deleted(connection_id, chat_id, unit, own: bool):
-    """Журнал и очистка истории для группы (сообщение или альбом) одного автора."""
+    """Журнал и очистка истории для группы (сообщение или альбом) одного автора.
+
+    Нет места по тарифу — запись в журнал пропускаем (уведомление уже ушло), историю
+    чистим как обычно; нет места только под файл — пишем без файла."""
     for message_id, entry, snap in unit:
-        await log_archive_event(
-            connection_id,
-            chat_id,
-            message_id,
-            "deleted",
-            entry["text"],
-            None,
-            int(time.time()),
-            kind=snap["kind"],
-            old_snapshot=snap,
-            is_owner=own,
-            media_type=entry.get("media_type"),
-            media_data=entry.get("media_data"),
-            media_mime=entry.get("media_mime"),
-            media_name=entry.get("media_name"),
-            media_status=entry.get("media_status"),
-        )
+        media = entry.get("media_data")
+        admission = await capacity.admit(connection_id, len(media or b""))
+        if admission.write:
+            await log_archive_event(
+                connection_id,
+                chat_id,
+                message_id,
+                "deleted",
+                entry["text"],
+                None,
+                int(time.time()),
+                kind=snap["kind"],
+                old_snapshot=snap,
+                is_owner=own,
+                media_type=entry.get("media_type"),
+                media_data=media if admission.keep_media else None,
+                media_mime=entry.get("media_mime"),
+                media_name=entry.get("media_name"),
+                media_status=(
+                    entry.get("media_status") if admission.keep_media else "limit"
+                ),
+            )
+        await capacity.report_full(connection_id, admission)
         await delete_history(connection_id, chat_id, message_id)
 
 
@@ -199,7 +209,8 @@ async def record_edit(
 ):
     """Журнал правки (если о ней уведомляли) и обновление истории до новой версии."""
     now = int(time.time())
-    if plan.notify:
+    admission = await capacity.admit(connection_id) if plan.notify else None
+    if admission and admission.write:
         await log_archive_event(
             connection_id,
             chat_id,
@@ -215,6 +226,8 @@ async def record_edit(
             notice_message_id=notice_id,
             is_owner=plan.is_owner,
         )
+    if admission:
+        await capacity.report_full(connection_id, admission)
     await save_history(
         connection_id,
         chat_id,

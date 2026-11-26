@@ -1745,6 +1745,47 @@
         "title": "DayActivity",
         "type": "object"
       },
+      "DeleteIn": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "media_only": {
+            "default": false,
+            "title": "Media Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "DeleteIn",
+        "type": "object"
+      },
+      "DeleteOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "freed_bytes": {
+            "title": "Freed Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "freed_bytes"
+        ],
+        "title": "DeleteOut",
+        "type": "object"
+      },
       "Deleted": {
         "properties": {
           "deleted": {
@@ -4256,6 +4297,53 @@
       }
     },
     "/api/archive": {
+      "delete": {
+        "operationId": "delete_archive_api_archive_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Archive"
+      },
       "get": {
         "operationId": "get_archive_api_archive_get",
         "parameters": [

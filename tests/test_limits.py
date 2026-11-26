@@ -47,7 +47,9 @@ def test_free_defaults_keep_current_features_working():
     assert plans.limit_for("free", "mirrors") == 1  # зеркало и так одно на владельца
     assert plans.limit_for("free", "linkscan_checks_day") == 50
     assert plans.limit_for("free", "archive_groups") == 3
-    assert plans.limit_for("free", "stored_messages") is None  # нет лимита
+    assert plans.limit_for("free", "archive_entries") == 300
+    assert plans.limit_for("free", "retention_days") == 14
+    assert plans.limit_for("pro", "archive_entries") is None  # до задачи 26
     assert plans.limit_for("pro", "linkscan_checks_day") is None
 
 

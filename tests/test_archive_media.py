@@ -120,9 +120,15 @@ async def test_retention_frees_bytes_but_file_id_keeps_media_available(
 ):
     """Байты (если их хранили) чистятся по сроку, а файл остаётся доступен по file_id."""
     from app.platform.retention import run_retention_once
+    from app.platform.ttl_cache import clear_all
     from config import settings
 
     monkeypatch.setattr(settings, "KEEP_MEDIA_BYTES", True)
+    # срок по тарифу здесь не проверяем (см. test_userbot3): записи живут без срока
+    monkeypatch.setattr(
+        settings, "PLAN_LIMITS_FREE", "retention_days=-1,retention_media_days=-1"
+    )
+    clear_all()
     msg = await receive(bot, photo=[tg_file("p")])
     await on_business_deleted(deleted_event(CHAT, [msg.message_id]), bot)
     await run_retention_once(now=10**10)  # через много лет

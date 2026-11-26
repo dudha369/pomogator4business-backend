@@ -77,4 +77,4 @@ def test_archive_router_has_all_handlers():
             counts[name] += len(obs.handlers)
     assert counts["deleted_business_messages"] == 1
     assert counts["edited_business_message"] == 1
-    assert counts["callback_query"] == 4
+    assert counts["callback_query"] == 5  # + кнопки «архив заполнен»

@@ -6,6 +6,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from app.features.archive import capacity
 from app.features.history import rule_queries
 from app.features.limits import queries, service
 from app.features.limits.plans import METRICS, limit_for, period_start
@@ -38,7 +39,10 @@ async def _used(owner_id: int, metric: str, now: int) -> int | None:
         return 1 if await get_mirror(owner_id) else 0
     if metric == "archive_groups":
         return await rule_queries.count_enabled_groups(owner_id)
-    return None  # остальные метрики подключит 17.3
+    if metric in ("archive_entries", "archive_media_bytes"):
+        entries, size = await capacity.usage(owner_id)
+        return entries if metric == "archive_entries" else size
+    return None  # срок хранения — значение плана, не счётчик
 
 
 @router.get("/plan", response_model=PlanOut)
