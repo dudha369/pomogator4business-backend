@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from aiogram.exceptions import (
     TelegramBadRequest,
@@ -19,6 +19,7 @@ from app.features.emoji_clock.queries import (
     set_emoji_status_enabled,
     set_emoji_status_granted,
 )
+from app.features.emoji_clock.style import local_time_key as _local_time_key
 from db.models.user_locale import get_timezone_offsets_for
 
 logger = logging.getLogger("bot.scheduler")
@@ -89,10 +90,6 @@ async def _push_emoji_status(bot, owner_id, style, time_key, cache):
             )
     except Exception:
         logger.exception("Не удалось обновить эмодзи-статус owner_id=%s", owner_id)
-
-
-def _local_time_key(now_utc, offset_minutes):
-    return (now_utc + timedelta(minutes=offset_minutes)).strftime("%H:%M")
 
 
 async def emoji_clock_tick(bot):

@@ -41,6 +41,12 @@ async def get_clock_emoji(time_key, style=DEFAULT_CLOCK_STYLE):
     return rows[0]["custom_emoji_id"] if rows else None
 
 
+async def get_clock_emojis_at(time_key):
+    """{style: custom_emoji_id} на минуту time_key: эмодзи для живого превью стилей."""
+    rows = await ClockEmoji.filter(time_key=time_key, custom_emoji_id__not_isnull=True)
+    return {row.style: row.custom_emoji_id for row in rows}
+
+
 async def count_clock_emojis(style=DEFAULT_CLOCK_STYLE):
     return await ClockEmoji.filter(style=style).count()
 

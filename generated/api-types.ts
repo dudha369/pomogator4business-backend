@@ -925,6 +925,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ui-stickers/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ui Sticker */
+        get: operations["get_ui_sticker_api_ui_stickers__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/userbot": {
         parameters: {
             query?: never;
@@ -1588,6 +1605,8 @@ export interface components {
             available: boolean;
             /** Id */
             id: string;
+            /** Preview Emoji Id */
+            preview_emoji_id: string | null;
             /** Titles */
             titles: {
                 [key: string]: string;
@@ -2056,6 +2075,11 @@ export interface components {
             today: components["schemas"]["MessageCounts"];
             week: components["schemas"]["MessageCounts"];
         };
+        /**
+         * StickerName
+         * @enum {string}
+         */
+        StickerName: "error_forbidden" | "error_crying";
         /** Template */
         Template: {
             /** Name */
@@ -4219,6 +4243,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TemplateDeleted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ui_sticker_api_ui_stickers__name__get: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Telegram-Init-Data": string;
+            };
+            path: {
+                name: components["schemas"]["StickerName"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/x-tgsticker": string;
+                    "image/webp": string;
+                    "video/webm": string;
                 };
             };
             /** @description Validation Error */

@@ -2,16 +2,20 @@
 (requestEmojiStatusAccess на фронте не сохраняется само — см. AccountPage
 фронтенда), переключение вкл/выкл."""
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.features.alerts import service as alerts_service
 from app.features.emoji_clock import STYLES, is_valid_style_id
 from app.features.emoji_clock import queries as status_db
-from app.features.emoji_clock.queries import get_clock_pack_counts
+from app.features.emoji_clock.queries import get_clock_emojis_at, get_clock_pack_counts
+from app.features.emoji_clock.style import local_time_key
 from app.platform.api.deps import require_user
 from app.platform.api.schemas import EmojiStatusState
 from app.platform.utils import log_suppressed
+from db.models.user_locale import get_timezone_offset
 
 router = APIRouter()
 
@@ -30,14 +34,24 @@ class EmojiStyleOut(BaseModel):
     style: str
 
 
-async def build_styles_payload() -> list[dict]:
-    """Список стилей для выбора. available=False — паки стиля ещё не загружены."""
+async def build_styles_payload(owner_id: int | None = None) -> list[dict]:
+    """Список стилей для выбора. available=False — паки стиля ещё не загружены.
+
+    С owner_id у каждого стиля есть `preview_emoji_id`: эмодзи текущей минуты в часовом
+    поясе владельца (живое превью). Без owner_id превью не считается."""
     ready = await get_clock_pack_counts()
+    previews = {}
+    if owner_id is not None:
+        time_key = local_time_key(
+            datetime.now(UTC), await get_timezone_offset(owner_id)
+        )
+        previews = await get_clock_emojis_at(time_key)
     return [
         {
             "id": style.id,
             "titles": style.titles,
             "available": ready.get(style.id, 0) >= style.pack_count,
+            "preview_emoji_id": previews.get(style.id),
         }
         for style in STYLES
     ]
@@ -49,7 +63,7 @@ async def get_emoji_status(user: dict = Depends(require_user)):
         "granted": await status_db.is_emoji_status_granted(user["id"]),
         "enabled": await status_db.is_emoji_status_enabled(user["id"]),
         "style": await status_db.get_emoji_status_style(user["id"]),
-        "styles": await build_styles_payload(),
+        "styles": await build_styles_payload(user["id"]),
     }
 
 

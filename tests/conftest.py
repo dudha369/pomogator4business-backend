@@ -14,6 +14,8 @@ os.environ.setdefault("WEBHOOK_SECRET", "test-secret")
 
 import pytest
 import pytest_asyncio
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.methods import GetStickerSet
 from tortoise import Tortoise
 
 import bot_instance
@@ -82,6 +84,8 @@ class FakeBot:
         self.album_sent = []  # send_media_group
         self.custom_emoji = {}  # id -> стикер для get_custom_emoji_stickers
         self.emoji_calls = []  # списки id, о которых спрашивали Telegram
+        self.sticker_sets = {}  # имя набора -> список стикеров для get_sticker_set
+        self.set_calls = []  # имена наборов, о которых спрашивали Telegram
         self._next_id = 1000
 
     async def send_rich_message(self, **kwargs):
@@ -121,6 +125,14 @@ class FakeBot:
         return [
             self.custom_emoji[i] for i in custom_emoji_ids if i in self.custom_emoji
         ]
+
+    async def get_sticker_set(self, name):
+        self.set_calls.append(name)
+        if name not in self.sticker_sets:
+            raise TelegramBadRequest(
+                method=GetStickerSet(name=name), message="STICKERSET_INVALID"
+            )
+        return types.SimpleNamespace(name=name, stickers=self.sticker_sets[name])
 
     # --- скачивание файлов и повторная отправка медиа ---
     async def get_file(self, file_id):
@@ -311,6 +323,7 @@ def api_bot(monkeypatch, bot):
         "get_file",
         "download_file",
         "get_custom_emoji_stickers",
+        "get_sticker_set",
     ):
         monkeypatch.setattr(bot_instance.bot, name, getattr(bot, name))
     return bot

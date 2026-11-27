@@ -19,6 +19,7 @@ class EmojiStyle(BaseModel):
     id: str
     titles: dict[str, str]
     available: bool  # False — паки стиля ещё не загружены
+    preview_emoji_id: str | None  # эмодзи текущей минуты для превью (None — нет)
 
 
 class EmojiStatusState(BaseModel):

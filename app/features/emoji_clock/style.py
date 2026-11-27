@@ -13,6 +13,7 @@
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 
 CLOCK_PACK_SIZE = 180  # эмодзи в одном паке (лимит Telegram — 200)
 
@@ -25,6 +26,11 @@ _PACK_NAME_RE = re.compile(
 def all_time_keys():
     """Все 1440 минут суток: '00:00' ... '23:59'."""
     return [f"{h:02d}:{m:02d}" for h in range(24) for m in range(60)]
+
+
+def local_time_key(now_utc, offset_minutes):
+    """'HH:MM' по местному времени: UTC плюс смещение в минутах."""
+    return (now_utc + timedelta(minutes=offset_minutes)).strftime("%H:%M")
 
 
 def pack_revision(pack_name):

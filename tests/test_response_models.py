@@ -16,6 +16,7 @@ BINARY_ENDPOINTS = {
     ("GET", "/avatar/{target_user_id}"),
     ("GET", "/archive/{log_id}/media"),
     ("GET", "/custom-emoji/{emoji_id}"),
+    ("GET", "/ui-stickers/{name}"),
 }
 
 

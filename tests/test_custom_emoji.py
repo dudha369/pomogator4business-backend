@@ -88,7 +88,7 @@ async def test_requires_init_data(client):
 
 
 def test_cache_evicts_oldest_not_everything(monkeypatch):
-    monkeypatch.setattr(emoji_api, "_MAX_ENTRIES", 3)
+    monkeypatch.setattr(emoji_api._cache, "max_entries", 3)
     for i in range(5):
-        emoji_api._remember(str(i), (b"x", "image/webp"))
-    assert list(emoji_api._cache) == ["2", "3", "4"]
+        emoji_api._cache.put(str(i), (b"x", "image/webp"))
+    assert emoji_api._cache.keys() == ["2", "3", "4"]

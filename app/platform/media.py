@@ -50,6 +50,19 @@ def emoji_mime(sticker):
     return "image/webp"
 
 
+class StickerNotInSet(LookupError):
+    """Набор есть, а стикера с таким `file_unique_id` в нём нет: ошибка реестра, не сбой сети."""
+
+
+async def _download_sticker(bot, sticker):
+    """(байты, mime) файла стикера или None, если файл слишком велик."""
+    if (sticker.file_size or 0) > MAX_CUSTOM_EMOJI_BYTES:
+        return None
+    file = await bot.get_file(sticker.file_id)
+    buffer = await bot.download_file(file.file_path)
+    return buffer.read(), emoji_mime(sticker)
+
+
 async def download_custom_emoji(bot, emoji_id):
     """(байты, mime) кастомного эмодзи или None. Работает без премиума у бота.
     Неизвестный id и слишком большой файл — не сбой, а «нет эмодзи»."""
@@ -58,14 +71,24 @@ async def download_custom_emoji(bot, emoji_id):
     except TelegramAPIError:
         logger.info("Эмодзи %s недоступно", emoji_id, exc_info=True)
         return None
-    if not stickers:
+    return await _download_sticker(bot, stickers[0]) if stickers else None
+
+
+async def download_set_sticker(bot, set_name, unique_id):
+    """(байты, mime) обычного стикера набора по `file_unique_id` или None.
+
+    `file_id` привязан к боту, а `file_unique_id` нет: для нашего бота `file_id`
+    берём из набора. Нет набора или Telegram не ответил — None; набор есть, а
+    стикера в нём нет — StickerNotInSet (ошибка реестра, её должны заметить)."""
+    try:
+        sticker_set = await bot.get_sticker_set(set_name)
+    except TelegramAPIError:
+        logger.info("Набор стикеров %s недоступен", set_name, exc_info=True)
         return None
-    sticker = stickers[0]
-    if (sticker.file_size or 0) > MAX_CUSTOM_EMOJI_BYTES:
-        return None
-    file = await bot.get_file(sticker.file_id)
-    buffer = await bot.download_file(file.file_path)
-    return buffer.read(), emoji_mime(sticker)
+    for sticker in sticker_set.stickers:
+        if sticker.file_unique_id == unique_id:
+            return await _download_sticker(bot, sticker)
+    raise StickerNotInSet(f"{set_name}/{unique_id}")
 
 
 @dataclass

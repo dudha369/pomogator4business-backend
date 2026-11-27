@@ -35,6 +35,7 @@ FEATURES = (
     "stats",
     "story",
     "templates",
+    "ui_stickers",
     "userbot",
     "vault",
     "voice_effects",

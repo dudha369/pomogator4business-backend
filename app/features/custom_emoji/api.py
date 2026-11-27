@@ -5,39 +5,15 @@
 набора), поэтому проверка владельца не нужна — достаточно initData. Формат
 (.tgs / .webm / .webp) фронтенд определяет по Content-Type."""
 
-import time
-from collections import OrderedDict
-
 from fastapi import APIRouter, Depends, HTTPException, Path, Response
 
 from app.platform.api.deps import require_user
+from app.platform.blob_cache import BlobCache
 from app.platform.media import download_custom_emoji
 
 router = APIRouter()
 
-# Эмодзи не меняется, «нет такого» может быть временным сбоем Telegram — кэш короче.
-_TTL_FOUND = 24 * 3600
-_TTL_MISSING = 600
-_MAX_ENTRIES = 500  # ≤ ~100 КБ на запись в худшем случае
-_cache: OrderedDict[str, tuple[float, tuple[bytes, str] | None]] = OrderedDict()
-
-
-def _cached(emoji_id):
-    hit = _cache.get(emoji_id)
-    if hit and hit[0] > time.monotonic():
-        _cache.move_to_end(emoji_id)
-        return True, hit[1]
-    return False, None
-
-
-def _remember(emoji_id, value):
-    _cache[emoji_id] = (
-        time.monotonic() + (_TTL_FOUND if value else _TTL_MISSING),
-        value,
-    )
-    _cache.move_to_end(emoji_id)
-    while len(_cache) > _MAX_ENTRIES:
-        _cache.popitem(last=False)  # вытесняем самое давнее, а не сбрасываем всё
+_cache = BlobCache()
 
 
 @router.get(
@@ -62,10 +38,10 @@ async def get_custom_emoji(
 ):
     from bot_instance import bot
 
-    hit, value = _cached(emoji_id)
+    hit, value = _cache.get(emoji_id)
     if not hit:
         value = await download_custom_emoji(bot, emoji_id)
-        _remember(emoji_id, value)
+        _cache.put(emoji_id, value)
     if value is None:
         raise HTTPException(status_code=404, detail="Эмодзи не найдено")
 

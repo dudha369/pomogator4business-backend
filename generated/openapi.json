@@ -1995,6 +1995,17 @@
             "title": "Id",
             "type": "string"
           },
+          "preview_emoji_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Emoji Id"
+          },
           "titles": {
             "additionalProperties": {
               "type": "string"
@@ -2006,7 +2017,8 @@
         "required": [
           "id",
           "titles",
-          "available"
+          "available",
+          "preview_emoji_id"
         ],
         "title": "EmojiStyle",
         "type": "object"
@@ -3456,6 +3468,14 @@
         ],
         "title": "StatsOut",
         "type": "object"
+      },
+      "StickerName": {
+        "enum": [
+          "error_forbidden",
+          "error_crying"
+        ],
+        "title": "StickerName",
+        "type": "string"
       },
       "Template": {
         "properties": {
@@ -6672,6 +6692,66 @@
           }
         },
         "summary": "Delete Template"
+      }
+    },
+    "/api/ui-stickers/{name}": {
+      "get": {
+        "operationId": "get_ui_sticker_api_ui_stickers__name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StickerName"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Telegram-Init-Data",
+            "required": true,
+            "schema": {
+              "title": "X-Telegram-Init-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/x-tgsticker": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "video/webm": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ui Sticker"
       }
     },
     "/api/userbot": {

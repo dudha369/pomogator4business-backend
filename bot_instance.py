@@ -13,6 +13,7 @@ from app.features.mirror.bot import router as mirror_router
 from app.features.ops.bot import router as ops_router
 from app.features.ops.middleware import OpsContextMiddleware
 from app.features.settings.bot import router as settings_router
+from app.features.ui_stickers.bot import router as ui_stickers_router
 from app.features.userbot.bot import router as userbot_router
 from app.platform.telegram.dm import router as bot_commands_router
 from app.platform.telegram.middleware import UpdateLoggingMiddleware
@@ -47,6 +48,7 @@ def setup_routes() -> Dispatcher:
     dp.include_router(games_router)
     dp.include_router(settings_router)
     dp.include_router(userbot_router)
+    dp.include_router(ui_stickers_router)
     dp.include_router(ai_drafts_router)
     dp.include_router(bot_commands_router)  # последним: см. docstring модуля
 

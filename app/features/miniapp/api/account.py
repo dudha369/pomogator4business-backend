@@ -83,7 +83,7 @@ async def get_account(user: dict = Depends(require_user)):
             "granted": await is_emoji_status_granted(owner_id),
             "enabled": await is_emoji_status_enabled(owner_id),
             "style": await get_emoji_status_style(owner_id),
-            "styles": await build_styles_payload(),
+            "styles": await build_styles_payload(owner_id),
         },
         "timezone_offset_minutes": await get_timezone_offset(owner_id),
         "timezone": await get_timezone_name(owner_id),
