@@ -63,7 +63,8 @@ def _rel(path: str) -> tuple[str, bool]:
     except (ValueError, OSError):
         rel = None
     if rel is not None and not str(rel).startswith(".venv"):
-        return str(rel), True
+        return rel.as_posix(), True
+    path = path.replace("\\", "/")  # Windows: пути пакетов с обратными слэшами
     marker = "site-packages/"
     return (
         path.split(marker, 1)[1] if marker in path else path.rsplit("/", 1)[-1]

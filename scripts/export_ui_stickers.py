@@ -11,6 +11,8 @@ from pathlib import Path
 
 from aiogram import Bot
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from app.platform.media import (
     StickerNotInSet,
     download_custom_emoji,
