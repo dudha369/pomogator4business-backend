@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from fastapi import Depends, Header, HTTPException
 
+from app.platform.api.errors import ApiErrorCode, api_error
 from app.platform.telegram.auth import validate_init_data
 from config import settings
 from db.models.connection import get_connection_by_owner
@@ -25,7 +26,8 @@ def require_user(x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-
         ) from None
 
     if settings.MAINTENANCE_MODE:
-        raise HTTPException(status_code=503, detail={"reason": "maintenance_mode"})
+        # `until` и `message` подставит админ-панель (задача 29)
+        raise api_error(503, ApiErrorCode.maintenance, reason="maintenance_mode")
     allowed = {
         int(part)
         for part in settings.ALLOWED_USER_IDS.split(",")

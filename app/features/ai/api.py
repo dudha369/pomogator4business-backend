@@ -13,6 +13,7 @@ from app.features.ai import service as ai
 from app.features.ai.queries import get_ai_settings, upsert_ai_settings
 from app.features.autoresponder.queries import log_autoreply
 from app.platform.api.deps import Owner, current_owner, require_user
+from app.platform.api.errors import ApiErrorCode, api_error
 from app.platform.api.schemas import AiCore
 
 router = APIRouter()
@@ -91,7 +92,13 @@ async def test_ai(payload: AiTest, owner: Owner = Depends(current_owner)):
 
     now = int(time.time())
     if await ai.used_today(user["id"], "ai_test", now) >= TEST_LIMIT_PER_DAY:
-        raise HTTPException(status_code=429, detail="Daily test limit reached")
+        # лимит суточный (UTC): повторить можно после полуночи
+        raise api_error(
+            429,
+            ApiErrorCode.rate_limited,
+            message="Daily test limit reached",
+            retry_after=86400 - now % 86400,
+        )
 
     stored = await get_ai_settings(user["id"]) or {}
     system = ai.build_system_prompt(

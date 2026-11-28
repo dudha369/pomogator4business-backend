@@ -658,7 +658,11 @@ async def test_maintenance_mode_returns_503(client, monkeypatch):
 
     monkeypatch.setattr(settings, "MAINTENANCE_MODE", True)
     r = await client.get("/api/account", headers=client.owner)
-    assert r.status_code == 503 and r.json()["detail"] == {"reason": "maintenance_mode"}
+    # приложение без глобального обработчика ошибок отдаёт структурный detail как есть;
+    # формат тела с обработчиком проверяет tests/test_api_errors.py
+    detail = r.json()["detail"]
+    assert r.status_code == 503
+    assert detail["code"] == "maintenance" and detail["reason"] == "maintenance_mode"
 
 
 async def test_allowlist_blocks_other_users(client, monkeypatch):

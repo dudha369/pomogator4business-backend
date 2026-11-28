@@ -385,6 +385,107 @@
         "title": "AliasesOut",
         "type": "object"
       },
+      "ApiErrorCode": {
+        "enum": [
+          "maintenance",
+          "session_expired",
+          "not_allowed",
+          "banned",
+          "feature_disabled",
+          "limit_reached",
+          "rate_limited",
+          "bad_request",
+          "not_found",
+          "conflict",
+          "validation_error",
+          "upstream_error",
+          "internal_error",
+          "start_failed",
+          "invalid_format",
+          "connection_failed",
+          "consent_required",
+          "not_waiting_password",
+          "userbot_unavailable"
+        ],
+        "title": "ApiErrorCode",
+        "type": "string"
+      },
+      "ApiErrorOut": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "detail": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "retry_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ApiErrorOut",
+        "type": "object"
+      },
       "ArchiveCounts": {
         "properties": {
           "deleted": {
@@ -5965,6 +6066,16 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -5974,6 +6085,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorOut"
+                }
+              }
+            },
+            "description": "Service Unavailable"
           }
         },
         "summary": "Ping Deep"

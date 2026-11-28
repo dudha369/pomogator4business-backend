@@ -16,6 +16,7 @@ from app.features.archive import export
 from app.features.archive.media import attach_media_info, load_media
 from app.features.archive.queries import get_archive_page
 from app.features.archive.scope import ArchiveScope, archive_scope
+from app.platform.api.errors import ApiErrorCode, api_error
 from db.models.user_locale import get_locale, get_timezone_offset
 
 logger = logging.getLogger("bot.archive_export")
@@ -107,7 +108,12 @@ async def export_archive(
 ):
     owner_id = scope.id
     if owner_id in _running:
-        raise HTTPException(status_code=429, detail="Export already running")
+        raise api_error(
+            429,
+            ApiErrorCode.rate_limited,
+            message="Export already running",
+            retry_after=30,
+        )
 
     _running.add(owner_id)
     try:

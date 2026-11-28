@@ -1149,6 +1149,27 @@ export interface components {
             /** Aliases */
             aliases: components["schemas"]["CommandAlias"][];
         };
+        /**
+         * ApiErrorCode
+         * @enum {string}
+         */
+        ApiErrorCode: "maintenance" | "session_expired" | "not_allowed" | "banned" | "feature_disabled" | "limit_reached" | "rate_limited" | "bad_request" | "not_found" | "conflict" | "validation_error" | "upstream_error" | "internal_error" | "start_failed" | "invalid_format" | "connection_failed" | "consent_required" | "not_waiting_password" | "userbot_unavailable";
+        /** ApiErrorOut */
+        ApiErrorOut: {
+            code: components["schemas"]["ApiErrorCode"];
+            /** Detail */
+            detail?: unknown | null;
+            /** Message */
+            message?: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Request Id */
+            request_id?: string | null;
+            /** Retry After */
+            retry_after?: number | null;
+            /** Until */
+            until?: number | null;
+        };
         /** ArchiveCounts */
         ArchiveCounts: {
             /** Deleted */
@@ -3717,6 +3738,15 @@ export interface operations {
                     "application/json": components["schemas"]["HealthOut"];
                 };
             };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorOut"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -3724,6 +3754,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorOut"];
                 };
             };
         };

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
 from app.platform.api.deps import require_user
+from app.platform.api.errors import ApiErrorOut
 from app.platform.health import measure_health
 
 router = APIRouter()
@@ -32,7 +33,14 @@ async def ping(response: Response):
     return {"ok": True, "server_time_ms": int(time.time() * 1000)}
 
 
-@router.get("/ping/deep", response_model=HealthOut)
+# Единый формат ошибки описан здесь один раз: так `ApiErrorOut` и `ApiErrorCode`
+# попадают в components OpenAPI (а оттуда в типы фронтенда) без раздувания схемы
+# ответами у каждого эндпоинта.
+@router.get(
+    "/ping/deep",
+    response_model=HealthOut,
+    responses={401: {"model": ApiErrorOut}, 503: {"model": ApiErrorOut}},
+)
 async def ping_deep(response: Response, user: dict = Depends(require_user)):
     from bot_instance import bot
 

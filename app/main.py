@@ -20,6 +20,7 @@ from app.features.scheduled.service import run_scheduled_loop
 from app.features.userbot.manager import manager as userbot_manager
 from app.features.vault import service as vault
 from app.platform.api import setup_routers
+from app.platform.api.errors import ApiErrorCode, cors_headers, install_error_handlers
 from app.platform.loader import load_commands
 from app.platform.logging_config import configure_logging
 from app.platform.retention import run_retention_loop
@@ -138,11 +139,12 @@ async def unhandled_error(request: Request, exc: Exception):
     # ответ обработчика идёт мимо RequestContextMiddleware (ServerErrorMiddleware снаружи)
     return JSONResponse(
         status_code=500,
-        content={"code": "internal_error", "request_id": request_id},
-        headers={"X-Request-ID": request_id or ""},
+        content={"code": ApiErrorCode.internal_error, "request_id": request_id},
+        headers={"X-Request-ID": request_id or "", **cors_headers(request)},
     )
 
 
+install_error_handlers(app)
 app.include_router(setup_routers(), prefix="/api")
 app.include_router(health_router)
 
